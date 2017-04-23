@@ -1059,11 +1059,15 @@ bool ft_set_ui_data(uint32_t friend_number, uint32_t file_number, MSG_HEADER *ui
     return true;
 }
 
-static void outgoing_file_callback_chunk(Tox *tox, uint32_t friend_number, uint32_t file_number, uint64_t position,
+static void outgoing_file_callback_chunk(Tox *tox, uint32_t friend_number, uint32_t file_number,
+                                         uint64_t position,
                                          size_t length, void *UNUSED(user_data))
 {
 
     FILE_TRANSFER *ft = get_file_transfer(friend_number, file_number);
+    if (!ft) {
+        return;
+    }
 
     if (!length) {
         utox_complete_file(ft);

@@ -198,6 +198,7 @@ static uint8_t *download(char *host, char *file, size_t *out_len) {
             return data;
         }
 
+        free(data);
         return NULL;
     }
 

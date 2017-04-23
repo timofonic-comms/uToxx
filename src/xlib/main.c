@@ -364,6 +364,7 @@ void pastedata(void *data, Atom type, size_t len, bool select) {
         if (NATIVE_IMAGE_IS_VALID(native_image)) {
             UTOX_IMAGE png_image = malloc(size);
             if (!png_image){
+                free(native_image);
                 return;
             }
 
