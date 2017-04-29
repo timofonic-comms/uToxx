@@ -136,29 +136,31 @@ void utox_write_metadata(FRIEND *f) {
     snprintf(dest, UTOX_FILE_NAME_LENGTH, "%.*s.fmetadata", TOX_PUBLIC_KEY_SIZE * 2, f->id_str);
 
     FILE *file = utox_get_file(dest, NULL, UTOX_FILE_OPTS_WRITE);
-    if (file) {
-        FRIEND_META_DATA metadata = { 0 };
-        size_t total_size = sizeof(metadata);
-
-        metadata.version          = METADATA_VERSION;
-        metadata.ft_autoaccept    = f->ft_autoaccept;
-        metadata.skip_msg_logging = f->skip_msg_logging;
-
-        if (f->alias && f->alias_length) {
-            metadata.alias_length = f->alias_length;
-            total_size += metadata.alias_length;
-        }
-
-        uint8_t *data = calloc(1, total_size);
-        if (data) {
-            memcpy(data, &metadata, sizeof(metadata));
-            memcpy(data + sizeof(metadata), f->alias, metadata.alias_length);
-
-            fwrite(data, total_size, 1, file);
-            free(data);
-        }
-        fclose(file);
+    if (!file) {
+        return;
     }
+
+    FRIEND_META_DATA metadata = { 0 };
+    size_t total_size = sizeof(metadata);
+
+    metadata.version          = METADATA_VERSION;
+    metadata.ft_autoaccept    = f->ft_autoaccept;
+    metadata.skip_msg_logging = f->skip_msg_logging;
+
+    if (f->alias && f->alias_length) {
+        metadata.alias_length = f->alias_length;
+        total_size += metadata.alias_length;
+    }
+
+    uint8_t *data = calloc(1, total_size);
+    if (data) {
+        memcpy(data, &metadata, sizeof(metadata));
+        memcpy(data + sizeof(metadata), f->alias, metadata.alias_length);
+
+        fwrite(data, total_size, 1, file);
+        free(data);
+    }
+    fclose(file);
 }
 
 static void friend_meta_data_read(FRIEND *f) {
@@ -174,19 +176,21 @@ static void friend_meta_data_read(FRIEND *f) {
         return;
     }
 
-    FRIEND_META_DATA *metadata = calloc(1, sizeof(*metadata) + size);
+    if (size < sizeof(FRIEND_META_DATA)) {
+        fclose(file);
+        return;
+    }
+
+    FRIEND_META_DATA *metadata = calloc(1, size);
     if (!metadata) {
         fclose(file);
         return;
     }
 
-    bool read_meta = fread(metadata, size, 1, file);
+    bool read_metadata = fread(metadata, size, 1, file);
     fclose(file);
 
-    if (!read_meta
-        || metadata->version != 0
-        || size < sizeof(*metadata))
-    {
+    if (!read_metadata || metadata->version != 0 || size < sizeof(*metadata)) {
         free(metadata);
         return;
     }
@@ -200,7 +204,6 @@ static void friend_meta_data_read(FRIEND *f) {
     f->ft_autoaccept = metadata->ft_autoaccept;
 
     free(metadata);
-    return;
 }
 
 void utox_friend_init(Tox *tox, uint32_t friend_number) {
