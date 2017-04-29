@@ -1,9 +1,8 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-typedef struct utox_save UTOX_SAVE;
+#include "../langs/i18n_decls.h"
 
-#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -28,6 +27,7 @@ typedef struct utox_settings {
     uint16_t proxy_port;
 
     // User interface settings
+    UTOX_LANG language;
     bool audiofilter_enabled;
     bool push_to_talk;
     bool audio_preview;
@@ -59,7 +59,7 @@ typedef struct utox_settings {
     uint32_t window_width;
     uint32_t window_baseline;
 
-    bool    window_maximized;
+    bool window_maximized;
 } SETTINGS;
 
 extern SETTINGS settings;
@@ -106,7 +106,9 @@ typedef struct utox_save {
     uint8_t zero_2              : 5;
     uint8_t zero_3              : 8;
 
-    uint16_t unused[28];
+    uint16_t language;
+
+    uint16_t unused[27];
     uint8_t  proxy_ip[];
 } UTOX_SAVE;
 
