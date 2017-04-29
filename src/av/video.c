@@ -15,8 +15,6 @@
 #include "../native/thread.h"
 #include "../native/video.h"
 
-#include "../ui/dropdown.h"
-
 #include <pthread.h>
 #include <stdlib.h>
 #include <tox/toxav.h>

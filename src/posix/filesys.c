@@ -14,6 +14,7 @@ bool native_create_dir(const uint8_t *filepath) {
     if (status == 0 || errno == EEXIST) {
         return true;
     }
+
     return false;
 }
 

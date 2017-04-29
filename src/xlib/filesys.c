@@ -3,7 +3,9 @@
 #include "gtk.h"
 
 #include "../chatlog.h"
+#include "../debug.h"
 #include "../file_transfers.h"
+#include "../filesys.h"
 #include "../friend.h"
 #include "../settings.h"
 #include "../tox.h"

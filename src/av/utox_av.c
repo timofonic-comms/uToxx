@@ -10,6 +10,7 @@
 #include "../tox.h"
 #include "../utox.h"
 
+#include "../native/audio.h"
 #include "../native/thread.h"
 
 #include <stdlib.h>
