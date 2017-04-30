@@ -15,9 +15,7 @@
 #endif
 
 #include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 
 #undef CLEARTYPE_QUALITY
 #define CLEARTYPE_QUALITY 5

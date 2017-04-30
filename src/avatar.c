@@ -1,6 +1,7 @@
 #include "avatar.h"
 
 #include "file_transfers.h"
+#include "filesys.h"
 #include "self.h"
 #include "tox.h"
 

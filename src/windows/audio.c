@@ -147,10 +147,6 @@ bool audio_frame(int16_t *buffer) {
             pData = NULL; // Tell CopyData to write silence.
         }
 
-        if (numFramesAvailable != 480) {
-            printf("ERROR\n");
-        }
-
         static bool frame = true;
 
         convertsamples(&buffer[frame ? 0 : 480], (void *)pData, 480);
