@@ -1,6 +1,5 @@
 #include "main.h"
 
-#include "../debug.h"
 #include "../flist.h"
 #include "../friend.h"
 #include "../stb.h"

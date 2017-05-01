@@ -9,6 +9,7 @@
 #include "native/thread.h"
 
 #include <getopt.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* The utox_ functions contained in src/main.c are wrappers for the platform native_ functions
@@ -23,7 +24,7 @@ bool utox_data_save_tox(uint8_t *data, size_t length) {
     }
 
     if (fwrite(data, length, 1, fp) != 1) {
-                fclose(fp);
+        fclose(fp);
         return true;
     }
 
@@ -49,7 +50,7 @@ uint8_t *utox_data_load_tox(size_t *size) {
         if (!data) {
             fclose(fp);
             // Quit. We're out of memory, calloc will fail again.
-            return NULL;
+            exit(EXIT_FAILURE);
         }
 
         if (fread(data, length, 1, fp) != 1) {
@@ -74,12 +75,12 @@ bool utox_data_save_ftinfo(char hex[TOX_PUBLIC_KEY_SIZE * 2], uint8_t *data, siz
 
     FILE *fp = utox_get_file(name, NULL, UTOX_FILE_OPTS_WRITE);
 
-    if (fp == NULL) {
+    if (!fp) {
         return false;
     }
 
     if (fwrite(data, length, 1, fp) != 1) {
-                fclose(fp);
+        fclose(fp);
         return false;
     }
 
@@ -229,7 +230,7 @@ void parse_args(int argc, char *argv[],
 
 /** Does all of the init work for uTox across all platforms
  *
- * it's expect this will be called AFTER you parse argc/v and will act accordingly. */
+ * it's expected this will be called AFTER you parse argc/v and will act accordingly. */
 void utox_init(void) {
     atexit(utox_raze);
 
@@ -243,7 +244,7 @@ void utox_init(void) {
     }
 
     // We likely want to start this on every system.
-    thread(updater_thread, (void*)1);
+    thread(updater_thread, (void *)1);
 }
 
 void utox_raze(void) {}

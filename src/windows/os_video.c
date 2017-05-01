@@ -3,7 +3,6 @@
 #include "main.h"
 
 #include "../macros.h"
-#include "../main.h" // video super globals
 
 #include "../av/video.h"
 
@@ -12,7 +11,6 @@
 #include "../../langs/i18n_decls.h"
 
 #include <windows.h>
-
 
 #ifdef __CRT__NO_INLINE
 #undef __CRT__NO_INLINE

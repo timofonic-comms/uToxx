@@ -38,17 +38,6 @@
 #define ENABLE_MULTIDEVICE 1
 #endif
 
-
-volatile uint16_t loaded_audio_in_device, loaded_audio_out_device;
-
-/* Super global vars */
-volatile bool utox_av_ctrl_init, utox_audio_thread_init, utox_video_thread_init;
-
-bool move_window_down; // When the mouse is currently down over the move_window_button().
-                       // non-ideal but I wasn't ready to write a better state system for
-                       // moving windows from inside uTox.
-                       // seems to be unused?
-
 enum {
     USER_STATUS_AVAILABLE,
     USER_STATUS_AWAY_IDLE,

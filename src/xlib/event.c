@@ -5,11 +5,10 @@
 #include "tray.h"
 #include "window.h"
 
-#include "../debug.h"
 #include "../flist.h"
 #include "../friend.h"
 #include "../macros.h"
-#include "../main.h" // STBI
+#include "../main.h"
 #include "../notify.h"
 #include "../self.h"
 #include "../settings.h"

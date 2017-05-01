@@ -5,7 +5,6 @@
 #include "../flist.h"
 #include "../friend.h"
 #include "../macros.h"
-#include "../main.h"
 #include "../tox.h"
 
 typedef struct {

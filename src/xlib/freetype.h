@@ -1,9 +1,9 @@
 #ifndef XLIB_FREETYPE_H
 #define XLIB_FREETYPE_H
 
-#include <X11/extensions/Xrender.h>
-#include <inttypes.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <X11/extensions/Xrender.h>
 
 #include <ft2build.h>
 #include FT_LCD_FILTER_H

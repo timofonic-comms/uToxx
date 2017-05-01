@@ -1,12 +1,11 @@
 #include "main.h"
 
 #include "../macros.h"
-#include "../main.h"
 
-#include <stdint.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #include <audioclient.h>
 #include <mmdeviceapi.h>
