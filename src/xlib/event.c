@@ -24,6 +24,7 @@
 
 #include "../native/clipboard.h"
 #include "../native/keyboard.h"
+#include "../native/notify.h"
 #include "../native/ui.h"
 
 #include "../ui/draw.h" // Needed for enddraw. This should probably be changed.
@@ -34,6 +35,8 @@
 #include <stdlib.h>
 
 extern XIC xic;
+
+bool have_focus = false;
 
 static void mouse_move(XMotionEvent *event, UTOX_WINDOW *window) {
     if (pointergrab) { // TODO super globals are bad mm'kay?
@@ -290,7 +293,7 @@ bool doevent(XEvent event) {
             }
             #endif
 
-            havefocus = true;
+            have_focus = true;
             XWMHints hints = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
             XSetWMHints(display, main_window.window, &hints);
             break;
@@ -307,7 +310,7 @@ bool doevent(XEvent event) {
             }
             #endif
 
-            havefocus = false;
+            have_focus = false;
             break;
         }
 

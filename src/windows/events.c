@@ -22,6 +22,7 @@
 
 #include "../native/clipboard.h"
 #include "../native/keyboard.h"
+#include "../native/notify.h"
 #include "../native/ui.h"
 
 #include "../ui/dropdown.h"
@@ -208,12 +209,12 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
                 Shell_NotifyIconW(NIM_MODIFY, &nid);
             }
 
-            havefocus = true;
+            have_focus = true;
             break;
         }
 
         case WM_KILLFOCUS: {
-            havefocus = false;
+            have_focus = false;
             break;
         }
 

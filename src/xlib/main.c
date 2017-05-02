@@ -27,6 +27,7 @@
 #include "../layout/settings.h"
 
 #include "../native/image.h"
+#include "../native/notify.h"
 #include "../native/ui.h"
 
 #include "../ui/draw.h"
@@ -69,8 +70,9 @@ void postmessage_utox(UTOX_MSG msg, uint16_t param1, uint16_t param2, void *data
     XFlush(display);
 }
 
-FILE    *ptt_keyboard_handle;
-Display *ptt_display;
+static FILE *   ptt_keyboard_handle;
+static Display *ptt_display;
+
 void init_ptt(void) {
     settings.push_to_talk = 1;
 
@@ -545,7 +547,7 @@ void setscale_fonts(void) {
 }
 
 void notify(char *title, uint16_t UNUSED(title_length), const char *msg, uint16_t msg_length, void *object, bool is_group) {
-    if (havefocus) {
+    if (have_focus) {
         return;
     }
 
