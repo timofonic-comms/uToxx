@@ -7,6 +7,7 @@
 #include "../branding.h"
 #include "../debug.h"
 #include "../macros.h"
+#include "../ui.h"
 
 #include <windows.h>
 
@@ -76,14 +77,12 @@ UTOX_WINDOW *native_window_create_main(int x, int y, int w, int h) {
 }
 
 HWND native_window_create_video(int x, int y, int w, int h) {
-    LOG_DEBUG("Windows WM", "Creating video window");
-    HWND win = CreateWindowExW(0, L"uTox", L"TEMP TITLE CHANGE ME", WS_OVERLAPPEDWINDOW,
-                               x, y, w, h, NULL, NULL, curr_instance, NULL);
+    wchar_t title[128];
+    // %S for single-byte char, non-standard behaviour
+    swprintf(title, 128, L"%S", S(WINDOW_TITLE_VIDEO_PREVIEW));
 
-    if (!win) {
-        LOG_ERR("Windows WM", "ERROR trying to create video window");
-        LOG_ERR("debug", "%u", GetLastError());
-    }
+    HWND win = CreateWindowExW(0, L"uTox", title, WS_OVERLAPPEDWINDOW,
+                               x, y, w, h, NULL, NULL, curr_instance, NULL);
 
     return win;
 }
@@ -118,7 +117,6 @@ UTOX_WINDOW *native_window_create_notify(int x, int y, int w, int h, PANEL *pane
     if (!popup) {
         popup = calloc(1, sizeof(UTOX_WINDOW)); // FIXME leaks
         if (!popup) {
-            LOG_ERR("Windows Wind", "NativeWindow:\tUnable to alloc to create window container");
             return NULL;
         }
     }
