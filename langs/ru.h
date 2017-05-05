@@ -648,9 +648,6 @@ msgstr("Рабочий стол")
 msgid(AUDIO_IN_DEFAULT_LOOPBACK)
 msgstr("По умолчанию")
 
-msgid(AUDIO_IN_ANDROID)
-msgstr("OpenSL")
-
 msgid(DEFAULT_FRIEND_REQUEST_MESSAGE)
 msgstr("Пожалуйста, добавьте меня в свой список контактов.")
 

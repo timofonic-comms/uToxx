@@ -467,9 +467,6 @@ msgstr("keines")
 msgid(AUDIO_IN_DEFAULT_LOOPBACK)
 msgstr("Standard Loopback")
 
-msgid(AUDIO_IN_ANDROID)
-msgstr("OpenSL-Eingang")
-
 msgid(DEFAULT_FRIEND_REQUEST_MESSAGE)
 msgstr("Bitte füge mich deiner Kontaktliste hinzu.")
 

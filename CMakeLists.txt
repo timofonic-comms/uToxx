@@ -94,8 +94,6 @@ configure_file(${uTox_SOURCE_DIR}/src/branding.h.in
                ${uTox_SOURCE_DIR}/src/branding.h)
 configure_file(${uTox_SOURCE_DIR}/src/cocoa/Info.plist.in
                ${uTox_SOURCE_DIR}/src/cocoa/Info.plist)
-configure_file(${uTox_SOURCE_DIR}/src/android/AndroidManifest.xml.in
-               ${uTox_SOURCE_DIR}/src/android/AndroidManifest.xml)
 
 if(${CMAKE_BUILD_TYPE} MATCHES Debug)
     execute_process(COMMAND git describe --abbrev=8 --dirty --always --tags
@@ -250,18 +248,11 @@ else()
         )
 endif()
 
-# Protip, you must use a different directory for each build target...
-# -DMAKE_TOOLCHAIN_FILE has no effect unless the target directory is empty
-# 1.5 hours to learn this...
 if(WIN32)
     if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
         set(GUI_TYPE WIN32)
     endif()
-    ############################################################
-    ## This is a hack, that we can remove once we have better
-    ## separation of the sections of uTox, until then, this
-    ## makes everything work.
-    ############################################################
+
     include_directories( libs/toktok/include libs/windows-x64/include/ )
     if(WIN64)
         link_directories( libs/toktok/lib /usr/x86_64-w64-mingw32/lib/ libs/windows-x64/lib )

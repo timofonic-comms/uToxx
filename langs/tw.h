@@ -451,9 +451,6 @@ msgstr("桌面")
 msgid(AUDIO_IN_DEFAULT_LOOPBACK)
 msgstr("默認環繞")
 
-msgid(AUDIO_IN_ANDROID)
-msgstr("OpenSL輸入")
-
 msgid(DEFAULT_FRIEND_REQUEST_MESSAGE)
 msgstr("請接受這條好友請求。")
 

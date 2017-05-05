@@ -34,9 +34,6 @@
 #if defined __WIN32__
 #define UPDATER_HOST "win"
 #define UPDATER_OUT "uTox.exe"
-#elif defined __ANDROID__
-#define UPDATER_HOST "and"
-#define UPDATER_OUT "uTox.apk"
 #elif defined __OBJC__
 #define UPDATER_HOST "osx"
 #define UPDATER_OUT "uTox.dmg"

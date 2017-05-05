@@ -298,9 +298,6 @@ msgstr("Escritorio")
 msgid(AUDIO_IN_DEFAULT_LOOPBACK)
 msgstr("Loopback")
 
-msgid(AUDIO_IN_ANDROID)
-msgstr("Entrada de OpenSL")
-
 msgid(DEFAULT_FRIEND_REQUEST_MESSAGE)
 msgstr("Por favor, acepta esta solicitud de amistad.")
 

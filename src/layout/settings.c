@@ -193,9 +193,6 @@ static void draw_settings_text_ui(int x, int y, int UNUSED(w), int UNUSED(height
     drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(125), START_IN_TRAY);
     drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(155), AUTO_STARTUP);
     drawstr(x + SCALE(20) + BM_SWITCH_WIDTH,  y + SCALE(185), SETTINGS_UI_MINI_ROSTER);
-    #if PLATFORM_ANDROID
-        drawstr(x + SCALE(20) + BM_SWITCH_WIDTH, y + SCALE(215), SETTINGS_UI_AUTO_HIDE_SIDEBAR);
-    #endif
 }
 
 // Audio/Video settings page
@@ -388,9 +385,6 @@ panel_settings_master = {
             (PANEL*)&switch_start_in_tray,
             (PANEL*)&switch_auto_startup,
             (PANEL*)&switch_mini_contacts,
-            #if PLATFORM_ANDROID
-                (PANEL*)&switch_magic_sidebar,
-            #endif
             NULL
         }
     },

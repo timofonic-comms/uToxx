@@ -346,9 +346,6 @@ msgstr("Nema")
 msgid(AUDIO_IN_DEFAULT_LOOPBACK)
 msgstr("Defaultni (loopback) ulaz")
 
-msgid(AUDIO_IN_ANDROID)
-msgstr("OpenSL ulaz")
-
 msgid(DEFAULT_FRIEND_REQUEST_MESSAGE)
 msgstr("Molim prihvatite poziv za prijateljstvom.")
 

@@ -355,9 +355,6 @@ msgstr("Labortablo")
 msgid(AUDIO_IN_DEFAULT_LOOPBACK)
 msgstr("Defaŭlta inversa ciklo")
 
-msgid(AUDIO_IN_ANDROID)
-msgstr("OpenSL-enmeto")
-
 msgid(DEFAULT_FRIEND_REQUEST_MESSAGE)
 msgstr("Bonvolu akceptu ĉi tiun amikiĝpeton.")
 

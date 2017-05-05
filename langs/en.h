@@ -728,9 +728,6 @@ msgstr("Desktop")
 msgid(AUDIO_IN_DEFAULT_LOOPBACK)
 msgstr("Default Loopback")
 
-msgid(AUDIO_IN_ANDROID)
-msgstr("OpenSL Input")
-
 msgid(DEFAULT_FRIEND_REQUEST_MESSAGE)
 msgstr("Please accept this friend request.")
 

@@ -533,9 +533,6 @@ msgstr("Écran")
 msgid(AUDIO_IN_DEFAULT_LOOPBACK)
 msgstr("Par défaut")
 
-msgid(AUDIO_IN_ANDROID)
-msgstr("Entrée OpenSL")
-
 msgid(DEFAULT_FRIEND_REQUEST_MESSAGE)
 msgstr("Veuillez accepter cette requête d'ami.")
 

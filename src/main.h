@@ -36,13 +36,6 @@ typedef uint8_t *UTOX_IMAGE;
 #define MAIN_WIDTH 800
 #define MAIN_HEIGHT 500
 
-//  fixes compile with apple headers
-/*** This breaks both android and Windows video... but it's needed to fix complation in clang (Cocoa & asan)
- ***  TODO fix them?
-#if !defined (__OBJC__) && !defined (__NetBSD__)
-#define volatile(x) (*((volatile typeof(x)*)&x))
-#endif */
-
 #ifndef __OBJC__
 #define volatile(x)(x)
 #endif
@@ -111,10 +104,5 @@ void utox_init(void);
  * Free used resources
  */
 void utox_raze(void);
-
-// Android audio
-void audio_play(int32_t call_index, const int16_t *data, int length, uint8_t channels);
-void audio_begin(int32_t call_index);
-void audio_end(int32_t call_index);
 
 #endif

@@ -596,9 +596,6 @@ msgstr("Pulpit")
 msgid(AUDIO_IN_DEFAULT_LOOPBACK)
 msgstr("Domyślny Loopback")
 
-msgid(AUDIO_IN_ANDROID)
-msgstr("Wejście OpenSL")
-
 msgid(DEFAULT_FRIEND_REQUEST_MESSAGE)
 msgstr("Proszę, zaakceptuj to zaproszenie do znajomych.")
 

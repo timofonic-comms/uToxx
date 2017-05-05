@@ -265,9 +265,6 @@ msgstr("Ambiente de Trabalho")
 msgid(AUDIO_IN_DEFAULT_LOOPBACK)
 msgstr("Loopback Pré-definido")
 
-msgid(AUDIO_IN_ANDROID)
-msgstr("Entrada OpenSL")
-
 msgid(DEFAULT_FRIEND_REQUEST_MESSAGE)
 msgstr("Por favor, aceite este pedido de amizade.")
 

@@ -238,9 +238,6 @@ msgstr("Asztal")
 msgid(AUDIO_IN_DEFAULT_LOOPBACK)
 msgstr("Alapértelmezett Loopback")
 
-msgid(AUDIO_IN_ANDROID)
-msgstr("OpenSL bevitel")
-
 msgid(DEFAULT_FRIEND_REQUEST_MESSAGE)
 msgstr("Kérem, fogadja el ezt a partnerkérelmet!")
 

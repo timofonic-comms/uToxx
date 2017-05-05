@@ -717,9 +717,6 @@ msgstr("Стільниця")
 msgid(AUDIO_IN_DEFAULT_LOOPBACK)
 msgstr("Стандартна петля") // Check the correctness
 
-msgid(AUDIO_IN_ANDROID)
-msgstr("Ввід OpenSL")
-
 msgid(DEFAULT_FRIEND_REQUEST_MESSAGE)
 msgstr("Будь ласка, додайте мене в свій список друзів.")
 
