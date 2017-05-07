@@ -171,6 +171,8 @@ elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
         add_cflag("-flto")
     endif()
 
+    add_cflag("-Wno-missing-field-initializers")
+
     # Have ld strip the symbols from Release and MinSizeRel build types. (-Oz is clang specific)
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os")
     set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} -Oz -s")
