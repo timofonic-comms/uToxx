@@ -5,68 +5,12 @@
 #include "../chatlog.h"
 #include "../file_transfers.h"
 #include "../friend.h"
-#include "../debug.h"
-#include "../tox.h"
 #include "../settings.h"
+#include "../tox.h"
 
 #include <fcntl.h>
+#include <stdlib.h>
 #include <string.h>
-
-#if 0 // commented because this function is deprecated, but I'm not ready to delete all this code yet
-/** Takes data from µTox and saves it, just how the OS likes it saved! */
-size_t native_save_data(const uint8_t *name, size_t name_length, const uint8_t *data, size_t length, bool append) {
-    char path[UTOX_FILE_NAME_LENGTH]        = { 0 };
-    char atomic_path[UTOX_FILE_NAME_LENGTH] = { 0 };
-
-    FILE *file;
-
-    size_t offset = 0;
-
-    if (settings.portable_mode) {
-        snprintf(path, UTOX_FILE_NAME_LENGTH, "./tox/");
-    } else {
-        snprintf(path, UTOX_FILE_NAME_LENGTH, "%s/.config/tox/", getenv("HOME"));
-    }
-
-    mkdir(path, 0700);
-
-    snprintf(path + strlen(path), UTOX_FILE_NAME_LENGTH - strlen(path), "%s", name);
-
-    if (append) {
-        file = fopen(path, "ab");
-    } else {
-        if (strlen(path) + name_length >= UTOX_FILE_NAME_LENGTH - strlen(".atomic")) {
-            LOG_TRACE("Filesys", "Save directory name too long" );
-            return 0;
-        } else {
-            snprintf(atomic_path, UTOX_FILE_NAME_LENGTH, "%s.atomic", path);
-        }
-        file = fopen(atomic_path, "wb");
-    }
-
-    if (file) {
-        offset = ftello(file);
-        fwrite(data, length, 1, file);
-        fclose(file);
-
-        if (append) {
-            return offset;
-        }
-
-        if (rename(atomic_path, path)) {
-            /* Consider backing up this file instead of overwriting it. */
-            LOG_TRACE("Filesys", "%sUnable to move file!" , atomic_path);
-            return 0;
-        }
-        return 1;
-    } else {
-        LOG_TRACE("Filesys", "Unable to open %s to write save" , path);
-        return 0;
-    }
-
-    return 0;
-}
-#endif
 
 /** Takes data from µTox and loads it up! */
 uint8_t *native_load_data(const uint8_t *name, size_t name_length, size_t *out_size) {
@@ -79,15 +23,13 @@ uint8_t *native_load_data(const uint8_t *name, size_t name_length, size_t *out_s
     }
 
     if (strlen(path) + name_length >= UTOX_FILE_NAME_LENGTH) {
-        LOG_TRACE("Filesys", "Load directory name too long" );
-        return 0;
+                return 0;
     } else {
         snprintf(path + strlen(path), UTOX_FILE_NAME_LENGTH - strlen(path), "%s", name);
     }
 
     FILE *file = fopen(path, "rb");
     if (!file) {
-        // LOG_TRACE("Filesys", "Unable to open/read %s" , path);
         if (out_size) {
             *out_size = 0;
         }
@@ -108,7 +50,6 @@ uint8_t *native_load_data(const uint8_t *name, size_t name_length, size_t *out_s
         fseek(file, 0, SEEK_SET);
 
         if (fread(data, size, 1, file) != 1) {
-            LOG_TRACE("Filesys", "Read error on %s" , path);
             fclose(file);
             free(data);
             if (out_size) {
@@ -133,7 +74,6 @@ void native_export_chatlog_init(uint32_t friend_number) {
         char name[TOX_MAX_NAME_LENGTH + sizeof(".txt")];
         FRIEND *f = get_friend(friend_number);
         if (!f) {
-            LOG_ERR("Filesys", "Could not get friend with number: %u", friend_number);
             return;
         }
         snprintf((char *)name, sizeof(name), "%.*s.txt", (int)f->name_length,
@@ -156,20 +96,16 @@ bool native_remove_file(const uint8_t *name, size_t length, bool portable_mode) 
     }
 
     if (strlen((const char *)path) + length >= UTOX_FILE_NAME_LENGTH) {
-        LOG_DEBUG("Filesys", "File/directory name too long, unable to remove" );
         return false;
-    } else {
-        snprintf((char *)path + strlen((const char *)path), UTOX_FILE_NAME_LENGTH - strlen((const char *)path), "%.*s",
-                 (int)length, (char *)name);
     }
 
+    snprintf((char *)path + strlen((const char *)path), UTOX_FILE_NAME_LENGTH - strlen((const char *)path), "%.*s",
+             (int)length, (char *)name);
+
     if (remove((const char *)path)) {
-        LOG_ERR("NATIVE", "Unable to delete file!\n\t\t%s" , path);
         return false;
-    } else {
-        LOG_INFO("NATIVE", "File deleted!" );
-        LOG_DEBUG("Filesys", "\t%s" , path);
     }
+
     return true;
 }
 
@@ -187,14 +123,12 @@ void native_select_dir_ft(uint32_t fid, uint32_t file_number, FILE_TRANSFER *fil
 }
 
 void native_autoselect_dir_ft(uint32_t fid, FILE_TRANSFER *file) {
-    if (file == NULL){
-        LOG_TRACE("Native", " file is null." );
+    if (!file){
         return;
     }
 
     uint8_t *path = malloc(file->name_length + 1);
-    if (path == NULL) {
-        LOG_ERR("Native", "Could not allocate memory.");
+    if (!path) {
         return;
     }
 
@@ -207,7 +141,6 @@ void native_autoselect_dir_ft(uint32_t fid, FILE_TRANSFER *file) {
         path[file->name_length] = 0;
     }
 
-    LOG_NOTE("Native", "Auto Accept Directory: \"%s\"" , path);
     postmessage_toxcore(TOX_FILE_ACCEPT, fid, file->file_number, path);
 }
 

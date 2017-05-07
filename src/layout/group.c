@@ -1,7 +1,6 @@
 #include "group.h"
 
 #include "../commands.h"
-#include "../debug.h"
 #include "../flist.h"
 #include "../groups.h"
 #include "../macros.h"
@@ -31,7 +30,6 @@ SCROLLABLE scrollbar_group = {
 static void draw_group(int x, int UNUSED(y), int UNUSED(w), int UNUSED(height)) {
     GROUPCHAT *g = flist_get_groupchat();
     if (!g) {
-        LOG_ERR("Group", "Could not get selected groupchat.");
         return;
     }
 
@@ -100,45 +98,44 @@ panel_group = {
         NULL
     }
 },
-    panel_group_chat = {
-        .type = PANEL_NONE,
-        .disabled = 0,
-        .drawfunc = draw_group,
-        .child = (PANEL*[]) {
-            (PANEL*)&scrollbar_group,
-            (PANEL*)&edit_chat_msg_group, // this needs to be one of the first, to get events before the others
-            (PANEL*)&messages_group,
-            (PANEL*)&button_group_audio,
-            (PANEL*)&button_chat_send_group,
-            NULL
-        }
-    },
-    panel_group_video = {
-        .type = PANEL_NONE,
-        .disabled = 1,
-        .child = (PANEL*[]) {
-            NULL
-        }
-    },
-    panel_group_settings = {
-        .type = PANEL_NONE,
-        .disabled = 1,
-        .drawfunc = draw_group_settings,
-        .child = (PANEL*[]) {
-            (PANEL*)&edit_group_topic,
-            (PANEL*)&dropdown_notify_groupchats,
-            NULL
-        }
-    },
-    messages_group = {
-        .type = PANEL_MESSAGES,
-        .content_scroll = &scrollbar_group,
-    };
+panel_group_chat = {
+    .type = PANEL_NONE,
+    .disabled = 0,
+    .drawfunc = draw_group,
+    .child = (PANEL*[]) {
+        (PANEL*)&scrollbar_group,
+        (PANEL*)&edit_chat_msg_group, // this needs to be one of the first, to get events before the others
+        (PANEL*)&messages_group,
+        (PANEL*)&button_group_audio,
+        (PANEL*)&button_chat_send_group,
+        NULL
+    }
+},
+panel_group_video = {
+    .type = PANEL_NONE,
+    .disabled = 1,
+    .child = (PANEL*[]) {
+        NULL
+    }
+},
+panel_group_settings = {
+    .type = PANEL_NONE,
+    .disabled = 1,
+    .drawfunc = draw_group_settings,
+    .child = (PANEL*[]) {
+        (PANEL*)&edit_group_topic,
+        (PANEL*)&dropdown_notify_groupchats,
+        NULL
+    }
+},
+messages_group = {
+    .type = PANEL_MESSAGES,
+    .content_scroll = &scrollbar_group,
+};
 
 static void button_group_audio_on_mup(void) {
     GROUPCHAT *g = flist_get_groupchat();
     if (!g) {
-        LOG_ERR("Group", "Could not get selected groupchat.");
         return;
     }
 
@@ -153,7 +150,6 @@ static void button_group_audio_on_mup(void) {
 static void button_group_audio_update(BUTTON *b) {
     GROUPCHAT *g = flist_get_groupchat();
     if (!g) {
-        LOG_ERR("Group", "Could not get selected groupchat.");
         return;
     }
 
@@ -184,7 +180,6 @@ BUTTON button_group_audio = {
 static uint32_t peers_deduplicate(char **dedup, size_t *dedup_size, GROUP_PEER **peers, uint32_t peer_count) {
     uint32_t count = 0;
     for (size_t peer = 0; peer < peer_count; peer++) {
-
         GROUP_PEER *p = peers[peer];
         if (!p) {
             continue;
@@ -224,6 +219,11 @@ static struct {
 } completion;
 
 static uint8_t nick_completion_search(EDIT *edit, char *found_nick, int direction) {
+    GROUPCHAT *   g = flist_get_groupchat();
+    if (!g) {
+        return 0;
+    }
+
     char *        text = edit->data;
     uint32_t      i, peers, prev_index, compsize = completion.length;
     char *        nick     = NULL;
@@ -231,11 +231,6 @@ static uint8_t nick_completion_search(EDIT *edit, char *found_nick, int directio
     bool          found    = 0;
     static char * dedup[65536];      /* TODO magic numbers */
     static size_t dedup_size[65536]; /* TODO magic numbers */
-    GROUPCHAT *   g = flist_get_groupchat();
-    if (!g) {
-        LOG_ERR("Group", "Could not get selected groupchat.");
-        return 0;
-    }
 
     peers = peers_deduplicate(dedup, dedup_size, g->peer, g->peer_count);
 
@@ -248,7 +243,8 @@ static uint8_t nick_completion_search(EDIT *edit, char *found_nick, int directio
             nick     = dedup[i];
             nick_len = dedup_size[i];
             if (nick_len == completion.end - completion.start - completion.spacing
-                && !memcmp(nick, text + completion.start, nick_len)) {
+                && !memcmp(nick, text + completion.start, nick_len))
+            {
                 found = 1;
             } else {
                 i++;
@@ -257,7 +253,7 @@ static uint8_t nick_completion_search(EDIT *edit, char *found_nick, int directio
     }
 
     prev_index = i;
-    found      = 0;
+    found = 0;
     do {
         if (direction == -1 && i == 0) {
             i = peers;
@@ -279,9 +275,9 @@ static uint8_t nick_completion_search(EDIT *edit, char *found_nick, int directio
     if (found) {
         memcpy(found_nick, nick, nick_len);
         return nick_len;
-    } else {
-        return 0;
     }
+
+    return 0;
 }
 
 static void nick_completion_replace(EDIT *edit, char *nick, uint32_t size) {
@@ -344,7 +340,6 @@ static void e_chat_msg_ontab(EDIT *edit) {
             if ((length == 6 && !memcmp(text, "/topic", 6)) || (length == 7 && !memcmp(text, "/topic ", 7))) {
                 GROUPCHAT *g = flist_get_groupchat();
                 if (!g) {
-                    LOG_ERR("Group", "Could not get selected groupchat.");
                     return;
                 }
 
@@ -374,7 +369,8 @@ static void e_chat_msg_ontab(EDIT *edit) {
         if (nick_length) {
             completion.edited = 1;
             if (!(nick_length == completion.end - completion.start - completion.spacing
-                  && !memcmp(nick, text + completion.start, nick_length))) {
+                  && !memcmp(nick, text + completion.start, nick_length)))
+            {
                 nick_completion_replace(edit, nick, nick_length);
             }
             edit_setcursorpos(edit, completion.end);
@@ -386,14 +382,14 @@ static void e_chat_msg_ontab(EDIT *edit) {
 }
 
 void e_chat_msg_onenter(EDIT *edit) {
-    char *   text   = edit->data;
     uint16_t length = edit->length;
-
     if (length <= 0) {
         return;
     }
 
-    uint16_t command_length = 0; //, argument_length = 0;
+    char *text = edit->data;
+
+    uint16_t command_length = 0;
     char *   command = NULL, *argument = NULL;
 
     command_length = utox_run_command(text, length, &command, &argument, 1);
@@ -403,8 +399,6 @@ void e_chat_msg_onenter(EDIT *edit) {
         edit->length = 0;
         return;
     }
-
-    // LOG_NOTE("Group", "cmd %u\n", command_length);
 
     bool action = false;
     if (command_length) {
@@ -427,7 +421,6 @@ void e_chat_msg_onenter(EDIT *edit) {
     if (g) {
         void *d = malloc(length);
         if (!d) {
-            LOG_ERR("Layout Group", "edit_msg_onenter:\t Ran out of memory.");
             return;
         }
         memcpy(d, text, length);
@@ -454,7 +447,8 @@ static void e_chat_msg_onshifttab(EDIT *edit) {
             if (nick_length) {
                 completion.edited = 1;
                 if (!(nick_length == completion.end - completion.start - completion.spacing
-                      && !memcmp(nick, text + completion.start, nick_length))) {
+                      && !memcmp(nick, text + completion.start, nick_length)))
+                {
                     nick_completion_replace(edit, nick, nick_length);
                 }
                 edit_setcursorpos(edit, completion.end);
@@ -491,13 +485,11 @@ EDIT edit_chat_msg_group = {
 static void e_group_topic_onenter(EDIT *edit) {
     GROUPCHAT *g = flist_get_groupchat();
     if (!g) {
-        LOG_ERR("Layout Groups", "Can't set a topic when a group isn't selected!");
         return;
     }
 
     void *d = malloc(edit->length);
     if (!d){
-        LOG_ERR("Layout Groups", "Unable to change group topic.");
         return;
     }
     memcpy(d, edit->data, edit->length);
@@ -506,21 +498,21 @@ static void e_group_topic_onenter(EDIT *edit) {
 
 static char e_group_topic_data[1024];
 EDIT edit_group_topic = {
-    .data           = e_group_topic_data,
-    .maxlength      = sizeof e_group_topic_data - 1,
-    .onenter        = e_group_topic_onenter,
-    .onlosefocus    = e_group_topic_onenter,
-    .noborder       = false,
-    .empty_str      = {.plain = STRING_INIT("") },
+    .data        = e_group_topic_data,
+    .maxlength   = sizeof e_group_topic_data - 1,
+    .onenter     = e_group_topic_onenter,
+    .onlosefocus = e_group_topic_onenter,
+    .noborder    = false,
+    .empty_str   = {.plain = STRING_INIT("") },
 };
 
 void e_msg_onenter_group(EDIT *edit) {
-    char *text   = edit->data;
     uint16_t length = edit->length;
-
     if (length <= 0) {
         return;
     }
+
+    char *text   = edit->data;
 
     char *command = NULL, *argument = NULL;
     uint16_t command_length = utox_run_command(text, length, &command, &argument, 1);

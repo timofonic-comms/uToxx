@@ -1,4 +1,3 @@
-#include "../src/debug.h"
 #include "../src/settings.h"
 
 #include <assert.h>

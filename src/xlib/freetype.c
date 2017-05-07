@@ -3,8 +3,6 @@
 #include "main.h"
 #include "window.h"
 
-
-#include "../debug.h"
 #include "../macros.h"
 #include "../ui.h"
 
@@ -30,7 +28,6 @@ Picture loadglyphpic(uint8_t *data, int width, int height, int pitch, bool no_su
         XPutImage(display, pixmap, legc, img, 0, 0, 0, 0, width, height);
         picture = XRenderCreatePicture(display, pixmap, XRenderFindStandardFormat(display, PictStandardA8), 0, NULL);
     } else {
-
         uint32_t *rgbx, *p, *end;
 
         rgbx = malloc(4 * width * height);
@@ -126,7 +123,7 @@ GLYPH *font_getglyph(FONT *f, uint32_t ch) {
 
     if (!i->face) {
         uint32_t count = (uint32_t)(i - f->info);
-        i              = realloc(f->info, (count + 2) * sizeof(FONT_INFO));
+        i = realloc(f->info, (count + 2) * sizeof(FONT_INFO));
         if (!i) {
             return NULL;
         }
@@ -157,7 +154,6 @@ GLYPH *font_getglyph(FONT *f, uint32_t ch) {
 
         if (!i->face) {
             // something went wrong
-            LOG_TRACE("Freetype", "???" );
             return NULL;
         }
     }
@@ -255,7 +251,6 @@ GLYPH *font_getglyph(FONT *f, uint32_t ch) {
         no_subpixel = 0;
     }
 
-    // LOG_TRACE("Freetype", "%u %u %u %u %C" , PIXELS(i->face->size->metrics.height), g->width, g->height, p->bitmap.pitch, ch);
     g->pic = loadglyphpic(p->bitmap.buffer, g->width, g->height, p->bitmap.pitch, no_subpixel, vert, ft_swap_blue_red);
 
     return g;
@@ -264,7 +259,6 @@ GLYPH *font_getglyph(FONT *f, uint32_t ch) {
 void initfonts(void) {
     if (!FcInit()) {
         // error
-        LOG_ERR("Freetype", "FcInit failed.");
     }
 
     FT_Init_FreeType(&ftlib);
@@ -279,82 +273,23 @@ void initfonts(void) {
     FcPatternDestroy(pat);
 }
 
-/*static void default_sub(FcPattern *pattern)
-{
-    //this is actually mostly useless
-    //FcValue   v;
-    //double    dpi;
-
-    //FcPatternAddBool (pattern, XFT_RENDER, XftDefaultGetBool (dpy, XFT_RENDER, screen, XftDefaultHasRender (dpy)));
-    FcPatternAddBool (pattern, FC_ANTIALIAS, True);
-    FcPatternAddBool (pattern, FC_EMBOLDEN, False);
-    FcPatternAddBool (pattern, FC_HINTING, True);
-    FcPatternAddInteger (pattern, FC_HINT_STYLE, FC_HINT_FULL);
-    FcPatternAddBool (pattern, FC_AUTOHINT, False);
-
-    int subpixel = FC_RGBA_UNKNOWN;
-    //if (XftDefaultHasRender (dpy))
-    {
-        int render_order = XRenderQuerySubpixelOrder (display, screen);
-        switch (render_order) {
-        default:
-        case SubPixelUnknown:   subpixel = FC_RGBA_UNKNOWN; break;
-        case SubPixelHorizontalRGB: subpixel = FC_RGBA_RGB; break;
-        case SubPixelHorizontalBGR: subpixel = FC_RGBA_BGR; break;
-        case SubPixelVerticalRGB:   subpixel = FC_RGBA_VRGB; break;
-        case SubPixelVerticalBGR:   subpixel = FC_RGBA_VBGR; break;
-        case SubPixelNone:      subpixel = FC_RGBA_NONE; break;
-        }
-    }
-
-    FcPatternAddInteger (pattern, FC_RGBA, subpixel);
-    FcPatternAddInteger (pattern, FC_LCD_FILTER, FC_LCD_DEFAULT);
-    FcPatternAddBool (pattern, FC_MINSPACE, False);
-
-    //dpi = (((double) DisplayHeight (dpy, screen) * 25.4) / (double) DisplayHeightMM (dpy, screen));
-    //FcPatternAddDouble (pattern, FC_DPI, dpi);
-    FcPatternAddDouble (pattern, FC_SCALE, 1.0);
-    //FcPatternAddInteger (pattern, XFT_MAX_GLYPH_MEMORY, XftDefaultGetInteger (dpy, XFT_MAX_GLYPH_MEMORY, screen,
-XFT_FONT_MAX_GLYPH_MEMORY));
-
-    FcDefaultSubstitute (pattern);
-}*/
-
 static void font_info_open(FONT_INFO *i, FcPattern *pattern) {
     uint8_t * filename;
     int       id = 0;
     double    size;
     FcMatrix *font_matrix;
-    /*FT_Matrix matrix = {
-        .xx = 0x10000,
-        .xy = 0,
-        .yx = 0,
-        .yy = 0x10000,
-    };*/
 
     FcPatternGetString(pattern, FC_FILE, 0, &filename);
     FcPatternGetInteger(pattern, FC_INDEX, 0, &id);
     FcPatternGetCharSet(pattern, FC_CHARSET, 0, &i->cs);
-    if (FcPatternGetMatrix(pattern, FC_MATRIX, 0, &font_matrix) == FcResultMatch) {
-        LOG_TRACE("Freetype", "has a matrix" );
-    }
-
+    FcPatternGetMatrix(pattern, FC_MATRIX, 0, &font_matrix);
     FcPatternGetDouble(pattern, FC_PIXEL_SIZE, 0, &size);
 
-    int ft_error = FT_New_Face(ftlib, (char *)filename, id, &i->face);
-
-    if (ft_error != 0) {
-        LOG_TRACE("Freetype", "Freetype error %u %s %i" , ft_error, filename, id);
+    if (FT_New_Face(ftlib, (char *)filename, id, &i->face) != 0) {
         return;
     }
 
-    ft_error = FT_Set_Char_Size(i->face, (size * 64.0 + 0.5), (size * 64.0 + 0.5), 0, 0);
-    if (ft_error != 0) {
-        LOG_TRACE("Freetype", "Freetype error %u %lf" , ft_error, size);
-        return;
-    }
-
-    // LOG_TRACE("Freetype", "Loaded font %s %u %i %i" , filename, id, PIXELS(i->face->ascender), PIXELS(i->face->descender));
+    FT_Set_Char_Size(i->face, (size * 64.0 + 0.5), (size * 64.0 + 0.5), 0, 0);
 }
 
 static bool font_open(FONT *a_font, ...) {
@@ -388,12 +323,10 @@ void loadfonts(void) {
     int render_order = XRenderQuerySubpixelOrder(display, def_screen_num);
     if (render_order == SubPixelHorizontalBGR || render_order == SubPixelVerticalBGR) {
         ft_swap_blue_red = 1;
-        LOG_TRACE("Freetype", "ft_swap_blue_red" );
     }
 
     if (render_order == SubPixelVerticalBGR || render_order == SubPixelVerticalRGB) {
         ft_vert = 1;
-        LOG_TRACE("Freetype", "ft_vert" );
     }
 
     font_open(&font[FONT_TEXT], FC_FAMILY, FcTypeString, UTOX_FONT_XLIB, FC_PIXEL_SIZE, FcTypeDouble, UI_FSCALE(12.0),
@@ -410,14 +343,8 @@ void loadfonts(void) {
     font_open(&font[FONT_LIST_NAME], FC_FAMILY, FcTypeString, UTOX_FONT_XLIB, FC_PIXEL_SIZE, FcTypeDouble, UI_FSCALE(12.0),
               FC_WEIGHT, FcTypeInteger, FC_WEIGHT_NORMAL, FC_SLANT, FcTypeInteger, FC_SLANT_ROMAN, NULL);
 
-    // font_open(&font[FONT_MSG],      FC_FAMILY, FcTypeString, UTOX_FONT_XLIB, FC_PIXEL_SIZE, FcTypeDouble, UI_FSCALE(11.0),
-    //           FC_WEIGHT, FcTypeInteger, FC_WEIGHT_LIGHT,  NULL);
-    // font_open(&font[FONT_MSG_NAME], FC_FAMILY, FcTypeString, UTOX_FONT_XLIB, FC_PIXEL_SIZE, FcTypeDouble, UI_FSCALE(10.0),
-    // FC_WEIGHT, FcTypeInteger, FC_WEIGHT_LIGHT,  NULL);
     font_open(&font[FONT_MISC], FC_FAMILY, FcTypeString, UTOX_FONT_XLIB, FC_PIXEL_SIZE, FcTypeDouble, UI_FSCALE(10.0),
               FC_WEIGHT, FcTypeInteger, FC_WEIGHT_NORMAL, FC_SLANT, FcTypeInteger, FC_SLANT_ROMAN, NULL);
-    // font_open(&font[FONT_MSG_LINK], FC_FAMILY, FcTypeString, UTOX_FONT_XLIB, FC_PIXEL_SIZE, FcTypeDouble, UI_FSCALE(11.0),
-    //           FC_WEIGHT, FcTypeInteger, FC_WEIGHT_LIGHT,  NULL);
 }
 
 void freefonts(void) {

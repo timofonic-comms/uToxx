@@ -6,29 +6,25 @@
 
 #include "main.h"
 
-#include "../main.h"
-
 #include "../chatlog.h"
-#include "../debug.h"
 #include "../file_transfers.h"
 #include "../filesys.h"
 #include "../friend.h"
+#include "../main.h"
 #include "../settings.h"
 #include "../tox.h"
 
-#include <shlobj.h>
 #include <io.h>
+#include <shlobj.h>
 
 void native_export_chatlog_init(uint32_t friend_number) {
     char *path = calloc(1, UTOX_FILE_NAME_LENGTH);
     if (!path){
-        LOG_ERR("SelectDir", " Could not allocate memory." );
         return;
     }
 
     FRIEND *f = get_friend(friend_number);
     if (!f) {
-        LOG_ERR("Windows7", "Could not get friend with number: %u", friend_number);
         return;
     }
 
@@ -47,18 +43,13 @@ void native_export_chatlog_init(uint32_t friend_number) {
         FILE *file = fopen(path, "wb");
         if (file) {
             utox_export_chatlog(f->id_str, file);
-        } else {
-            LOG_ERR("Windows7", "Opening file %s failed", path);
         }
-    } else {
-        LOG_ERR("Windows7", "Unable to open file and export chatlog.");
     }
 }
 
 void native_select_dir_ft(uint32_t fid, uint32_t num, FILE_TRANSFER *file) {
     char *path = calloc(1, UTOX_FILE_NAME_LENGTH);
     if (!path) {
-        LOG_ERR("SelectDir", "Could not allocate memory for path.");
         return;
     }
 
@@ -73,8 +64,6 @@ void native_select_dir_ft(uint32_t fid, uint32_t num, FILE_TRANSFER *file) {
 
     if (GetSaveFileName(&ofn)) {
         postmessage_toxcore(TOX_FILE_ACCEPT, fid, num, path);
-    } else {
-        LOG_ERR("Windows7", "Unable to Get save file for incoming FT.");
     }
 }
 
@@ -90,8 +79,8 @@ void native_autoselect_dir_ft(uint32_t fid, FILE_TRANSFER *file) {
 
         swprintf(autoaccept_folder, UTOX_FILE_NAME_LENGTH, L"%ls", tmp);
     } else if (SHGetKnownFolderPath((REFKNOWNFOLDERID)&FOLDERID_Downloads,
-                                    KF_FLAG_CREATE, NULL, &autoaccept_folder) != S_OK) {
-        LOG_ERR("Windows7", "Unable to get auto accept file folder!");
+                                    KF_FLAG_CREATE, NULL, &autoaccept_folder) != S_OK)
+    {
         return;
     }
 
@@ -120,8 +109,6 @@ void native_autoselect_dir_ft(uint32_t fid, FILE_TRANSFER *file) {
 
     if (f) {
         postmessage_toxcore(TOX_FILE_ACCEPT_AUTO, fid, file->file_number, f);
-    } else {
-        LOG_ERR("Windows7", "Unable to save autoaccepted ft to %ls", fullpath);
     }
 }
 
@@ -140,19 +127,12 @@ void launch_at_startup(bool should) {
 
             // 2 bytes per wchar_t
             uint16_t ret = RegSetKeyValueW(hKey, NULL, L"uTox", REG_SZ, path, path_length * 2);
-            if (ret != ERROR_SUCCESS) {
-                LOG_ERR("Windows7", "Unable to set Registry key for startup.");
-            }
-
             RegCloseKey(hKey);
         }
     } else {
         HKEY hKey;
         if (ERROR_SUCCESS == RegOpenKeyW(HKEY_CURRENT_USER, run_key_path, &hKey)) {
             uint16_t ret = RegDeleteKeyValueW(hKey, NULL, L"uTox");
-            if (ret == ERROR_SUCCESS) {
-                LOG_ERR("Windows7", "Unable to delete Registry key for startup.");
-            }
             RegCloseKey(hKey);
         }
     }

@@ -7,11 +7,11 @@
 #include "window.h"
 
 #include "../avatar.h"
-#include "../debug.h"
 #include "../filesys.h"
 #include "../flist.h"
 #include "../friend.h"
 #include "../macros.h"
+#include "../main.h" // STBI
 #include "../settings.h"
 #include "../text.h"
 #include "../theme.h"
@@ -21,18 +21,17 @@
 
 #include "../av/utox_av.h"
 
-#include "../native/image.h"
-#include "../native/ui.h"
-
-#include "../ui/draw.h"
-#include "../ui/edit.h"
-
 #include "../layout/background.h"
 #include "../layout/friend.h"
 #include "../layout/group.h"
 #include "../layout/settings.h"
 
-#include "../main.h" // STBI
+#include "../native/image.h"
+#include "../native/ui.h"
+
+#include "../ui/draw.h"
+#include "../ui/dropdown.h" // this is for dropdown.language TODO provide API
+#include "../ui/edit.h"
 
 #include <ctype.h>
 #include <locale.h>
@@ -72,7 +71,7 @@ void postmessage_utox(UTOX_MSG msg, uint16_t param1, uint16_t param2, void *data
 
 FILE    *ptt_keyboard_handle;
 Display *ptt_display;
-void     init_ptt(void) {
+void init_ptt(void) {
     settings.push_to_talk = 1;
 
     char path[UTOX_FILE_NAME_LENGTH];
@@ -80,7 +79,6 @@ void     init_ptt(void) {
 
     ptt_keyboard_handle = fopen((const char *)path, "r");
     if (!ptt_keyboard_handle) {
-        LOG_TRACE("XLIB", "Could not access ptt-kbd in data directory" );
         ptt_display = XOpenDisplay(0);
         XSynchronize(ptt_display, True);
     }
@@ -103,12 +101,9 @@ static bool linux_check_ptt(void) {
         int mask = 1 << (ptt_key % 8);   // Put 1 in the same column as our key state
 
         if (keyb & mask) {
-            LOG_TRACE("XLIB", "PTT key is down" );
             return true;
-        } else {
-            LOG_TRACE("XLIB", "PTT key is up" );
-            return false;
         }
+        return false;
     }
     /* Okay nope, lets' fallback to xinput... *pouts*
      * Fall back to Querying the X for the current keymap. */
@@ -118,16 +113,11 @@ static bool linux_check_ptt(void) {
     if (ptt_display) {
         XQueryKeymap(ptt_display, keys);
         if (keys[ptt_key / 8] & (0x1 << (ptt_key % 8))) {
-            LOG_TRACE("XLIB", "PTT key is down (according to XQueryKeymap" );
             return true;
-        } else {
-            LOG_TRACE("XLIB", "PTT key is up (according to XQueryKeymap" );
-            return false;
         }
+        return false;
     }
     /* Couldn't access the keyboard directly, and XQuery failed, this is really bad! */
-    LOG_ERR("XLIB", "Unable to access keyboard, you need to read the manual on how to enable utox to\nhave access to your "
-                "keyboard.\nDisable push to talk to suppress this message.\n");
     return false;
 }
 #else
@@ -138,7 +128,6 @@ static bool bsd_check_ptt(void) {
 
 bool check_ptt_key(void) {
     if (!settings.push_to_talk) {
-        // LOG_TRACE("XLIB", "PTT is disabled" );
         return true; /* If push to talk is disabled, return true. */
     }
 
@@ -175,7 +164,7 @@ void image_set_filter(NATIVE_IMAGE *image, uint8_t filter) {
     switch (filter) {
         case FILTER_NEAREST: xfilter  = FilterNearest; break;
         case FILTER_BILINEAR: xfilter = FilterBilinear; break;
-        default: LOG_TRACE("XLIB", "Warning: Tried to set image to unrecognized filter(%u)." , filter); return;
+        default:  return;
     }
     XRenderSetPictureFilter(display, image->rgb, xfilter, NULL, 0);
     if (image->alpha) {
@@ -266,7 +255,6 @@ void copy(int value) {
     } else if (flist_get_groupchat()) {
         len = messages_selection(&messages_group, clipboard.data, sizeof(clipboard.data), value);
     } else {
-        LOG_ERR("XLIB", "Copy from Unsupported flist type.");
         return;
     }
 
@@ -276,13 +264,7 @@ void copy(int value) {
     }
 }
 
-int hold_x11s_hand(Display *UNUSED(d), XErrorEvent *event) {
-    LOG_ERR("XLIB", "X11 err:\tX11 tried to kill itself, so I hit him with a shovel.");
-    LOG_ERR("XLIB", "    err:\tResource: %lu || Serial %lu", event->resourceid, event->serial);
-    LOG_ERR("XLIB", "    err:\tError code: %u || Request: %u || Minor: %u",
-        event->error_code, event->request_code, event->minor_code);
-    LOG_ERR("uTox", "This would be a great time to submit a bug!");
-
+int hold_x11s_hand(Display *UNUSED(d), XErrorEvent *UNUSED(event)) {
     return 0;
 }
 
@@ -315,18 +297,14 @@ void pastebestformat(const Atom atoms[], size_t len, Atom selection) {
     const Atom supported[] = { XA_PNG_IMG, XA_URI_LIST, XA_UTF8_STRING };
     size_t i, j;
     for (i = 0; i < len; i++) {
-        char *name = XGetAtomName(display, atoms[i]);
-        if (name) {
-            LOG_TRACE("XLIB", "Supported type: %s" , name);
-        } else {
-            LOG_TRACE("XLIB", "Unsupported type!!: Likely a bug, please report!" );
-        }
+        XGetAtomName(display, atoms[i]);
     }
 
     for (i = 0; i < len; i++) {
         for (j = 0; j < COUNTOF(supported); j++) {
             if (atoms[i] == supported[j]) {
-                XConvertSelection(display, selection, supported[j], targets, main_window.window, CurrentTime);
+                XConvertSelection(display, selection, supported[j], targets,
+                                  main_window.window, CurrentTime);
                 return;
             }
         }
@@ -341,7 +319,8 @@ static bool ishexdigit(char c) {
 static char hexdecode(char upper, char lower) {
     upper = toupper(upper);
     lower = toupper(lower);
-    return (upper >= 'A' ? upper - 'A' + 10 : upper - '0') * 16 + (lower >= 'A' ? lower - 'A' + 10 : lower - '0');
+    return (upper >= 'A' ? upper - 'A' + 10 : upper - '0') * 16
+           + (lower >= 'A' ? lower - 'A' + 10 : lower - '0');
 }
 
 void formaturilist(char *out, const char *in, size_t len) {
@@ -368,25 +347,20 @@ void formaturilist(char *out, const char *in, size_t len) {
     // out[len - removed - 1] = '\n';
 }
 
-// TODO(robinli): Go over this function and see if either len or size are removeable.
 void pastedata(void *data, Atom type, size_t len, bool select) {
 
     size_t size = len;
     if (type == XA_PNG_IMG) {
         FRIEND *f = flist_get_friend();
         if (!f) {
-            LOG_ERR("XLIB", "Can't paste data to missing friend.");
             return;
         }
         uint16_t width, height;
 
         NATIVE_IMAGE *native_image = utox_image_to_native(data, size, &width, &height, 0);
         if (NATIVE_IMAGE_IS_VALID(native_image)) {
-            LOG_INFO("XLIB MAIN", "Pasted image: %dx%d", width, height);
-
             UTOX_IMAGE png_image = malloc(size);
             if (!png_image){
-                LOG_ERR("XLIB", "Could not allocate memory for an image");
                 return;
             }
 
@@ -396,12 +370,10 @@ void pastedata(void *data, Atom type, size_t len, bool select) {
     } else if (type == XA_URI_LIST) {
         FRIEND *f = flist_get_friend();
         if (!f) {
-            LOG_ERR("XLIB", "Can't paste data to missing friend.");
             return;
         }
         char *path = malloc(len + 1);
         if (!path) {
-            LOG_ERR("XLIB", "Could not allocate memory for path.");
             return;
         }
         formaturilist(path, (char *)data, len);
@@ -418,7 +390,7 @@ Picture ximage_to_picture(XImage *img, const XRenderPictFormat *format) {
     GC     legc   = XCreateGC(display, pixmap, 0, NULL);
     XPutImage(display, pixmap, legc, img, 0, 0, 0, 0, img->width, img->height);
 
-    if (format == NULL) {
+    if (!format) {
         format = XRenderFindVisualFormat(display, default_visual);
     }
     Picture picture = XRenderCreatePicture(display, pixmap, format, 0, NULL);
@@ -431,7 +403,6 @@ Picture ximage_to_picture(XImage *img, const XRenderPictFormat *format) {
 
 void loadalpha(int bm, void *data, int width, int height) {
     if (bm < 0){
-        LOG_ERR("XLIB", "Can not get object from array. Index %d", bm);
         return;
     }
 
@@ -457,7 +428,7 @@ static Picture generate_alpha_bitmask(const uint8_t *rgba_data, uint16_t width, 
     }
 
     // create 1-byte-per-pixel image and convert it to a Alpha-format Picture
-    XImage *img     = XCreateImage(display, CopyFromParent, 8, ZPixmap, 0, (char *)out, width, height, 8, width);
+    XImage *img = XCreateImage(display, CopyFromParent, 8, ZPixmap, 0, (char *)out, width, height, 8, width);
     Picture picture = ximage_to_picture(img, XRenderFindStandardFormat(display, PictStandardA8));
 
     XDestroyImage(img);
@@ -481,11 +452,11 @@ static void native_color_mask(uint8_t *data, uint32_t size, uint32_t mask_red, u
 }
 
 NATIVE_IMAGE *utox_image_to_native(const UTOX_IMAGE data, size_t size, uint16_t *w, uint16_t *h, bool keep_alpha) {
-    int      width, height, bpp;
+    int width, height, bpp;
     uint8_t *rgba_data = stbi_load_from_memory(data, size, &width, &height, &bpp, 4);
     // we don't need to free this, that's done by XDestroyImage()
 
-    if (rgba_data == NULL || width == 0 || height == 0) {
+    if (!rgba_data || !width || !height) {
         return None; // invalid png data
     }
 
@@ -501,8 +472,7 @@ NATIVE_IMAGE *utox_image_to_native(const UTOX_IMAGE data, size_t size, uint16_t 
     *h = height;
 
     NATIVE_IMAGE *image = malloc(sizeof(NATIVE_IMAGE));
-    if (image == NULL) {
-        LOG_ERR("utox_image_to_native", "Could mot allocate memory for image." );
+    if (!image) {
         return NULL;
     }
     image->rgb   = rgb;
@@ -678,19 +648,13 @@ static void cursors_init(void) {
     cursors[CURSOR_ZOOM_OUT] = XCreateFontCursor(display, XC_target);
 }
 
-#include "../ui/dropdown.h" // this is for dropdown.language TODO provide API
 int main(int argc, char *argv[]) {
     if (!XInitThreads()) {
-        LOG_FATAL_ERR(EXIT_FAILURE, "XLIB MAIN", "XInitThreads failed.");
-    }
+        exit(1);    }
     if (!native_window_init()) {
         return 2;
     }
     initfonts();
-
-    #ifdef HAVE_DBUS
-    LOG_INFO("XLIB MAIN", "Compiled with dbus support!");
-    #endif
 
     int8_t should_launch_at_startup;
     int8_t set_show_window;
@@ -703,17 +667,6 @@ int main(int argc, char *argv[]) {
     // We need to parse_args before calling utox_init()
     utox_init();
 
-
-    if (should_launch_at_startup == 1 || should_launch_at_startup == -1) {
-        LOG_NOTE("XLIB", "Start on boot not supported on this OS, please use your distro suggested method!\n");
-    }
-
-    if (skip_updater == true) {
-        LOG_ERR("XLIB", "Disabling the updater is not supported on this OS. "
-                        "Updates are managed by your distro's package manager.\n");
-    }
-
-    LOG_INFO("XLIB MAIN", "Setting theme to:\t%d", settings.theme);
     theme_load(settings.theme);
 
     XSetErrorHandler(hold_x11s_hand);
@@ -722,7 +675,6 @@ int main(int argc, char *argv[]) {
     setlocale(LC_ALL, "");
     XSetLocaleModifiers("");
     if ((xim = XOpenIM(display, 0, 0, 0)) == NULL) {
-        LOG_ERR("XLIB", "Cannot open input method");
     }
 
     atom_init();
@@ -776,7 +728,6 @@ int main(int argc, char *argv[]) {
     /* Xft draw context/color */
     main_window.renderpic = XRenderCreatePicture(display, main_window.drawbuf, main_window.pictformat, 0, NULL);
 
-
     XRenderColor xrcolor = { 0,0,0,0 };
     main_window.colorpic = XRenderCreateSolidFill(display, &xrcolor);
 
@@ -800,7 +751,6 @@ int main(int argc, char *argv[]) {
                              XNFocusWindow, main_window.window, NULL))) {
             XSetICFocus(xic);
         } else {
-            LOG_ERR("XLIB", "Cannot open input method");
             XCloseIM(xim);
             xim = 0;
         }
@@ -853,8 +803,8 @@ int main(int argc, char *argv[]) {
 
     destroy_tray_icon();
 
-    Window       root_return, child_return;
-    int          x_return, y_return;
+    Window root_return, child_return;
+    int x_return, y_return;
     unsigned int width_return, height_return, i;
     XGetGeometry(display, main_window.window, &root_return, &x_return, &y_return, &width_return, &height_return, &i, &i);
 

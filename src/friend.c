@@ -2,7 +2,6 @@
 
 #include "avatar.h"
 #include "chatlog.h"
-#include "debug.h"
 #include "dns.h"
 #include "filesys.h"
 #include "flist.h"
@@ -22,13 +21,13 @@
 
 #include "ui/edit.h"        // friend_set_name()
 
+#include <stdlib.h>
 #include <string.h>
 
 static FRIEND *friend = NULL;
 
 FRIEND *get_friend(uint32_t friend_number) {
     if (friend_number >= self.friend_list_size) { //friend doesnt exist if true
-        LOG_WARN("Friend", "Friend number (%u) out of bounds.", friend_number);
         return NULL;
     }
 
@@ -37,17 +36,14 @@ FRIEND *get_friend(uint32_t friend_number) {
 
 static FRIEND *friend_make(uint32_t friend_number) {
     if (friend_number >= self.friend_list_size) {
-        LOG_INFO("Friend", "Reallocating friend array to %u. Current size: %u", (friend_number + 1), self.friend_list_size);
         FRIEND *tmp = realloc(friend, sizeof(FRIEND) * (friend_number + 1));
         if (!tmp) {
-            LOG_ERR("Friend", "Could not reallocate friends array.");
             return NULL;
         }
 
         friend = tmp;
 
         self.friend_list_size = friend_number + 1;
-
     }
 
     // TODO should we memset(0); before return?
@@ -59,7 +55,6 @@ static uint16_t frequest_list_size = 0;
 
 FREQUEST *get_frequest(uint16_t frequest_number) {
     if (frequest_number >= frequest_list_size) { //frequest doesnt exist if true
-        LOG_ERR("Friend", "Request number out of bounds.");
         return NULL;
     }
 
@@ -68,11 +63,9 @@ FREQUEST *get_frequest(uint16_t frequest_number) {
 
 static FREQUEST *frequest_make(uint16_t frequest_number) {
     if (frequest_number >= frequest_list_size) {
-        LOG_INFO("Friend", "Reallocating frequest array to %u. Current size: %u", (frequest_number + 1), frequest_list_size);
-        FREQUEST *tmp = realloc(frequests, sizeof(FREQUEST) * (frequest_number + 1));
+                FREQUEST *tmp = realloc(frequests, sizeof(FREQUEST) * (frequest_number + 1));
         if (!tmp) {
-            LOG_ERR("Friend", "Could not reallocate frequests array.");
-            return NULL;
+                        return NULL;
         }
 
         frequests = tmp;
@@ -87,7 +80,6 @@ uint16_t friend_request_new(const uint8_t *id, const uint8_t *msg, size_t length
     uint16_t curr_num = frequest_list_size;
     FREQUEST *r = frequest_make(frequest_list_size); // TODO search for empty request slots
     if (!r) {
-        LOG_ERR("Friend", "Unable to get space for Friend Request.");
         return UINT16_MAX;
     }
 
@@ -95,7 +87,6 @@ uint16_t friend_request_new(const uint8_t *id, const uint8_t *msg, size_t length
     memcpy(r->bin_id, id, TOX_ADDRESS_SIZE);
     r->msg = malloc(length + 1);
     if (!r->msg) {
-        LOG_ERR("Friend", "Unable to get space for friend request message.");
         return UINT16_MAX;
     }
     memcpy(r->msg, msg, length);
@@ -108,7 +99,6 @@ uint16_t friend_request_new(const uint8_t *id, const uint8_t *msg, size_t length
 void friend_request_free(uint16_t number) {
     FREQUEST *r = get_frequest(number);
     if (!r) {
-        LOG_ERR("Friend", "Unable to free a missing request.");
         return;
     }
 
@@ -130,7 +120,6 @@ void free_friends(void) {
     for (uint32_t i = 0; i < self.friend_list_count; i++){
         FRIEND *f = get_friend(i);
         if (!f) {
-            LOG_WARN("Friend", "Could not get friend %u. Skipping", i);
             continue;
         }
         friend_free(f);
@@ -148,9 +137,7 @@ void utox_write_metadata(FRIEND *f) {
 
     FILE *file = utox_get_file(dest, NULL, UTOX_FILE_OPTS_WRITE);
     if (file) {
-
-        FRIEND_META_DATA metadata;
-        memset(&metadata, 0, sizeof(metadata));
+        FRIEND_META_DATA metadata = { 0 };
         size_t total_size = sizeof(metadata);
 
         metadata.version          = METADATA_VERSION;
@@ -184,13 +171,11 @@ static void friend_meta_data_read(FRIEND *f) {
     FILE *file = utox_get_file(path, &size, UTOX_FILE_OPTS_READ);
 
     if (!file) {
-        LOG_TRACE("Friend", "Meta Data not found %s", path);
         return;
     }
 
     FRIEND_META_DATA *metadata = calloc(1, sizeof(*metadata) + size);
     if (!metadata) {
-        LOG_ERR("Metadata", "Could not allocate memory for metadata." );
         fclose(file);
         return;
     }
@@ -198,20 +183,10 @@ static void friend_meta_data_read(FRIEND *f) {
     bool read_meta = fread(metadata, size, 1, file);
     fclose(file);
 
-    if (!read_meta) {
-        LOG_ERR("Metadata", "Failed to read metadata from disk.");
-        free(metadata);
-        return;
-    }
-
-    if (metadata->version != 0) {
-        LOG_ERR("Metadata", "WARNING! This version of utox does not support this metadata file version." );
-        free(metadata);
-        return;
-    }
-
-    if (size < sizeof(*metadata)) {
-        LOG_ERR("Metadata", "Meta Data was incomplete");
+    if (!read_meta
+        || metadata->version != 0
+        || size < sizeof(*metadata))
+    {
         free(metadata);
         return;
     }
@@ -229,12 +204,11 @@ static void friend_meta_data_read(FRIEND *f) {
 }
 
 void utox_friend_init(Tox *tox, uint32_t friend_number) {
-    LOG_INFO("Friend", "Initializing friend: %u", friend_number);
     FRIEND *f = friend_make(friend_number); // get friend pointer
     if (!f) {
-        LOG_ERR("Friend", "Could not create init friend %u", friend_number);
         return;
     }
+
     self.friend_list_count++;
 
     uint8_t name[TOX_MAX_NAME_LENGTH];
@@ -288,19 +262,16 @@ void utox_friend_init(Tox *tox, uint32_t friend_number) {
 }
 
 void utox_friend_list_init(Tox *tox) {
-    LOG_INFO("Friend", "Initializing friend list.");
-
     self.friend_list_size = tox_self_get_friend_list_size(tox);
 
     friend = calloc(self.friend_list_size, sizeof(FRIEND));
     if (!friend) {
-        LOG_FATAL_ERR(EXIT_MALLOC, "Friend", "Could not allocate friend list with size: %u", self.friend_list_size);
+        exit(1);
     }
 
     for (uint32_t i = 0; i < self.friend_list_size; ++i) {
         utox_friend_init(tox, i);
     }
-    LOG_INFO("Friend", "Friendlist sucessfully initialized with %u friends.", self.friend_list_size);
 }
 
 void friend_setname(FRIEND *f, uint8_t *name, size_t length) {
@@ -308,9 +279,16 @@ void friend_setname(FRIEND *f, uint8_t *name, size_t length) {
         size_t size = sizeof(" is now known as ") + f->name_length + length;
 
         char *p = calloc(1, size);
-        size = snprintf(p, size, "%.*s is now known as %.*s", (int)f->name_length, f->name, (int)length, name);
+        if (!p) {
+            return;
+        }
 
-        if (length != f->name_length || memcmp(f->name, name, (length < f->name_length ? length : f->name_length))) {
+        size = snprintf(p, size, "%.*s is now known as %.*s", (int)f->name_length,
+                        f->name, (int)length, name);
+
+        if (length != f->name_length
+            || memcmp(f->name, name, (length < f->name_length ? length : f->name_length)))
+        {
             message_add_type_notice(&f->msg, p, size, 1);
         }
 
@@ -318,7 +296,7 @@ void friend_setname(FRIEND *f, uint8_t *name, size_t length) {
         free(p);
     }
 
-    if (length == 0) {
+    if (!length) {
         f->name = calloc(1, sizeof(f->cid) * 2 + 1);
         cid_to_string(f->name, f->cid);
         f->name_length = sizeof(f->cid) * 2;
@@ -334,11 +312,12 @@ void friend_setname(FRIEND *f, uint8_t *name, size_t length) {
         if (flist_get_type()== ITEM_FRIEND) {
             FRIEND *selected = flist_get_friend();
             if (!selected) {
-                LOG_ERR("Friend", "Unable to get selected friend.");
                 return;
             }
+
             if (selected && f->number == selected->number) {
-                maybe_i18nal_string_set_plain(&edit_friend_alias.empty_str, f->name, f->name_length);
+                maybe_i18nal_string_set_plain(&edit_friend_alias.empty_str, f->name,
+                                              f->name_length);
             }
         }
     }
@@ -347,15 +326,8 @@ void friend_setname(FRIEND *f, uint8_t *name, size_t length) {
 }
 
 void friend_set_alias(FRIEND *f, uint8_t *alias, uint16_t length) {
-    if (length > 0) {
-        if (!alias) {
-            LOG_ERR("Friend Alias", "Got alias length, but no alias.");
-            return;
-        }
-
-        LOG_TRACE("Friend", "New Alias set for friend %s." , f->name);
-    } else {
-        LOG_TRACE("Friend", "Alias for friend %s unset." , f->name);
+    if (length > 0 && !alias) {
+        return;
     }
 
     free(f->alias);
@@ -365,7 +337,6 @@ void friend_set_alias(FRIEND *f, uint8_t *alias, uint16_t length) {
     } else {
         f->alias = calloc(1, length + 1);
         if (!f->alias) {
-            LOG_ERR("Friend", "Unable to malloc for alias set for friend %s.");
             return;
         }
 
@@ -374,11 +345,11 @@ void friend_set_alias(FRIEND *f, uint8_t *alias, uint16_t length) {
     }
 }
 
-void friend_sendimage(FRIEND *f, NATIVE_IMAGE *native_image, uint16_t width, uint16_t height, UTOX_IMAGE png_image,
-                      size_t png_size) {
+void friend_sendimage(FRIEND *f, NATIVE_IMAGE *native_image, uint16_t width, uint16_t height,
+                      UTOX_IMAGE png_image, size_t png_size)
+{
     struct TOX_SEND_INLINE_MSG *tsim = malloc(sizeof(struct TOX_SEND_INLINE_MSG));
     if (!tsim) {
-        LOG_ERR("Friend", "Unable to malloc for inline image.");
         return;
     }
 
@@ -400,13 +371,14 @@ void friend_recvimage(FRIEND *f, NATIVE_IMAGE *native_image, uint16_t width, uin
 void friend_notify_msg(FRIEND *f, const char *msg, size_t msg_length) {
     char title[UTOX_FRIEND_NAME_LENGTH(f) + 25];
 
-    size_t title_length = snprintf((char *)title, UTOX_FRIEND_NAME_LENGTH(f) + 25, "uTox new message from %.*s",
-                                   (int)UTOX_FRIEND_NAME_LENGTH(f), UTOX_FRIEND_NAME(f));
+    size_t title_length = snprintf((char *)title, UTOX_FRIEND_NAME_LENGTH(f) + 25,
+                                   "uTox new message from %.*s", (int)UTOX_FRIEND_NAME_LENGTH(f),
+                                   UTOX_FRIEND_NAME(f));
 
     postmessage_utox(FRIEND_MESSAGE, f->number, 0, NULL);
     notify(title, title_length, msg, msg_length, f, 0);
 
-    f->unread_msg = 1;
+    f->unread_msg = true;
     postmessage_audio(UTOXAUDIO_PLAY_NOTIFICATION, NOTIFY_TONE_FRIEND_NEW_MSG, 0, NULL);
 }
 
@@ -433,7 +405,6 @@ void friend_set_typing(FRIEND *f, int typing) {
 void friend_addid(uint8_t *id, char *msg, uint16_t msg_length) {
     char *data = malloc(TOX_ADDRESS_SIZE + msg_length);
     if (!data) {
-        LOG_ERR("Friend", "Unable to malloc for friend request.");
         return;
     }
 
@@ -476,7 +447,6 @@ void friend_add(char *name, uint16_t length, char *msg, uint16_t msg_length) {
 
 void friend_history_clear(FRIEND *f) {
     if (!f) {
-        LOG_ERR("FList", "Unable to clear history for missing friend.");
         return;
     }
     messages_clear_all(&f->msg);
@@ -484,8 +454,7 @@ void friend_history_clear(FRIEND *f) {
 }
 
 void friend_free(FRIEND *f) {
-    LOG_INFO("Friend", "Freeing friend: %u", f->number);
-    for (uint16_t i = 0; i < f->edit_history_length; ++i) {
+        for (uint16_t i = 0; i < f->edit_history_length; ++i) {
         free(f->edit_history[i]);
         f->edit_history[i] = NULL;
     }
@@ -500,15 +469,8 @@ void friend_free(FRIEND *f) {
         MSG_HEADER *msg = f->msg.data[i];
         message_free(msg);
     }
-    free(f->msg.data);
 
-    if (f->call_state_self) {
-        // postmessage_audio(AUDIO_END, f->number, 0, NULL);
-        /* TODO end a video call too!
-        if(f->calling == CALL_OK_VIDEO) {
-            postmessage_video(VIDEO_CALL_END, f->number, 0, NULL);
-        }*/
-    }
+    free(f->msg.data);
 
     memset(f, 0, sizeof(FRIEND));
     self.friend_list_count--;
@@ -518,12 +480,13 @@ FRIEND *find_friend_by_name(uint8_t *name) {
     for (size_t i = 0; i < self.friend_list_count; i++) {
         FRIEND *f = get_friend(i);
         if (!f) {
-            LOG_ERR("Friend", "Could not get friend %u", i);
             continue;
         }
 
-        if ((f->alias && memcmp(f->alias, name, MIN(f->alias_length, strlen((char *)name))) == 0)
-            || memcmp(f->name, name, MIN(f->name_length, strlen((char *)name))) == 0) {
+        if ((f->alias
+             && memcmp(f->alias, name, MIN(f->alias_length, strlen((char *)name))) == 0)
+            || memcmp(f->name, name, MIN(f->name_length, strlen((char *)name))) == 0)
+        {
             return f;
         }
     }

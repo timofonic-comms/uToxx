@@ -1,19 +1,22 @@
 #include "settings.h"
 
-#include "../debug.h"
+#include "../chatlog.h"
 #include "../flist.h"
+#include "../friend.h"
 #include "../macros.h"
+#include "../screen_grab.h"
 #include "../self.h"
+#include "../settings.h"
 #include "../theme.h"
+#include "../tox.h"
 #include "../tox.h"
 #include "../updater.h"
 
+#include "../av/utox_av.h"
 #include "../av/video.h"
-
 #include "../native/clipboard.h"
 #include "../native/keyboard.h"
 #include "../native/notify.h"
-
 #include "../ui/button.h"
 #include "../ui/draw.h"
 #include "../ui/dropdown.h"
@@ -23,6 +26,7 @@
 #include "../ui/switch.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* Top bar for user settings */
@@ -70,7 +74,7 @@ static void draw_settings_sub_header(int x, int y, int width, int UNUSED(height)
     x = next_x;
 
     /* Draw the text and bars for device settings */
-    #ifdef ENABLE_MULTIDEVICE
+#ifdef ENABLE_MULTIDEVICE
     setcolor(!button_settings_sub_devices.mouseover ? COLOR_MAIN_TEXT : COLOR_MAIN_TEXT_SUBTEXT);
     next_x += SCALE(20) + UTOX_STR_WIDTH(DEVICES_BUTTON);
     drawstr(x + SCALE(10), y, + SCALE(10), DEVICES_BUTTON);
@@ -81,7 +85,7 @@ static void draw_settings_sub_header(int x, int y, int width, int UNUSED(height)
     }
     drawvline(next_x, y, y, + SCALE(28), COLOR_EDGE_NORMAL);
     x = next_x;
-    #endif
+#endif
 
     /* Draw the text and bars for User interface settings */
     setcolor(!button_settings_sub_ui.mouseover ? COLOR_MAIN_TEXT : COLOR_MAIN_TEXT_SUBTEXT);
@@ -326,120 +330,120 @@ panel_settings_master = {
         NULL
     }
 },
-    panel_settings_subheader = {
-        .y = MAIN_TOP_FRAME_THIN,
-        .type = PANEL_NONE,
-        .disabled = 0,
-        .drawfunc = draw_settings_sub_header,
-        .child = (PANEL*[]) {
-            (PANEL*)&button_settings_sub_profile,
-            (PANEL*)&button_settings_sub_devices,
-            (PANEL*)&button_settings_sub_ui,
-            (PANEL*)&button_settings_sub_av,
-            (PANEL*)&button_settings_sub_notifications,
-            (PANEL*)&button_settings_sub_adv,
-            (PANEL*)&scrollbar_settings,
-            &panel_settings_profile,
-            &panel_settings_devices,
-            &panel_settings_ui,
-            &panel_settings_av,
-            &panel_settings_notifications,
-            &panel_settings_adv,
-            NULL
-        }
-    },
-    /* Panel to draw settings page */
-    panel_settings_profile = {
-        .type = PANEL_NONE,
-        .disabled = 0,
-        .drawfunc = draw_settings_text_profile,
-        .content_scroll = &scrollbar_settings,
-        .child = (PANEL*[]) {
-            (PANEL*)&edit_name,
-            (PANEL*)&edit_status_msg,
-            // Text: Tox ID
-            (PANEL*)&edit_toxid,
-            (PANEL*)&button_copyid,
-            (PANEL*)&dropdown_language,
-            NULL
-        }
-    },
-    /* Panel to draw settings page */
-    panel_settings_devices = {
-        .type = PANEL_NONE,
-        .disabled = 1,
-        .drawfunc = draw_settings_text_devices,
-        .content_scroll = &scrollbar_settings,
-        .child = NULL,
-    },
-    panel_settings_ui = {
-        .type = PANEL_NONE,
-        .drawfunc = draw_settings_text_ui,
-        .disabled = 1,
-        .content_scroll = &scrollbar_settings,
-        .child = (PANEL*[]) {
-            (PANEL*)&dropdown_dpi,
-            (PANEL*)&dropdown_theme,
-            (PANEL*)&switch_save_chat_history,
-            (PANEL*)&switch_close_to_tray,
-            (PANEL*)&switch_start_in_tray,
-            (PANEL*)&switch_auto_startup,
-            (PANEL*)&switch_mini_contacts,
-            NULL
-        }
-    },
-    panel_settings_av = {
-        .type = PANEL_NONE,
-        .disabled = 1,
-        .drawfunc = draw_settings_text_av,
-        .content_scroll = &scrollbar_settings,
-        .child = (PANEL*[]) {
-            (PANEL*)&button_callpreview,
-            (PANEL*)&switch_push_to_talk,
-            (PANEL*)&button_videopreview,
-            (PANEL*)&dropdown_audio_in,
-            (PANEL*)&dropdown_audio_out,
-            (PANEL*)&dropdown_video,
-            (PANEL*)&switch_audio_filtering,
-            NULL
-        }
-    },
+panel_settings_subheader = {
+    .y = MAIN_TOP_FRAME_THIN,
+    .type = PANEL_NONE,
+    .disabled = 0,
+    .drawfunc = draw_settings_sub_header,
+    .child = (PANEL*[]) {
+        (PANEL*)&button_settings_sub_profile,
+        (PANEL*)&button_settings_sub_devices,
+        (PANEL*)&button_settings_sub_ui,
+        (PANEL*)&button_settings_sub_av,
+        (PANEL*)&button_settings_sub_notifications,
+        (PANEL*)&button_settings_sub_adv,
+        (PANEL*)&scrollbar_settings,
+        &panel_settings_profile,
+        &panel_settings_devices,
+        &panel_settings_ui,
+        &panel_settings_av,
+        &panel_settings_notifications,
+        &panel_settings_adv,
+        NULL
+    }
+},
+/* Panel to draw settings page */
+panel_settings_profile = {
+    .type = PANEL_NONE,
+    .disabled = 0,
+    .drawfunc = draw_settings_text_profile,
+    .content_scroll = &scrollbar_settings,
+    .child = (PANEL*[]) {
+        (PANEL*)&edit_name,
+        (PANEL*)&edit_status_msg,
+        // Text: Tox ID
+        (PANEL*)&edit_toxid,
+        (PANEL*)&button_copyid,
+        (PANEL*)&dropdown_language,
+        NULL
+    }
+},
+/* Panel to draw settings page */
+panel_settings_devices = {
+    .type = PANEL_NONE,
+    .disabled = 1,
+    .drawfunc = draw_settings_text_devices,
+    .content_scroll = &scrollbar_settings,
+    .child = NULL,
+},
+panel_settings_ui = {
+    .type = PANEL_NONE,
+    .drawfunc = draw_settings_text_ui,
+    .disabled = 1,
+    .content_scroll = &scrollbar_settings,
+    .child = (PANEL*[]) {
+        (PANEL*)&dropdown_dpi,
+        (PANEL*)&dropdown_theme,
+        (PANEL*)&switch_save_chat_history,
+        (PANEL*)&switch_close_to_tray,
+        (PANEL*)&switch_start_in_tray,
+        (PANEL*)&switch_auto_startup,
+        (PANEL*)&switch_mini_contacts,
+        NULL
+    }
+},
+panel_settings_av = {
+    .type = PANEL_NONE,
+    .disabled = 1,
+    .drawfunc = draw_settings_text_av,
+    .content_scroll = &scrollbar_settings,
+    .child = (PANEL*[]) {
+        (PANEL*)&button_callpreview,
+        (PANEL*)&switch_push_to_talk,
+        (PANEL*)&button_videopreview,
+        (PANEL*)&dropdown_audio_in,
+        (PANEL*)&dropdown_audio_out,
+        (PANEL*)&dropdown_video,
+        (PANEL*)&switch_audio_filtering,
+        NULL
+    }
+},
 
-    panel_settings_notifications = {
-        .type = PANEL_NONE,
-        .disabled = true,
-        .drawfunc = draw_settings_text_notifications,
-        .content_scroll = &scrollbar_settings,
-        .child = (PANEL*[]) {
-            (PANEL*)&dropdown_global_group_notifications,
-            (PANEL*)&switch_status_notifications,
-            (PANEL*)&switch_typing_notes,
-            (PANEL*)&switch_audible_notifications,
-            NULL
-        }
-    },
+panel_settings_notifications = {
+    .type = PANEL_NONE,
+    .disabled = true,
+    .drawfunc = draw_settings_text_notifications,
+    .content_scroll = &scrollbar_settings,
+    .child = (PANEL*[]) {
+        (PANEL*)&dropdown_global_group_notifications,
+        (PANEL*)&switch_status_notifications,
+        (PANEL*)&switch_typing_notes,
+        (PANEL*)&switch_audible_notifications,
+        NULL
+    }
+},
 
-    panel_settings_adv = {
-        .type = PANEL_NONE,
-        .disabled = true,
-        .drawfunc = draw_settings_text_adv,
-        .content_scroll = &scrollbar_settings,
-        .child = (PANEL*[]) {
-            (PANEL*)&edit_proxy_ip,
-            (PANEL*)&edit_proxy_port,
-            (PANEL*)&switch_proxy,
-            (PANEL*)&switch_proxy_force,
-            (PANEL*)&switch_ipv6,
-            (PANEL*)&switch_udp,
-            (PANEL*)&switch_auto_update,
-            (PANEL*)&button_show_password_settings,
-            &panel_profile_password_settings,
-            (PANEL*)&switch_block_friend_requests,
-            (PANEL*)&button_show_nospam,
-            &panel_nospam_settings,
-            NULL,
-        }
-    };
+panel_settings_adv = {
+    .type = PANEL_NONE,
+    .disabled = true,
+    .drawfunc = draw_settings_text_adv,
+    .content_scroll = &scrollbar_settings,
+    .child = (PANEL*[]) {
+        (PANEL*)&edit_proxy_ip,
+        (PANEL*)&edit_proxy_port,
+        (PANEL*)&switch_proxy,
+        (PANEL*)&switch_proxy_force,
+        (PANEL*)&switch_ipv6,
+        (PANEL*)&switch_udp,
+        (PANEL*)&switch_auto_update,
+        (PANEL*)&button_show_password_settings,
+        &panel_profile_password_settings,
+        (PANEL*)&switch_block_friend_requests,
+        (PANEL*)&button_show_nospam,
+        &panel_nospam_settings,
+        NULL,
+    }
+};
 
 
 extern SCROLLABLE scrollbar_settings;
@@ -598,7 +602,6 @@ button_add_new_device_to_self = {
     .on_mup      = button_add_device_to_self_mdown,
 };
 
-#include "../tox.h"
 static void button_lock_uTox_on_mup(void) {
     if (tox_thread_init && edit_profile_password.length > 3) {
         flist_selectsettings();
@@ -619,14 +622,9 @@ static void button_show_password_settings_on_mup(void) {
     update_show_password_button_text();
 }
 
-
-#include "../chatlog.h"
-#include "../flist.h"
-#include "../friend.h"
 static void button_export_chatlog_on_mup(void) {
     FRIEND *f = flist_get_friend();
     if (!f) {
-        LOG_ERR("Settings", "Could not get selected friend.");
         return;
     }
     utox_export_chatlog_init(f->number);
@@ -640,7 +638,6 @@ static void button_change_nospam_on_mup(void) {
 
 static void button_revert_nospam_on_mup(void) {
     if (self.old_nospam == 0 || self.nospam == self.old_nospam) { //nospam can not be 0
-        LOG_ERR("Settings", "Invalid or current nospam: %u.", self.old_nospam);
         return;
     }
     postmessage_toxcore(TOX_SELF_CHANGE_NOSPAM, self.old_nospam, 0, NULL);
@@ -659,8 +656,6 @@ static void button_copyid_on_mup(void) {
     copy(0);
 }
 
-#include "../settings.h"
-#include "../av/utox_av.h"
 static void button_audiopreview_on_mup(void) {
     if (!settings.audio_preview) {
         postmessage_utoxav(UTOXAV_START_AUDIO, 1, 0, NULL);
@@ -684,8 +679,7 @@ static void button_videopreview_on_mup(void) {
     } else if (video_width && video_height) {
         postmessage_utoxav(UTOXAV_START_VIDEO, 0, 1, NULL);
     } else {
-        LOG_ERR("Button", "Video_width = 0, can't preview\n");
-    }
+            }
     settings.video_preview = !settings.video_preview;
 }
 
@@ -696,6 +690,7 @@ static void button_videopreview_update(BUTTON *b) {
         button_setcolors_success(b);
     }
 }
+
 BUTTON button_copyid = {
     .bm_fill  = BM_SBUTTON,
     .update   = button_setcolors_success,
@@ -819,15 +814,25 @@ static void switchfxn_udp(void) {
     tox_settingschanged();
 }
 
-static void switchfxn_close_to_tray(void) { settings.close_to_tray = !settings.close_to_tray; }
+static void switchfxn_close_to_tray(void) {
+    settings.close_to_tray = !settings.close_to_tray;
+}
 
-static void switchfxn_start_in_tray(void) { settings.start_in_tray = !settings.start_in_tray; }
+static void switchfxn_start_in_tray(void) {
+    settings.start_in_tray = !settings.start_in_tray;
+}
 
-static void switchfxn_auto_startup(void) { settings.start_with_system = !settings.start_with_system; }
+static void switchfxn_auto_startup(void) {
+    settings.start_with_system = !settings.start_with_system;
+}
 
-static void switchfxn_typing_notes(void) { settings.send_typing_status = !settings.send_typing_status; }
+static void switchfxn_typing_notes(void) {
+    settings.send_typing_status = !settings.send_typing_status;
+}
 
-static void switchfxn_audible_notifications(void) { settings.ringtone_enabled = !settings.ringtone_enabled; }
+static void switchfxn_audible_notifications(void) {
+    settings.ringtone_enabled = !settings.ringtone_enabled;
+}
 
 static void switchfxn_push_to_talk(void) {
     if (!settings.push_to_talk) {
@@ -837,16 +842,22 @@ static void switchfxn_push_to_talk(void) {
     }
 }
 
-static void switchfxn_audio_filtering(void) { settings.audiofilter_enabled = !settings.audiofilter_enabled; }
+static void switchfxn_audio_filtering(void) {
+    settings.audiofilter_enabled = !settings.audiofilter_enabled;
+}
 
-static void switchfxn_status_notifications(void) { settings.status_notifications = !settings.status_notifications; }
+static void switchfxn_status_notifications(void) {
+    settings.status_notifications = !settings.status_notifications;
+}
 
 static void switchfxn_auto_update(void) {
     settings.auto_update = !settings.auto_update;
     updater_start(0);
 }
 
-static void switchfxn_block_friend_requests(void) { settings.block_friend_requests = !settings.block_friend_requests; }
+static void switchfxn_block_friend_requests(void) {
+    settings.block_friend_requests = !settings.block_friend_requests;
+}
 
 UISWITCH switch_save_chat_history = {
     .style_outer    = BM_SWITCH,
@@ -1074,7 +1085,6 @@ static void dropdown_audio_out_onselect(uint16_t i, const DROPDOWN *dm) {
     postmessage_utoxav(UTOXAV_SET_AUDIO_OUT, 0, 0, handle);
 }
 
-#include "../screen_grab.h"
 static void dropdown_video_onselect(uint16_t i, const DROPDOWN *UNUSED(dm)) {
     if (i == 1) {
         utox_screen_grab_desktop(1);
@@ -1106,12 +1116,10 @@ static void dropdown_theme_onselect(const uint16_t i, const DROPDOWN *UNUSED(dm)
 static void dropdown_notify_groupchats_onselect(const uint16_t i, const DROPDOWN *UNUSED(dm)) {
     GROUPCHAT *g = flist_get_groupchat();
     if (!g) {
-        LOG_ERR("Settings", "Could not get selected groupchat.");
         return;
     }
 
-    g->notify    = i;
-    LOG_INFO("Settings", "g->notify = %u\n", i);
+    g->notify = i;
 }
 
 static void dropdown_global_group_notifications_onselect(const uint16_t i, const DROPDOWN *UNUSED(dm)) {
@@ -1302,7 +1310,6 @@ EDIT edit_toxid = {
 static void edit_change_nospam_onenter(EDIT *UNUSED(edit)) {
     long int nospam = strtol(edit_nospam_data, NULL, 16);
     if (nospam == 0 || nospam < 0) {
-        LOG_ERR("Nospam", "Invalid nospam value: %lu", nospam);
         return;
     }
     postmessage_toxcore(TOX_SELF_CHANGE_NOSPAM, nospam, 0, NULL);

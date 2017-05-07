@@ -3,23 +3,26 @@
 #include "utox_av.h"
 
 #include "../friend.h"
-#include "../debug.h"
 #include "../macros.h"
+#include "../main.h" // video/screen super globals
 #include "../self.h"
 #include "../settings.h"
 #include "../tox.h"
 #include "../utox.h"
 
+#include "../layout/settings.h"
+
 #include "../native/thread.h"
 #include "../native/video.h"
 
-#include <tox/toxav.h>
+#include "../ui/dropdown.h"
 
 #include <pthread.h>
+#include <stdlib.h>
+#include <tox/toxav.h>
 #include <vpx/vpx_codec.h>
 #include <vpx/vpx_image.h>
 
-#include "../main.h" // video/screen super globals
 
 static void *   video_device[16]     = { NULL }; /* TODO; magic number */
 static int16_t  video_device_count   = 0;
@@ -39,12 +42,10 @@ static bool video_device_init(void *handle) {
     // initialize video (will populate video_width and video_height)
     if (handle == (void *)1) {
         if (!native_video_init((void *)1)) {
-            LOG_TRACE("uToxVideo", "native_video_init() failed for desktop" );
             return false;
         }
     } else {
         if (!handle || !native_video_init(*(void **)handle)) {
-            LOG_TRACE("uToxVideo", "native_video_init() failed webcam" );
             return false;
         }
     }
@@ -55,7 +56,6 @@ static bool video_device_init(void *handle) {
     utox_video_frame.w = input.d_w;
     utox_video_frame.h = input.d_h;
 
-    LOG_NOTE("uToxVideo", "video init done!" );
     video_device_status = true;
 
     return true;
@@ -89,8 +89,6 @@ static bool video_device_stop(void) {
     return false;
 }
 
-#include "../ui/dropdown.h"
-#include "../layout/settings.h" // TODO move?
 void utox_video_append_device(void *device, bool localized, void *name, bool default_) {
     video_device[video_device_count++] = device;
 
@@ -127,7 +125,6 @@ bool utox_video_change_device(uint16_t device_number) {
                 postmessage_utox(AV_CLOSE_WINDOW, 0, 0, NULL);
             }
         }
-        LOG_TRACE("uToxVideo", "Disabled Video device (none)" );
         pthread_mutex_unlock(&video_thread_lock);
         return false;
     }
@@ -145,9 +142,7 @@ bool utox_video_change_device(uint16_t device_number) {
     video_device_init(video_device[device_number]);
 
     if (_was_active) {
-        LOG_TRACE("uToxVideo", "Trying to restart video with new device..." );
         if (!video_device_start()) {
-            LOG_ERR("uToxVideo", "Error, unable to start new device...");
             if (settings.video_preview) {
                 settings.video_preview = false;
                 postmessage_utox(AV_CLOSE_WINDOW, 0, 0, NULL);
@@ -158,22 +153,20 @@ bool utox_video_change_device(uint16_t device_number) {
         }
         pthread_mutex_unlock(&video_thread_lock);
         return true;
-    } else {
-        /* Just grab the new frame size */
-        close_video_device(video_device[video_device_current]);
     }
+
+    /* Just grab the new frame size */
+    close_video_device(video_device[video_device_current]);
     pthread_mutex_unlock(&video_thread_lock);
     return false;
 }
 
 bool utox_video_start(bool preview) {
     if (video_active) {
-        LOG_NOTE("uToxVideo", "video already running" );
         return true;
     }
 
     if (!video_device_current) {
-        LOG_NOTE("uToxVideo", "Not starting device None" );
         return false;
     }
 
@@ -183,27 +176,23 @@ bool utox_video_start(bool preview) {
 
     if (video_device_init(video_device[video_device_current]) && video_device_start()) {
         video_active = true;
-        LOG_NOTE("uToxVideo", "started video" );
         return true;
     }
 
-    LOG_ERR("uToxVideo", "Unable to start video.");
     return false;
 }
 
 bool utox_video_stop(bool UNUSED(preview)) {
     if (!video_active) {
-        LOG_TRACE("uToxVideo", "video already stopped!" );
         return false;
     }
 
-    video_active           = false;
+    video_active = false;
     settings.video_preview = false;
     postmessage_utox(AV_CLOSE_WINDOW, 0, 0, NULL);
 
     video_device_stop();
     close_video_device(video_device[video_device_current]);
-    LOG_TRACE("uToxVideo", "stopped video" );
     return true;
 }
 
@@ -272,34 +261,19 @@ void utox_video_thread(void *args) {
                 size_t active_video_count = 0;
                 for (size_t i = 0; i < self.friend_list_count; i++) {
                     if (SEND_VIDEO_FRAME(i)) {
-                        LOG_TRACE("uToxVideo", "sending video frame to friend %lu" , i);
                         active_video_count++;
                         TOXAV_ERR_SEND_FRAME error = 0;
-                        toxav_video_send_frame(av, get_friend(i)->number, utox_video_frame.w, utox_video_frame.h,
-                                               utox_video_frame.y, utox_video_frame.u, utox_video_frame.v, &error);
-                        // LOG_TRACE("uToxVideo", "Sent video frame to friend %u" , i);
-                        if (error) {
-                            if (error == TOXAV_ERR_SEND_FRAME_SYNC) {
-                                LOG_ERR("uToxVideo", "Vid Frame sync error: w=%u h=%u", utox_video_frame.w, utox_video_frame.h);
-                            } else if (error == TOXAV_ERR_SEND_FRAME_PAYLOAD_TYPE_DISABLED) {
-                                LOG_ERR("uToxVideo",
-                                    "ToxAV disagrees with our AV state for friend %lu, self %u, friend %u",
-                                        i, get_friend(i)->call_state_self, get_friend(i)->call_state_friend);
-                            } else {
-                                LOG_ERR("uToxVideo", "toxav_send_video error friend: %i error: %u",
-                                        get_friend(i)->number, error);
-                            }
-                        } else {
+                        toxav_video_send_frame(av, get_friend(i)->number, utox_video_frame.w,
+                                               utox_video_frame.h, utox_video_frame.y,
+                                               utox_video_frame.u, utox_video_frame.v, &error);
+                        if (!error) {
                             if (active_video_count >= UTOX_MAX_CALLS) {
-                                LOG_ERR("uToxVideo", "Trying to send video frame to too many peers. Please report this bug!");
                                 break;
                             }
                         }
                     }
                 }
             } else if (r == -1) {
-                LOG_ERR("uToxVideo", "Err... something really bad happened trying to get this frame, I'm just going "
-                            "to plots now!");
                 video_device_stop();
                 close_video_device(video_device);
             }
@@ -322,11 +296,11 @@ void utox_video_thread(void *args) {
 
     video_thread_msg       = 0;
     utox_video_thread_init = 0;
-    LOG_TRACE("uToxVideo", "Clean thread exit!");
 }
 
 void yuv420tobgr(uint16_t width, uint16_t height, const uint8_t *y, const uint8_t *u, const uint8_t *v,
-                 unsigned int ystride, unsigned int ustride, unsigned int vstride, uint8_t *out) {
+                 unsigned int ystride, unsigned int ustride, unsigned int vstride, uint8_t *out)
+{
     for (unsigned long int i = 0; i < height; ++i) {
         for (unsigned long int j = 0; j < width; ++j) {
             uint8_t *point = out + 4 * ((i * width) + j);
@@ -469,7 +443,7 @@ void bgrxtoyuv420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t 
 }
 
 void scale_rgbx_image(uint8_t *old_rgbx, uint16_t old_width, uint16_t old_height, uint8_t *new_rgbx, uint16_t new_width,
-                      uint16_t new_height) {
+    uint16_t new_height) {
     for (int y = 0; y != new_height; y++) {
         const int y0 = y * old_height / new_height;
         for (int x = 0; x != new_width; x++) {

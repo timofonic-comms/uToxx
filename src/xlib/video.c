@@ -3,8 +3,8 @@
 #include "screen_grab.h"
 #include "window.h"
 
-#include "../debug.h"
 #include "../macros.h"
+#include "../main.h"
 #include "../ui.h"
 
 #include "../av/video.h"
@@ -12,16 +12,13 @@
 #include "../native/time.h"
 
 #include <stdio.h>
-
-#include "../main.h"
-
+#include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <sys/shm.h>
+#include <sys/stat.h>
 
 void video_frame(uint32_t id, uint8_t *img_data, uint16_t width, uint16_t height, bool resize) {
     if (!video_win[id]) {
-        LOG_TRACE("Video", "frame for null window %u" , id);
         return;
     }
 
@@ -33,19 +30,21 @@ void video_frame(uint32_t id, uint8_t *img_data, uint16_t width, uint16_t height
     XWindowAttributes attrs;
     XGetWindowAttributes(display, video_win[id], &attrs);
 
-    XImage image = {.width            = attrs.width,
-                    .height           = attrs.height,
-                    .depth            = 24,
-                    .bits_per_pixel   = 32,
-                    .format           = ZPixmap,
-                    .byte_order       = LSBFirst,
-                    .bitmap_unit      = 8,
-                    .bitmap_bit_order = LSBFirst,
-                    .bytes_per_line   = attrs.width * 4,
-                    .red_mask         = 0xFF0000,
-                    .green_mask       = 0xFF00,
-                    .blue_mask        = 0xFF,
-                    .data             = (char *)img_data };
+    XImage image = {
+        .width            = attrs.width,
+        .height           = attrs.height,
+        .depth            = 24,
+        .bits_per_pixel   = 32,
+        .format           = ZPixmap,
+        .byte_order       = LSBFirst,
+        .bitmap_unit      = 8,
+        .bitmap_bit_order = LSBFirst,
+        .bytes_per_line   = attrs.width * 4,
+        .red_mask         = 0xFF0000,
+        .green_mask       = 0xFF00,
+        .blue_mask        = 0xFF,
+        .data             = (char *)img_data
+    };
 
     /* scale image if needed */
     uint8_t *new_data = malloc(attrs.width * attrs.height * 4);
@@ -83,7 +82,6 @@ void video_begin(uint32_t id, char *name, uint16_t name_length, uint16_t width, 
     XSetClassHint(display, *win, &hint);
 
     XMapWindow(display, *win);
-    LOG_TRACE("Video", "new window %u" , id);
 }
 
 void video_end(uint32_t id) {
@@ -93,7 +91,6 @@ void video_end(uint32_t id) {
 
     XDestroyWindow(display, video_win[id]);
     video_win[id] = None;
-    LOG_TRACE("Video", "killed window %u" , id);
 }
 
 static Display *deskdisplay;
@@ -104,7 +101,6 @@ XShmSegmentInfo shminfo;
 void initshm(void) {
     deskdisplay = XOpenDisplay(NULL);
     deskscreen  = DefaultScreen(deskdisplay);
-    LOG_TRACE("Video", "desktop: %u %u" , default_screen->width, default_screen->height);
     max_video_width  = default_screen->width;
     max_video_height = default_screen->height;
 }
@@ -122,14 +118,10 @@ uint16_t native_video_detect(void) {
         struct stat st;
         if (-1 == stat(dev_name, &st)) {
             continue;
-            // LOG_TRACE("Video", "Cannot identify '%s': %d, %s" , dev_name, errno, strerror(errno));
-            // return 0;
         }
 
         if (!S_ISCHR(st.st_mode)) {
             continue;
-            // LOG_TRACE("Video", "%s is no device" , dev_name);
-            // return 0;
         }
 
         char *p = malloc(sizeof(void *) + sizeof(dev_name)), *pp = p + sizeof(void *);
@@ -231,12 +223,10 @@ bool native_video_endread(void) {
 int native_video_getframe(uint8_t *y, uint8_t *u, uint8_t *v, uint16_t width, uint16_t height) {
     if (utox_v4l_fd == -1) {
         static uint64_t lasttime;
-        uint64_t        t = get_time();
+        uint64_t t = get_time();
         if (t - lasttime >= (uint64_t)1000 * 1000 * 1000 / 24) {
             XShmGetImage(deskdisplay, RootWindow(deskdisplay, deskscreen), screen_image, video_x, video_y, AllPlanes);
             if (width != video_width || height != video_height) {
-                LOG_ERR("v4l", "width/height mismatch %u %u != %u %u", width, height, screen_image->width,
-                      screen_image->height);
                 return 0;
             }
 

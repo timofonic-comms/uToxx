@@ -2,8 +2,8 @@
 
 #include "main.h"
 
-#include "../debug.h"
 #include "../macros.h"
+#include "../main.h" // video super globals
 
 #include "../av/video.h"
 
@@ -13,7 +13,6 @@
 
 #include <windows.h>
 
-#include "../main.h" // video super globals
 
 #ifdef __CRT__NO_INLINE
 #undef __CRT__NO_INLINE
@@ -80,8 +79,7 @@ void video_begin(uint32_t id, char *UNUSED(name), uint16_t UNUSED(name_length), 
 
     *h = native_window_create_video(0, 0, width, height);
     if (!*h) {
-        LOG_ERR("Win OSVideo", "Unable to create this window w%uh%u", width, height);
-    }
+            }
     ShowWindow(*h, SW_SHOW);
 }
 
@@ -101,15 +99,11 @@ volatile bool newframe = 0;
 uint8_t *frame_data;
 
 HRESULT STDMETHODCALLTYPE test_SampleCB(ISampleGrabberCB *UNUSED(lpMyObj), double UNUSED(SampleTime), IMediaSample *pSample) {
-    // you can call functions like:
-    // REFERENCE_TIME   tStart, tStop;
     uint8_t *sampleBuffer;
 
     pSample->lpVtbl->GetPointer(pSample, (BYTE **)&sampleBuffer);
     uint16_t length = pSample->lpVtbl->GetActualDataLength(pSample);
 
-    /*pSample->GetTime(&tStart, &tStop);
-    */
     if (length == video_width * video_height * 3) {
         uint8_t *p = frame_data + video_width * video_height * 3;
 
@@ -122,7 +116,6 @@ HRESULT STDMETHODCALLTYPE test_SampleCB(ISampleGrabberCB *UNUSED(lpMyObj), doubl
         newframe = 1;
     }
 
-    // LOG_TRACE("Video", "frame %u" , length);
     return S_OK;
 }
 
@@ -171,8 +164,6 @@ HRESULT IsPinDirection(IPin *local_pPin, PIN_DIRECTION dir, BOOL *pResult) {
 }
 
 HRESULT MatchPin(IPin *local_pPin, PIN_DIRECTION direction, BOOL bShouldBeConnected, BOOL *pResult) {
-    // assert(pResult != NULL);
-
     BOOL bMatch       = FALSE;
     BOOL bIsConnected = FALSE;
 
@@ -304,16 +295,13 @@ uint16_t native_video_detect(void) {
     hr = CoCreateInstance(&CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER, &IID_ICreateDevEnum,
                           (void **)&pSysDevEnum);
     if (FAILED(hr)) {
-        LOG_TRACE("Video", "CoCreateInstance failed()" );
         return 0;
     }
     // Obtain a class enumerator for the video compressor category.
     IEnumMoniker *pEnumCat = NULL;
     hr = pSysDevEnum->lpVtbl->CreateClassEnumerator(pSysDevEnum, &CLSID_VideoInputDeviceCategory, &pEnumCat, 0);
     if (hr != S_OK) {
-
         pSysDevEnum->lpVtbl->Release(pSysDevEnum);
-        LOG_TRACE("Video", "CreateClassEnumerator failed()" );
         return 0;
     }
 
@@ -322,8 +310,7 @@ uint16_t native_video_detect(void) {
 
 
     uint16_t device_count = 1; /* start at 1 because we support desktop grabbing */
-    LOG_TRACE("Video", "Windows Video Devices:" );
-    ULONG cFetched;
+        ULONG cFetched;
     while (pEnumCat->lpVtbl->Next(pEnumCat, 1, &pMoniker, &cFetched) == S_OK) {
         IPropertyBag *pPropBag;
         hr = pMoniker->lpVtbl->BindToStorage(pMoniker, 0, 0, &IID_IPropertyBag, (void **)&pPropBag);
@@ -333,11 +320,6 @@ uint16_t native_video_detect(void) {
             VariantInit(&varName);
             hr = pPropBag->lpVtbl->Read(pPropBag, L"FriendlyName", &varName, 0);
             if (SUCCEEDED(hr)) {
-                if (varName.vt == VT_BSTR) {
-                    LOG_TRACE("Video", "\tFriendly name: %ls" , varName.bstrVal);
-                } else {
-                    LOG_TRACE("Video", "\tEw, got an unfriendly name" );
-                }
                 // To create an instance of the filter, do the following:
                 hr = pMoniker->lpVtbl->BindToObject(pMoniker, NULL, NULL, &IID_IBaseFilter, (void **)&pFilter);
                 if (SUCCEEDED(hr)) {
@@ -348,8 +330,6 @@ uint16_t native_video_detect(void) {
                     utox_video_append_device(data, 0, data + 8, 1);
                     device_count++;
                 }
-            } else {
-                LOG_TRACE("Video", "Windows Video Code:\tcouldn't get a name for this device, this is a bug, please report!" );
             }
 
             VariantClear(&varName);
@@ -364,19 +344,16 @@ uint16_t native_video_detect(void) {
 
     hr = CoCreateInstance(&CLSID_NullRenderer, NULL, CLSCTX_INPROC_SERVER, &IID_IBaseFilter, (void **)&pNullF);
     if (FAILED(hr)) {
-        LOG_TRACE("Video", "CoCreateInstance failed" );
         return 0;
     }
 
     hr = pGraph->lpVtbl->AddFilter(pGraph, pNullF, L"Null Filter");
     if (FAILED(hr)) {
-        LOG_TRACE("Video", "AddFilter failed" );
         return 0;
     }
 
     hr = ConnectFilters(pGraph, pGrabberF, pNullF);
     if (FAILED(hr)) {
-        LOG_TRACE("Video", "ConnectFilters (2) failed" );
         return 0;
     }
 
@@ -426,26 +403,21 @@ bool native_video_init(void *handle) {
             video_height++;
         }
 
-        LOG_TRACE("Video", "size: %u %u" , video_width, video_height);
 
         desktopwnd = GetDesktopWindow();
         if (!desktopwnd) {
-            LOG_TRACE("Video", "GetDesktopWindow() failed" );
             return 0;
         }
 
         if (!(desktopdc = GetDC(desktopwnd))) {
-            LOG_TRACE("Video", "GetDC(desktopwnd) failed" );
             return 0;
         }
 
         if (!(capturedc = CreateCompatibleDC(desktopdc))) {
-            LOG_TRACE("Video", "CreateCompatibleDC(desktopdc) failed" );
             return 0;
         }
 
         if (!(capturebitmap = CreateCompatibleBitmap(desktopdc, video_width, video_height))) {
-            LOG_TRACE("Video", "CreateCompatibleBitmap(desktopdc) failed" );
             return 0;
         }
 
@@ -453,16 +425,16 @@ bool native_video_init(void *handle) {
         dibits         = malloc(video_width * video_height * 3);
         capturedesktop = 1;
         return 1;
-    } else {
-        capturedesktop = 0;
     }
+
+    capturedesktop = 0;
+
 
     HRESULT      hr;
     IBaseFilter *pFilter = handle;
 
     hr = pGraph->lpVtbl->AddFilter(pGraph, pFilter, L"Video Capture");
     if (FAILED(hr)) {
-        LOG_TRACE("Video", "AddFilter failed" );
         return 0;
     }
 
@@ -471,7 +443,6 @@ bool native_video_init(void *handle) {
     /* build filter graph */
     hr = pFilter->lpVtbl->EnumPins(pFilter, &pEnum);
     if (FAILED(hr)) {
-        LOG_TRACE("Video", "EnumPins failed" );
         return 0;
     }
 
@@ -484,7 +455,6 @@ bool native_video_init(void *handle) {
     }
 
     if (FAILED(hr)) {
-        LOG_TRACE("Video", "failed to connect a filter" );
         return 0;
     }
 
@@ -493,13 +463,11 @@ bool native_video_init(void *handle) {
 
     hr = pPin->lpVtbl->QueryInterface(pPin, &IID_IAMStreamConfig, (void **)&pConfig);
     if (FAILED(hr)) {
-        LOG_TRACE("Video", "Windows Video device: QueryInterface failed" );
         return 0;
     }
 
     hr = pConfig->lpVtbl->GetFormat(pConfig, &pmt);
     if (FAILED(hr)) {
-        LOG_TRACE("Video", "Windows Video device: GetFormat failed" );
         return 0;
     }
 
@@ -510,14 +478,11 @@ bool native_video_init(void *handle) {
         video_width          = bmiHeader->biWidth;
         video_height         = bmiHeader->biHeight;
     } else {
-        LOG_TRACE("Video", "got bad format" );
         video_width  = 0;
         video_height = 0;
     }
 
     frame_data = malloc((size_t)video_width * video_height * 3);
-
-    LOG_TRACE("Video", "Windows video init:\n\twidth height %u %u" , video_width, video_height);
 
     return 1;
 }
@@ -532,29 +497,24 @@ void native_video_close(void *handle) {
         return;
     }
 
-    LOG_NOTE("Video", "Closing webcam");
 
     IBaseFilter *pFilter = handle;
 
     if (FAILED(pGraph->lpVtbl->RemoveFilter(pGraph, pFilter))) {
-        LOG_ERR("Video", "Failed to close webcam. (1)");
         return;
     }
 
     if (FAILED(pGraph->lpVtbl->Disconnect(pGraph, pPin))) {
-        LOG_ERR("Video", "Failed to close webcam. (2)");
         return;
     }
 
     if (FAILED(pGraph->lpVtbl->Disconnect(pGraph, pIPin))) {
-        LOG_ERR("Video", "Failed to close webcam. (3)");
         return;
     }
 }
 
 int native_video_getframe(uint8_t *y, uint8_t *u, uint8_t *v, uint16_t width, uint16_t height) {
     if (width != video_width || height != video_height) {
-        LOG_TRACE("Video", "width/height mismatch %u %u != %u %u" , width, height, video_width, video_height);
         return 0;
     }
 
@@ -562,14 +522,16 @@ int native_video_getframe(uint8_t *y, uint8_t *u, uint8_t *v, uint16_t width, ui
         static uint64_t lasttime;
         uint64_t        t = get_time();
         if (t - lasttime >= (uint64_t)1000 * 1000 * 1000 / 24) {
-            BITMAPINFO info = {.bmiHeader = {
-                                   .biSize        = sizeof(BITMAPINFOHEADER),
-                                   .biWidth       = video_width,
-                                   .biHeight      = -(int)video_height,
-                                   .biPlanes      = 1,
-                                   .biBitCount    = 24,
-                                   .biCompression = BI_RGB,
-                               } };
+            BITMAPINFO info = {
+                .bmiHeader = {
+                    .biSize        = sizeof(BITMAPINFOHEADER),
+                    .biWidth       = video_width,
+                    .biHeight      = -(int)video_height,
+                    .biPlanes      = 1,
+                    .biBitCount    = 24,
+                    .biCompression = BI_RGB,
+                }
+            };
 
             BitBlt(capturedc, 0, 0, video_width, video_height, desktopdc, video_x, video_y, SRCCOPY | CAPTUREBLT);
             GetDIBits(capturedc, capturebitmap, 0, video_height, dibits, &info, DIB_RGB_COLORS);
@@ -577,6 +539,7 @@ int native_video_getframe(uint8_t *y, uint8_t *u, uint8_t *v, uint16_t width, ui
             lasttime = t;
             return 1;
         }
+
         return 0;
     }
 
@@ -585,6 +548,7 @@ int native_video_getframe(uint8_t *y, uint8_t *u, uint8_t *v, uint16_t width, ui
         bgrtoyuv420(y, u, v, frame_data, video_width, video_height);
         return 1;
     }
+
     return 0;
 }
 
@@ -592,11 +556,8 @@ bool native_video_startread(void) {
     if (capturedesktop) {
         return 1;
     }
-    LOG_TRACE("Video", "start webcam" );
-    HRESULT hr;
-    hr = pControl->lpVtbl->Run(pControl);
+    HRESULT hr = pControl->lpVtbl->Run(pControl);
     if (FAILED(hr)) {
-        LOG_TRACE("Video", "Run failed" );
         return 0;
     }
     return 1;
@@ -606,11 +567,8 @@ bool native_video_endread(void) {
     if (capturedesktop) {
         return 1;
     }
-    LOG_TRACE("Video", "stop webcam" );
-    HRESULT hr;
-    hr = pControl->lpVtbl->StopWhenReady(pControl);
+    HRESULT hr = pControl->lpVtbl->StopWhenReady(pControl);
     if (FAILED(hr)) {
-        LOG_TRACE("Video", "Stop failed" );
         return 0;
     }
     return 1;

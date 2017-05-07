@@ -3,25 +3,23 @@
 #include "main.h"
 
 #include "../branding.h"
-#include "../debug.h"
 #include "../macros.h"
+#include "../main.h" // MAIN_WIDTH, MAIN_HEIGHT
+
+#include "../layout/background.h"
+#include "../layout/notify.h"
 
 #include "../native/thread.h"
 #include "../native/time.h"
 
 #include "../ui/draw.h"
 
-#include "../layout/background.h"
-#include "../layout/notify.h"
-
-#include "../main.h" // MAIN_WIDTH, MAIN_HEIGHT
-
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 bool native_window_init(void) {
     if ((display = XOpenDisplay(NULL)) == NULL) {
-        LOG_ERR("XLIB Wind", "Cannot open display, must exit");
         return false;
     }
 
@@ -31,7 +29,6 @@ bool native_window_init(void) {
     default_depth  = DefaultDepth(display, def_screen_num);
 
     root_window    = RootWindow(display, def_screen_num);
-
 
     return true;
 }
@@ -64,7 +61,6 @@ static UTOX_WINDOW *native_window_create(UTOX_WINDOW *window, char *title, unsig
     XTextProperty native_window_name;
     // Why?
     if (XStringListToTextProperty(&title_name, 1, &native_window_name) == 0 ) {
-        LOG_ERR("XLIB Wind", "FATAL ERROR: Unable to alloc for a sting during window creation");
         return NULL;
     }
     // "Because FUCK your use of sane coding strategies" -Xlib... probably...
@@ -78,7 +74,6 @@ static UTOX_WINDOW *native_window_create(UTOX_WINDOW *window, char *title, unsig
     XWMHints   *wm_hints    = XAllocWMHints();
     XClassHint *class_hints = XAllocClassHint();
     if (!size_hints || !wm_hints || !class_hints) {
-        LOG_ERR("XLIB Wind", "XLIB_Windows: couldn't allocate memory.");
         return NULL;
     }
 
@@ -130,8 +125,9 @@ UTOX_WINDOW *native_window_create_main(int x, int y, int w, int h, char **UNUSED
     snprintf(title, 256, "%s %s (version: %s)", TITLE, SUB_TITLE, VERSION);
 
     if (!native_window_create(&main_window, title, CWBackPixmap | CWBorderPixel | CWEventMask,
-                      x, y, w, h, MAIN_WIDTH, MAIN_HEIGHT, &panel_root, false)) {
-        LOG_FATAL_ERR(EXIT_FAILURE, "XLIB Wind", "Unable to create main window.");
+                      x, y, w, h, MAIN_WIDTH, MAIN_HEIGHT, &panel_root, false))
+    {
+        exit(1);
     }
 
     Atom a_pid  = XInternAtom(display, "_NET_WM_PID", 0);
@@ -172,7 +168,6 @@ UTOX_WINDOW *native_window_create_notify(int x, int y, int w, int h, PANEL *pane
                         x, y, w, h, w, h, &panel_notify_generic, true);
 
     if (!win) {
-        LOG_ERR("XLIB Wind", "XLIB_WIN:\tUnable to Alloc for a notification window");
         return NULL;
     }
 
@@ -185,21 +180,8 @@ UTOX_WINDOW *native_window_create_notify(int x, int y, int w, int h, PANEL *pane
     Atom a_util = XInternAtom(display, "_NET_WM_WINDOW_TYPE_UTILITY", 0);
     XChangeProperty(display, win->window, a_type, XA_ATOM, 32, PropModeReplace, (uint8_t *)&a_util, 1);
 
-    // Atom a_win  = XInternAtom(display, "WM_CLIENT_LEADER", 0);
-    // XChangeProperty(display, win, a_win, XA_WINDOW, 32, PropModeReplace, (uint8_t *)&master, 1);
-    // XSetTransientForHint(display, win, master);
-
-    // Atom a_role = XInternAtom(display, "WM_WINDOW_ROLE", 0);
-    // uint8_t *name = calloc(6, 1); // TODO leaks
-    // memcpy(name, "alert", 6);
-    // XChangeProperty(display, win, a_role, XA_STRING, 8, PropModeReplace, name, 5);
-
-
     Atom list[] = {
         wm_delete_window,
-        // XInternAtom(display, "WM_TAKE_FOCUS", 0),
-        // XInternAtom(display, "_NET_WM_PING", 0),
-        // XInternAtom(display, "_NET_WM_SYNC_REQUEST", 0),
     };
     XSetWMProtocols(display, win->window, list, 1);
 
@@ -275,9 +257,7 @@ void native_window_tween(UTOX_WINDOW *win) {
 }
 
 
-void native_window_create_screen_select() {
-    return;
-}
+void native_window_create_screen_select() {}
 
 bool native_window_set_target(UTOX_WINDOW *new_win) {
     if (new_win == curr) {

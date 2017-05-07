@@ -5,7 +5,6 @@
 #include "scrollable.h"
 #include "text.h"
 
-#include "../debug.h"
 #include "../macros.h"
 #include "../main.h"
 #include "../settings.h"
@@ -18,8 +17,9 @@
 #include "../native/os.h"
 #include "../native/ui.h"
 
-#include <string.h>
 #include <limits.h>
+#include <stdlib.h>
+#include <string.h>
 
 static EDIT *active_edit;
 
@@ -60,20 +60,22 @@ void edit_draw(EDIT *edit, int x, int y, int width, int height) {
     uint32_t color_bg, color_border, color_border_h, color_border_a, color_text;
 
     switch (edit->style) {
-        case AUXILIARY_STYLE:
+        case AUXILIARY_STYLE: {
             color_bg       = COLOR_BKGRND_AUX;
             color_border   = COLOR_AUX_EDGE_NORMAL;
             color_border_h = COLOR_AUX_EDGE_HOVER;
             color_border_a = COLOR_AUX_EDGE_ACTIVE;
             color_text     = COLOR_AUX_TEXT;
             break;
-        default:
+        }
+        default: {
             color_bg       = COLOR_BKGRND_MAIN;
             color_border   = COLOR_EDGE_NORMAL;
             color_border_h = COLOR_EDGE_HOVER;
             color_border_a = COLOR_EDGE_ACTIVE;
             color_text     = COLOR_MAIN_TEXT;
             break;
+        }
     }
 
     if (!edit->noborder) {
@@ -203,7 +205,7 @@ bool edit_mdown(EDIT *edit) {
 
     if (edit->multiline) {
         if (scroll_mdown(edit->scroll)) {
-            return 1;
+            return true;
         }
     }
 
@@ -215,12 +217,14 @@ bool edit_mdown(EDIT *edit) {
         setactive(edit);
 
         showkeyboard(1);
-        return 1;
-    } else if (edit == active_edit) {
+        return true;
+    }
+
+    if (edit == active_edit) {
         edit_resetfocus();
     }
 
-    return 0;
+    return false;
 }
 
 bool edit_dclick(EDIT *edit, bool triclick) {
@@ -239,11 +243,11 @@ bool edit_dclick(EDIT *edit, bool triclick) {
         i -= utf8_unlen(edit->data + i);
     }
     edit_sel.start = edit_sel.p1 = i;
-    i                            = edit->mouseover_char;
+    i = edit->mouseover_char;
     while (i != edit->length && edit->data[i] != c) {
         i += utf8_len(edit->data + i);
     }
-    edit_sel.p2     = i;
+    edit_sel.p2 = i;
     edit_sel.length = i - edit_sel.start;
 
     return true;
@@ -251,17 +255,23 @@ bool edit_dclick(EDIT *edit, bool triclick) {
 
 static void contextmenu_edit_onselect(uint8_t i) {
     switch (i) {
-        case 0:
-            copy(0);
-            edit_char(KEY_DEL, 1, 0);
-            break;
-        case 1: copy(0); break;
-        case 2: paste(); break;
-        case 3: edit_char(KEY_DEL, 1, 0); break;
-        case 4:
-            /* Send a ctrl + a to the active edit */
-            edit_char('A', 1, 4);
-            break;
+    case 0:
+        copy(0);
+        edit_char(KEY_DEL, 1, 0);
+        break;
+    case 1:
+        copy(0);
+        break;
+    case 2:
+        paste();
+        break;
+    case 3:
+        edit_char(KEY_DEL, 1, 0);
+        break;
+    case 4:
+        /* Send a ctrl + a to the active edit */
+        edit_char('A', 1, 4);
+        break;
     }
 }
 
@@ -277,14 +287,16 @@ bool edit_mright(EDIT *edit) {
             setactive(edit);
 
             edit_sel.start = edit_sel.p1 = edit_sel.p2 = edit->mouseover_char;
-            edit_sel.length                            = 0;
-            edit_select                                = 1;
+            edit_sel.length = 0;
+            edit_select = 1;
         }
 
         contextmenu_new(COUNTOF(menu_edit), menu_edit, contextmenu_edit_onselect);
 
         return true;
-    } else if (active_edit == edit) {
+    }
+
+    if (active_edit == edit) {
         edit_resetfocus(); // lose focus if right mouse button is pressed somewhere else
         return true;          // redraw
     }
@@ -353,12 +365,12 @@ void edit_do(EDIT *edit, uint16_t start, uint16_t length, bool remove) {
 
     history = realloc(edit->history, (edit->history_cur + 1) * sizeof(void *));
     if (!history) {
-        LOG_FATAL_ERR(EXIT_MALLOC, "UI Edit", "Unable to realloc for edit history, this should never happen!");
+        exit(1);
     }
 
     new = calloc(1, sizeof(EDIT_CHANGE) + length);
     if (!new) {
-        LOG_FATAL_ERR(EXIT_MALLOC, "UI Edit", "Unable to calloc for new EDIT_CHANGE, this should never happen!");
+        exit(1);
     }
 
     new->remove = remove;
@@ -374,7 +386,7 @@ void edit_do(EDIT *edit, uint16_t start, uint16_t length, bool remove) {
     }
 
     history[edit->history_cur] = new;
-    edit->history              = history;
+    edit->history = history;
 
     edit->history_cur++;
     edit->history_length = edit->history_cur;
@@ -855,7 +867,7 @@ void edit_setfocus(EDIT *edit) {
 }
 
 bool edit_active(void) {
-    return (active_edit != NULL);
+    return active_edit != NULL;
 }
 
 EDIT *edit_get_active(void) {

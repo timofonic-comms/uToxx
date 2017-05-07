@@ -16,19 +16,14 @@ bool native_remove_file(const uint8_t *name, size_t length, bool portable_mode) 
     }
 
     if (strlen((const char *)path) + length >= UTOX_FILE_NAME_LENGTH) {
-        LOG_DEBUG("Filesys", "File/directory name too long, unable to remove" );
         return false;
-    } else {
-        snprintf((char *)path + strlen((const char *)path), UTOX_FILE_NAME_LENGTH - strlen((const char *)path), "%.*s",
-                 (int)length, (char *)name);
     }
+    snprintf((char *)path + strlen((const char *)path), UTOX_FILE_NAME_LENGTH - strlen((const char *)path), "%.*s",
+             (int)length, (char *)name);
 
     if (remove((const char *)path)) {
-        LOG_ERR("NATIVE", "Unable to delete file!\n\t\t%s" , path);
         return false;
-    } else {
-        LOG_INFO("NATIVE", "File deleted!" );
-        LOG_DEBUG("Filesys", "\t%s" , path);
     }
+
     return true;
 }

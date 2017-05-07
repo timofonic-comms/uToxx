@@ -2,8 +2,8 @@
 
 #include "test.h"
 
-#include <time.h>
 #include <stdint.h>
+#include <time.h>
 
 /*
 START_TEST (test_chrono_finished)

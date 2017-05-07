@@ -4,7 +4,6 @@
 
 #include "main.h"
 
-#include "debug.h"
 #include "settings.h"
 #include "theme.h"
 #include "updater.h"
@@ -23,13 +22,11 @@
 bool utox_data_save_tox(uint8_t *data, size_t length) {
     FILE *fp = utox_get_file("tox_save.tox", NULL, UTOX_FILE_OPTS_WRITE);
     if (!fp) {
-        LOG_ERR("uTox", "Can not open tox_save.tox to write to it.");
         return true;
     }
 
     if (fwrite(data, length, 1, fp) != 1) {
-        LOG_ERR("uTox", "Unable to write Tox save to file.");
-        fclose(fp);
+                fclose(fp);
         return true;
     }
 
@@ -53,14 +50,12 @@ uint8_t *utox_data_load_tox(size_t *size) {
         uint8_t *data = calloc(1, length + 1);
 
         if (!data) {
-            LOG_ERR("uTox", "Could not allocate memory for tox save.");
             fclose(fp);
             // Quit. We're out of memory, calloc will fail again.
             return NULL;
         }
 
         if (fread(data, length, 1, fp) != 1) {
-            LOG_ERR("uTox", "Could not read: %s.", name[i]);
             fclose(fp);
             free(data);
             // Return NULL, because if a Tox save exits we don't want to fall
@@ -87,8 +82,7 @@ bool utox_data_save_ftinfo(char hex[TOX_PUBLIC_KEY_SIZE * 2], uint8_t *data, siz
     }
 
     if (fwrite(data, length, 1, fp) != 1) {
-        LOG_ERR("uTox", "Unable to write ftinfo to file.");
-        fclose(fp);
+                fclose(fp);
         return false;
     }
 
@@ -101,8 +95,8 @@ bool utox_data_save_ftinfo(char hex[TOX_PUBLIC_KEY_SIZE * 2], uint8_t *data, siz
 void parse_args(int argc, char *argv[],
                 bool *skip_updater,
                 int8_t *should_launch_at_startup,
-                int8_t *set_show_window
-                ) {
+                int8_t *set_show_window)
+{
     // set default options
     if (skip_updater) {
         *skip_updater = false;
@@ -117,12 +111,18 @@ void parse_args(int argc, char *argv[],
     }
 
     static struct option long_options[] = {
-        { "theme", required_argument, NULL, 't' },      { "portable", no_argument, NULL, 'p' },
-        { "set", required_argument, NULL, 's' },        { "unset", required_argument, NULL, 'u' },
-        { "skip-updater", no_argument, NULL, 'N' },     { "delete-updater", required_argument, NULL, 'D'},
-        { "version", no_argument, NULL, 0 },            { "silent", no_argument, NULL, 'S' },
-        { "verbose", no_argument, NULL, 'v' },          { "help", no_argument, NULL, 'h' },
-        { "debug", required_argument, NULL, 1 },        { 0, 0, 0, 0 }
+        { "theme", required_argument, NULL, 't' },
+        { "portable", no_argument, NULL, 'p' },
+        { "set", required_argument, NULL, 's' },
+        { "unset", required_argument, NULL, 'u' },
+        { "skip-updater", no_argument, NULL, 'N' },
+        { "delete-updater", required_argument, NULL, 'D'},
+        { "version", no_argument, NULL, 0 },
+        { "silent", no_argument, NULL, 'S' },
+        { "verbose", no_argument, NULL, 'v' },
+        { "help", no_argument, NULL, 'h' },
+        { "debug", required_argument, NULL, 1 },
+        { 0, 0, 0, 0 }
     };
 
     int opt, long_index = 0;
@@ -145,15 +145,12 @@ void parse_args(int argc, char *argv[],
                 } else if (!strcmp(optarg, "solarized-dark")) {
                     settings.theme = THEME_SOLARIZED_DARK;
                 } else {
-                    LOG_NORM("Please specify correct theme (please check user manual for list of correct values).\n");
                     exit(EXIT_FAILURE);
                 }
                 break;
             }
 
             case 'p': {
-                LOG_INFO("uTox", "Launching uTox in portable mode: All data will be saved to the tox folder in the current "
-                         "working directory\n");
                 settings.portable_mode = 1;
                 break;
             }
@@ -172,7 +169,6 @@ void parse_args(int argc, char *argv[],
                         *set_show_window = -1;
                     }
                 } else {
-                    LOG_NORM("Please specify a correct set option (please check user manual for list of correct values).\n");
                     exit(EXIT_FAILURE);
                 }
                 break;
@@ -184,7 +180,6 @@ void parse_args(int argc, char *argv[],
                         *should_launch_at_startup = -1;
                     }
                 } else {
-                    LOG_NORM("Please specify a correct unset option (please check user manual for list of correct values).\n");
                     exit(EXIT_FAILURE);
                 }
                 break;
@@ -208,54 +203,29 @@ void parse_args(int argc, char *argv[],
             }
 
             case 0: {
-                LOG_NORM("uTox version: %s\n", VERSION);
-                #ifdef GIT_VERSION
-                LOG_NORM("git version %s\n", GIT_VERSION);
-                #endif
                 exit(EXIT_SUCCESS);
                 break;
             }
 
             case 'S': {
-                settings.verbose = LOG_LVL_FATAL;
                 break;
             }
 
             case 'v': {
-                settings.verbose++;
                 break;
             }
 
             case 1: {
-                settings.debug_file = fopen(optarg, "a+");
-                if (!settings.debug_file) {
-                    settings.debug_file = stdout;
-                    LOG_NORM("Could not open %s. Logging to stdout.\n", optarg);
-                }
                 break;
             }
 
             case 'h': {
-                LOG_NORM("µTox - Lightweight Tox client version %s.\n\n", VERSION);
-                LOG_NORM("The following options are available:\n");
-                LOG_NORM("  -t --theme=<theme-name>  Specify a UI theme, where <theme-name> can be one of default, "
-                            "dark, light, highcontrast, zenburn.\n");
-                LOG_NORM("  -p --portable            Launch in portable mode: All data will be saved to the tox "
-                            "folder in the current working directory.\n");
-                LOG_NORM("  -s --set=<option>        Set an option: start-on-boot, show-window, hide-window.\n");
-                LOG_NORM("  -u --unset=<option>      Unset an option: start-on-boot.\n");
-                LOG_NORM("  -n --no-updater          Disable the updater.\n");
-                LOG_NORM("  -v --verbose             Increase the amount of output, use -v multiple times to get "
-                            "full debug output.\n");
-                LOG_NORM("  -h --help                Shows this help text.\n");
-                LOG_NORM("  --version                Print the version and exit.\n");
-                LOG_NORM("  --silent                 Set the verbosity level to 0, disable all debugging output.\n");
-                LOG_NORM("  --debug                  Set a file for utox to log errors to.\n");
-                exit(EXIT_SUCCESS);
                 break;
             }
 
-            case '?': LOG_TRACE("uTox", "%c", (char)optopt ); break;
+            case '?':{
+                break;
+            }
         }
     }
 }
@@ -265,10 +235,6 @@ void parse_args(int argc, char *argv[],
  * it's expect this will be called AFTER you parse argc/v and will act accordingly. */
 void utox_init(void) {
     atexit(utox_raze);
-
-    if (settings.debug_file == NULL) {
-        settings.debug_file = stdout;
-    }
 
     UTOX_SAVE *save = config_load();
     free(save);
@@ -281,12 +247,6 @@ void utox_init(void) {
 
     // We likely want to start this on every system.
     thread(updater_thread, (void*)1);
-
 }
 
-void utox_raze(void) {
-    LOG_WARN("uTox", "Clean exit.");
-    if (settings.debug_file != stdout) {
-        fclose(settings.debug_file);
-    }
-}
+void utox_raze(void) {}

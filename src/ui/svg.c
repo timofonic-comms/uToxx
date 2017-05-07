@@ -2,9 +2,8 @@
 
 #include "draw.h"
 
-#include "../debug.h"
-#include "../ui.h"
 #include "../macros.h"
+#include "../ui.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -713,10 +712,6 @@ bool svg_draw(bool needmemory) {
                           BM_CHAT_BUTTON_OVERLAY_WIDTH * 0.85, BM_CHAT_BUTTON_OVERLAY_HEIGHT * 0.81, SCALE(4), 0.1);
     loadalpha(BM_CHAT_BUTTON_OVERLAY_SCREENSHOT, p, BM_CHAT_BUTTON_OVERLAY_WIDTH, BM_CHAT_BUTTON_OVERLAY_HEIGHT);
     p += BM_CHAT_BUTTON_OVERLAY_WIDTH * BM_CHAT_BUTTON_OVERLAY_HEIGHT;
-
-    if (p - svg_data != size) {
-        LOG_WARN("SVG", "SVG data size mismatch...");
-    }
 
     if (!needmemory) {
         free(svg_data);

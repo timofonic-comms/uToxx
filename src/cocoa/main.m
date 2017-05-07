@@ -1,7 +1,6 @@
 #include "main.h"
 
 #include "../commands.h"
-#include "../debug.h"
 #include "../filesys.h"
 #include "../main.h"
 #include "../settings.h"
@@ -172,8 +171,9 @@ void config_osdefaults(UTOX_SAVE *r) {
 }
 
 void ensure_directory_r(char *path, int perm) {
-    if ((strcmp(path, "/") == 0) || (strcmp(path, ".") == 0))
+    if ((strcmp(path, "/") == 0) || (strcmp(path, ".") == 0)) {
         return;
+    }
 
     struct stat finfo;
     if (stat(path, &finfo) != 0) {
@@ -186,18 +186,19 @@ void ensure_directory_r(char *path, int perm) {
     }
 
     const char *parent = dirname(path);
-    if (!parent)
+    if (!parent) {
         abort();
+    }
 
     char *parent_copy = strdup(parent);
-    if (!parent_copy)
+    if (!parent_copy) {
         abort();
+    }
 
     ensure_directory_r(parent_copy, perm);
     free(parent_copy);
 
     if (mkdir(path, perm) != 0 && errno != EEXIST) {
-        LOG_ERR("Native", "ensure_directory_r(%s): %s", path, strerror(errno));
         abort();
     }
 }
@@ -214,7 +215,6 @@ bool native_remove_file(const uint8_t *name, size_t length, bool portable_mode) 
     }
 
     if (strlen((const char *)path) + length >= UTOX_FILE_NAME_LENGTH) {
-        LOG_TRACE("NATIVE", "File/directory name too long, unable to remove" );
         return 0;
     } else {
         snprintf((char *)path + strlen((const char *)path), UTOX_FILE_NAME_LENGTH - strlen((const char *)path), "%.*s",
@@ -222,11 +222,7 @@ bool native_remove_file(const uint8_t *name, size_t length, bool portable_mode) 
     }
 
     if (remove((const char *)path)) {
-        LOG_ERR("NATIVE", "Unable to delete file!\n\t\t%s" , path);
         return 0;
-    } else {
-        LOG_INFO("NATIVE", "File deleted!" );
-        LOG_TRACE("NATIVE", "\t%s" , path);
     }
     return 1;
 }
@@ -246,9 +242,8 @@ int file_lock(FILE *file, uint64_t start, size_t length) {
     result = fcntl(fileno(file), F_SETLK, &fl);
     if (result != -1) {
         return 1;
-    } else {
-        return 0;
     }
+    return 0;
 }
 
 int file_unlock(FILE *file, uint64_t start, size_t length) {
@@ -262,9 +257,8 @@ int file_unlock(FILE *file, uint64_t start, size_t length) {
     result = fcntl(fileno(file), F_SETLK, &fl);
     if (result != -1) {
         return 1;
-    } else {
-        return 0;
     }
+    return 0;
 }
 
 void flush_file(FILE *file) {
@@ -303,7 +297,7 @@ void init_ptt(void) {
 }
 
 static bool is_ctrl_down = 0;
-bool        check_ptt_key(void) {
+bool check_ptt_key(void) {
     return settings.push_to_talk ? is_ctrl_down : 1;
 }
 
@@ -531,18 +525,6 @@ int main(int argc, char const *argv[]) {
                &skip_updater,
                &should_launch_at_startup,
                &set_show_window);
-
-    if (should_launch_at_startup == 1 || should_launch_at_startup == -1) {
-        LOG_TRACE("NATIVE", "Start on boot not supported on this OS!" );
-    }
-
-    if (set_show_window == 1 || set_show_window == -1) {
-        LOG_TRACE("NATIVE", "Showing/hiding windows not supported on this OS!" );
-    }
-
-    if (skip_updater == true) {
-        LOG_TRACE("NATIVE", "Disabling the updater is not supported on this OS. Updates are managed by the app store." );
-    }
 
     setlocale(LC_ALL, "");
 

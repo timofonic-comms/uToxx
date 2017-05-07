@@ -1,7 +1,6 @@
 #include "updater.h"
 
 #include "branding.h"
-#include "debug.h"
 #include "macros.h"
 #include "settings.h"
 
@@ -87,14 +86,12 @@ static size_t mk_request(char *host, char *file, char *data) {
 
 static uint8_t *download(char *host, char *file, size_t *out_len) {
     if (settings.force_proxy) {
-        LOG_ERR("Updater", "Unable to download with a proxy set and forced!");
         return NULL;
     }
 
     struct addrinfo *root;
 
     if (getaddrinfo(host, "80", NULL, &root)) {
-        LOG_ERR("Updater", "No host found at [%s]", host);
         return NULL;
     }
 
@@ -105,27 +102,23 @@ static uint8_t *download(char *host, char *file, size_t *out_len) {
 
         int64_t sock = socket(info->ai_family, SOCK_STREAM, IPPROTO_TCP);
         if (SOCKET_SUCKS(sock)) {
-            LOG_ERR("Updater", "Can't get socket!");
             continue;
         }
 
         if (connect(sock, info->ai_addr, info->ai_addrlen)) {
-            LOG_ERR("Updater", "Unable to connect to addr [%s]" , host);
-            close(sock);
+                        close(sock);
             continue;
         }
 
         char reqst[1024] = {0}; // 1024 aught to be enough for anyone!
         size_t size = mk_request(host, file, reqst);
         if (size >= 1024) {
-            LOG_ERR("Updater", "OVERRUN DETECTED!");
             close(sock);
             freeaddrinfo(root);
             return NULL;
         }
 
         if (send(sock, reqst, size, 0) != (ssize_t)size) {
-            LOG_ERR("Updater", "Unable to send request to update server, [%s]x%lu", host, size);
             close(sock);
             continue;
         }
@@ -137,7 +130,6 @@ static uint8_t *download(char *host, char *file, size_t *out_len) {
         uint32_t real_len = 0, header_len = 0;
         uint8_t *buffer = calloc(1, 0x10000);
         if (!buffer) {
-            LOG_ERR("Updater", "Unable to malloc for the updater");
             close(sock);
             return NULL;
         }
@@ -148,13 +140,11 @@ static uint8_t *download(char *host, char *file, size_t *out_len) {
                 buffer[len] = 0; // Buffer must be null term
                 // Fail with 404
                 if (strstr((char *)buffer, "404 Not Found\r\n")) {
-                    LOG_ERR("Updater", "404 Not Found at [%s]" , host);
                     break;
                 }
                 // Get the real file length
                 char *str = strstr((char*)buffer, "Content-Length: ");
                 if (!str) {
-                    LOG_NOTE("Updater", "invalid HTTP response (1)");
                     break;
                 }
 
@@ -162,7 +152,6 @@ static uint8_t *download(char *host, char *file, size_t *out_len) {
                 str += sizeof("Content-Length: ") - 1;
                 header_len = strtoul(str, NULL, 10);
                 if (header_len > 100 * 1024 * 1024) {
-                    LOG_ERR("Updater", "Can't download a file larger than 100MiB");
                     close(sock);
                     free(buffer);
                     return NULL;
@@ -171,7 +160,6 @@ static uint8_t *download(char *host, char *file, size_t *out_len) {
                 /* find the end of the http response header */
                 str = strstr(str, "\r\n\r\n");
                 if (!str) {
-                    LOG_ERR("Updater", "invalid HTTP response (2)");
                     break;
                 }
                 str += sizeof("\r\n\r\n") - 1; // and trim
@@ -179,11 +167,9 @@ static uint8_t *download(char *host, char *file, size_t *out_len) {
                 /* allocate buffer to read into) */
                 data = calloc(header_len, 1);
                 if (!data) {
-                    LOG_ERR("Updater", "malloc failed (1) (%u)", header_len);
                     break;
                 }
 
-                LOG_INFO("Updater", "Download size: %u", header_len);
 
                 /* read the first piece */
                 real_len = len - (str - (char*)buffer);
@@ -194,7 +180,6 @@ static uint8_t *download(char *host, char *file, size_t *out_len) {
             }
 
             if (real_len + len > header_len) {
-                LOG_ERR("Updater", "Corrupt download, can't continue with update.");
                 close(sock);
                 free(buffer);
                 free(data);
@@ -215,11 +200,9 @@ static uint8_t *download(char *host, char *file, size_t *out_len) {
             return data;
         }
 
-        LOG_ERR("Updater", "bad download from host [%s]" , host);
         return NULL;
     }
 
-    LOG_ERR("Updater", "Generic error in updater. (This should never happen!)");
     freeaddrinfo(root);
     return NULL;
 }
@@ -227,13 +210,11 @@ static uint8_t *download(char *host, char *file, size_t *out_len) {
 static uint8_t *verify_sig(uint8_t *raw, uint32_t len, size_t *out_len) {
     uint8_t *message = calloc(1, len);
     if (!message) {
-        LOG_ERR("Updater", "Cant' malloc to verify the sig");
         return NULL;
     }
 
     size_t m_len = 0;
     if (crypto_sign_ed25519_open(message, (unsigned long long*)&m_len, raw, len, pk) == -1) {
-        LOG_ERR("Updater", "Fatal error checking the signature for download!");
         free(message);
         return NULL;
     }
@@ -252,7 +233,6 @@ static uint32_t download_version(void) {
     size_t len = 0;
     uint8_t *raw = download("downloads.utox.io", UPDATER_VERSION_STABLE_URI, &len);
     if (!raw) {
-        LOG_ERR("Updater", "Download failed.");
         return 0;
     }
 
@@ -260,7 +240,6 @@ static uint32_t download_version(void) {
     uint8_t *data = verify_sig(raw, len, &msg_len);
     free(raw);
     if (!data) {
-        LOG_ERR("Updater", "Signature failed. This is bad; consider reporting this.");
         return 0;
     }
 
@@ -278,29 +257,8 @@ static uint32_t download_version(void) {
     return version;
 }
 
-uint32_t updater_check(uint64_t v) {
-    uint32_t version = download_version();
-    LOG_INFO("Updater", "Current version %u, newest version version %u." , v, version);
-
-    if (version == 0) {
-        LOG_ERR("Updater", "Error getting version from uTox.io");
-        return 0;
-    }
-
-    if (version > v) {
-        LOG_WARN("Updater", "Yay! There's a new version of uTox [%u.%u.%u] our version <%u.%u.%u>",
-                      (version & 0xFF0000) >> 16, (version & 0xFF00) >> 8, (version & 0xFF),
-                      (v & 0xFF0000) >> 16, (v & 0xFF00) >> 8, (v & 0xFF));
-    } else if (version == v) {
-        LOG_WARN("Updater", "Running the latest version of uTox [%u.%u.%u]",
-                      (version & 0xFF0000) >> 16, (version & 0xFF00) >> 8, (version & 0xFF));
-    } else {
-        LOG_WARN("Updater", "Running an unpublished version of uTox published is [%u.%u.%u] our version <%u.%u.%u>",
-                      (version & 0xFF0000) >> 16, (version & 0xFF00) >> 8, (version & 0xFF),
-                      (v & 0xFF0000) >> 16, (v & 0xFF00) >> 8, (v & 0xFF));
-    }
-
-    return version;
+uint32_t updater_check(uint64_t UNUSED(v)) {
+    return download_version();
 }
 
 #ifdef ENABLE_AUTOUPDATE
@@ -335,34 +293,30 @@ void updater_thread(void *from_startup) {
         if (version > UTOX_VERSION_NUMBER) {
 
             char str[100];
-            snprintf(str, 100, "%.3s_%u-%u.%u.%u", UPDATER_HOST, UPDATER_ARCH, (version & 0xFF0000) >> 16, (version & 0xFF00) >> 8, (version & 0xFF));
+            snprintf(str, 100, "%.3s_%u-%u.%u.%u", UPDATER_HOST, UPDATER_ARCH,
+                     (version & 0xFF0000) >> 16, (version & 0xFF00) >> 8, (version & 0xFF));
 
             char name[UTOX_FILE_NAME_LENGTH];
             snprintf(name, UTOX_FILE_NAME_LENGTH, "%s/next_%s", pwd, UPDATER_OUT);
             FILE *file = fopen(name, "rb");
             if (file) {
-                LOG_WARN("Updater", "File already exists -- %s ", name);
                 fclose(file);
                 return;
             }
 
             file = fopen(name, "wb");
             if (!file) {
-                LOG_ERR("Updater", "Can't write to working dir");
-                LOG_ERR("Updater", "      %s", name);
                 return;
             }
 
             size_t raw_size = 0;
             uint8_t *raw = download("downloads.utox.io", str, &raw_size);
-            LOG_NOTE("Updater", "Got size bin %u", raw_size);
 
             size_t data_size = 0;
             uint8_t *data = verify_sig(raw, raw_size, &data_size);
             free(raw);
 
             if (!data) {
-                LOG_ERR("Updater", "Signature failed. This is bad; consider reporting this.");
                 fclose(file);
                 return;
             }
@@ -373,7 +327,6 @@ void updater_thread(void *from_startup) {
             fwrite(data + 4, data_size - 4, 1, file);
             fclose(file);
             free(data);
-            LOG_NOTE("Updater", "Wrote binary to %s", name);
             return;
         }
 
@@ -388,5 +341,5 @@ void updater_thread(void *from_startup)
 #endif
 
 void updater_start(bool from_startup) {
-    thread(updater_thread, (void*)from_startup);
+    thread(updater_thread, (void *)from_startup);
 }

@@ -3,7 +3,6 @@
 
 #include "../test.h"
 
-
 SETTINGS settings = {
     .curr_version = UTOX_VERSION_NUMBER,
     // .last_version                // included here to match the full struct
@@ -49,9 +48,6 @@ SETTINGS settings = {
     .ringtone_enabled       = true,
     .status_notifications   = true,
     .group_notifications    = 0,
-
-    .verbose = LOG_LVL_ERROR,
-    .debug_file = NULL,
 
     // .theme                       // included here to match the full struct
     // OS interface settings

@@ -1,19 +1,17 @@
 #include "main.h"
 
 #include "../friend.h"
-#include "../debug.h"
 #include "../main.h"
 #include "../settings.h"
 #include "../tox.h"
 
-#include "../../langs/i18n_decls.h"
-
 #include "../av/utox_av.h"
 #include "../av/video.h"
-
 #include "../native/audio.h"
 #include "../native/ui.h"
 #include "../native/video.h"
+
+#include "../../langs/i18n_decls.h"
 
 #import <OpenGL/gl.h>
 #import <OpenGL/glext.h>
@@ -225,7 +223,6 @@ CGFloat           desktop_capture_scale = 1.0;
 #else
 #define AV_SESSION_CHK()                  \
     if (!active_video_session) {          \
-        LOG_WARN("uToxAV", "no active video session"); \
         abort();                          \
     }
 #endif
@@ -234,7 +231,6 @@ bool native_video_init(void *handle) {
     NSLog(@"using video: %p", handle);
 
     if (active_video_session) {
-        LOG_ERR("Video", "overlapping video session!");
         abort();
     }
 
@@ -353,8 +349,7 @@ uint16_t native_video_detect(void) {
 }
 
 - (void)displayImage:(uint8_t *)rgba w:(uint16_t)width h:(uint16_t)height {
-    // LOG_TRACE("Video", "wants image of %hu %hu", width, height);
-    ((uToxIroncladVideoLayer *)self.layer).temporaryLoadTexture = rgba;
+    //     ((uToxIroncladVideoLayer *)self.layer).temporaryLoadTexture = rgba;
     ((uToxIroncladVideoLayer *)self.layer).temporaryWidth       = width;
     ((uToxIroncladVideoLayer *)self.layer).temporaryHeight      = height;
 
@@ -467,9 +462,7 @@ uint16_t native_video_detect(void) {
             default: {
                 FRIEND *f = get_friend(((uToxIroncladWindow *)notification.object).video_id - 1);
                 if (!f) {
-                    LOG_ERR("Cocoa", "Could not get friend with number: %u",
-                            ((uToxIroncladWindow *)notification.object).video_id - 1);
-                    return;
+                                        return;
                 }
 
                 postmessage_toxcore(TOX_CALL_DISCONNECT, f->number, 0, NULL);
@@ -487,13 +480,8 @@ void video_frame(uint32_t id, uint8_t *img_data, uint16_t width, uint16_t height
     NSWindow *        win    = [utoxapp ironcladWindowForID:id];
     uToxIroncladView *view   = win.contentView;
 
-    if (!win) {
-        LOG_WARN("Video", "BUG: video_frame called for bogus Ironclad id %lu", id);
-    }
-
     CGSize s = view.videoSize;
     if (resize || s.width != width || s.height != height) {
-        LOG_WARN("Video", "frame size changed, if this happens too often file a bug");
 
         CGFloat chrome_metric_w = win.frame.size.width - [win.contentView frame].size.width;
         CGFloat chrome_metric_h = win.frame.size.height - [win.contentView frame].size.height;

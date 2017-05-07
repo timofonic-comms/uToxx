@@ -6,7 +6,6 @@
 
 #include "../avatar.h"
 #include "../commands.h"
-#include "../debug.h"
 #include "../file_transfers.h"
 #include "../filesys.h"
 #include "../flist.h"
@@ -28,15 +27,15 @@
 #include "../native/os.h"
 #include "../native/window.h"
 
-#include "../ui/draw.h"
-#include "../ui/dropdown.h"
-#include "../ui/edit.h"
-#include "../ui/svg.h"
-
 #include "../layout/background.h" // TODO do we want to remove this?
 #include "../layout/friend.h"
 #include "../layout/group.h"
 #include "../layout/settings.h" // TODO remove, in for dropdown.lang
+
+#include "../ui/draw.h"
+#include "../ui/dropdown.h"
+#include "../ui/edit.h"
+#include "../ui/svg.h"
 
 #include <windowsx.h>
 #include <io.h>
@@ -63,8 +62,7 @@ static int utf8_to_nativestr(const char *str, wchar_t *out, int length) {
 /** Open system file browser dialog */
 void openfilesend(void) {
     char *filepath = calloc(1, UTOX_FILE_NAME_LENGTH);
-    if (filepath == NULL) {
-        LOG_ERR("Windows", " Could not allocate memory for path.");
+    if (!filepath) {
         return;
     }
 
@@ -82,13 +80,11 @@ void openfilesend(void) {
     if (GetOpenFileName(&ofn)) {
         FRIEND *f = flist_get_friend();
         if (!f) {
-            LOG_ERR("Windows", "Unable to get friend for file send msg.");
             return;
         }
 
         UTOX_MSG_FT *msg = calloc(1, sizeof(UTOX_MSG_FT));
         if (!msg) {
-            LOG_ERR("Windows", "Unable to calloc for file send msg.");
             return;
         }
 
@@ -96,8 +92,6 @@ void openfilesend(void) {
         msg->name = (uint8_t *)filepath;
 
         postmessage_toxcore(TOX_FILE_SEND_NEW, f->number, 0, msg);
-    } else {
-        LOG_ERR("Windows", "GetOpenFileName() failed.");
     }
     SetCurrentDirectoryW(dir);
 }
@@ -105,7 +99,6 @@ void openfilesend(void) {
 void openfileavatar(void) {
     char *filepath = calloc(1, UTOX_FILE_NAME_LENGTH);
     if (!filepath) {
-        LOG_ERR("openfileavatar", "Could not allocate memory for path.");
         return;
     }
 
@@ -128,7 +121,6 @@ void openfileavatar(void) {
 
     while (1) { // loop until we have a good file or the user closed the dialog
         if (!GetOpenFileName(&ofn)) {
-            LOG_TRACE("NATIVE", "GetOpenFileName() failed when trying to grab an avatar.");
             break;
         }
 
@@ -146,8 +138,6 @@ void openfileavatar(void) {
             free(img);
             char message[1024];
             if (sizeof(message) < (unsigned)SLEN(AVATAR_TOO_LARGE_MAX_SIZE_IS) + 16) {
-                LOG_ERR("NATIVE", "AVATAR_TOO_LARGE message is larger than allocated buffer(%"PRIu64" bytes)\n",
-                      sizeof(message));
                 break;
             }
 
@@ -172,7 +162,7 @@ void openfileavatar(void) {
 void file_save_inline_image_png(MSG_HEADER *msg) {
     char *path = calloc(1, UTOX_FILE_NAME_LENGTH);
     if (!path) {
-        LOG_FATAL_ERR(EXIT_MALLOC, "file_save_inline_image_png", "Could not allocate memory for path.");
+        exit(1);
     }
 
     snprintf(path, UTOX_FILE_NAME_LENGTH, "%.*s", (int)msg->via.ft.name_length, (char *)msg->via.ft.name);
@@ -195,11 +185,7 @@ void file_save_inline_image_png(MSG_HEADER *msg) {
 
             snprintf((char *)msg->via.ft.path, UTOX_FILE_NAME_LENGTH, "%s", path);
             msg->via.ft.inline_png = false;
-        } else {
-            LOG_ERR("NATIVE", "file_save_inline_image_png:\tCouldn't open path: `%s` to save inline file.", path);
         }
-    } else {
-        LOG_ERR("NATIVE", "GetSaveFileName() failed");
     }
 
     free(path);
@@ -284,7 +270,6 @@ void copy(int value) {
 static NATIVE_IMAGE *create_utox_image(HBITMAP bmp, bool has_alpha, uint32_t width, uint32_t height) {
     NATIVE_IMAGE *image = calloc(1, sizeof(NATIVE_IMAGE));
     if (!image) {
-        LOG_ERR("create_utox_image", " Could not allocate memory for image." );
         return NULL;
     }
 
@@ -301,7 +286,7 @@ static NATIVE_IMAGE *create_utox_image(HBITMAP bmp, bool has_alpha, uint32_t wid
 
 /* TODO DRY, this exists in screen_grab.c */
 static void sendbitmap(HDC mem, HBITMAP hbm, int width, int height) {
-    if (width == 0 || height == 0) {
+    if (!width || !height) {
         return;
     }
 
@@ -384,10 +369,10 @@ void paste(void) {
 }
 
 NATIVE_IMAGE *utox_image_to_native(const UTOX_IMAGE data, size_t size, uint16_t *w, uint16_t *h, bool keep_alpha) {
-    int      width, height, bpp;
+    int width, height, bpp;
     uint8_t *rgba_data = stbi_load_from_memory(data, size, &width, &height, &bpp, 4);
 
-    if (rgba_data == NULL || width == 0 || height == 0) {
+    if (!rgba_data || !width || !height) {
         return NULL; // invalid image
     }
 
@@ -460,7 +445,6 @@ void flush_file(FILE *file) {
 }
 
 int ch_mod(uint8_t *UNUSED(file)) {
-    /* You're probably looking for ./xlib as windows is lamesauce and wants nothing to do with sane permissions */
     return true;
 }
 
@@ -533,8 +517,7 @@ void redraw(void) {
 void update_tray(void) {
     // FIXME: this is likely to over/under-run
     char *tip = calloc(1, 128); // 128 is the max length of nid.szTip
-    if (tip == NULL) {
-        LOG_TRACE("update_trip", " Could not allocate memory." );
+    if (!tip) {
         return;
     }
 
@@ -586,20 +569,11 @@ void loadfonts() {
     font[FONT_SELF_NAME] = CreateFontIndirect(&lf);
     lf.lfHeight          = (SCALE(-20) - 1) / 2;
     font[FONT_MISC]      = CreateFontIndirect(&lf);
-    /*lf.lfWeight = FW_NORMAL; //FW_LIGHT <- light fonts dont antialias
-    font[FONT_MSG_NAME] = CreateFontIndirect(&lf);
-    lf.lfHeight = F(11);
-    font[FONT_MSG] = CreateFontIndirect(&lf);
-    lf.lfUnderline = 1;
-    font[FONT_MSG_LINK] = CreateFontIndirect(&lf);*/
 
     SelectObject(main_window.draw_DC, font[FONT_TEXT]);
     TEXTMETRIC tm;
     GetTextMetrics(main_window.draw_DC, &tm);
     font_small_lineheight = tm.tmHeight + tm.tmExternalLeading;
-    // SelectObject(main_window.draw_DC, font[FONT_MSG]);
-    // GetTextMetrics(main_window.draw_DC, &tm);
-    // font_msg_lineheight = tm.tmHeight + tm.tmExternalLeading;
 }
 
 void setscale_fonts(void) {
@@ -724,12 +698,9 @@ static void cursors_init(void) {
 static bool fresh_update(void) {
     char path[UTOX_FILE_NAME_LENGTH];
     GetModuleFileName(NULL, path, UTOX_FILE_NAME_LENGTH);
-    LOG_WARN("Win Updater", "Starting");
-    LOG_NOTE("Win Updater", "Root %s", path);
 
     char *name_start = strstr(path, "next_uTox.exe");
     if (!name_start) {
-        LOG_NOTE("Win Updater", "Not the updater -- %s ", path);
         return false;
     }
 
@@ -738,29 +709,23 @@ static bool fresh_update(void) {
     char backup[UTOX_FILE_NAME_LENGTH];
     strcpy(name_start, "uTox_backup.exe");
     memcpy(backup, path, UTOX_FILE_NAME_LENGTH);
-    LOG_NOTE("Win Updater", "Backup %s", backup);
 
     char real[UTOX_FILE_NAME_LENGTH];
     strcpy(name_start, "uTox.exe");
     memcpy(real, path, UTOX_FILE_NAME_LENGTH);
-    LOG_NOTE("Win Updater", "%s", real);
-    if (MoveFileEx(real, backup, MOVEFILE_REPLACE_EXISTING) == 0) {
+        if (MoveFileEx(real, backup, MOVEFILE_REPLACE_EXISTING) == 0) {
         // Failed
-        LOG_ERR("Win Updater", "move failed");
         return false;
     }
 
     char new[UTOX_FILE_NAME_LENGTH];
     strcpy(name_start, "next_uTox.exe");
     memcpy(new, path, UTOX_FILE_NAME_LENGTH);
-    LOG_NOTE("Win Updater", "%s", new);
-    if (CopyFile(new, real, 0) == 0) {
+        if (CopyFile(new, real, 0) == 0) {
         // Failed
-        LOG_ERR("Win Updater", "copy failed");
         return false;
     }
 
-    LOG_ERR("Win Updater", "Launching new path %s", real);
 
     char cmd[UTOX_FILE_NAME_LENGTH];
     size_t next = snprintf(cmd, UTOX_FILE_NAME_LENGTH, " --skip-updater --delete-updater %s", new);
@@ -773,7 +738,6 @@ static bool fresh_update(void) {
 }
 
 static bool pending_update(void) {
-    LOG_WARN("Win Pending", "Starting");
     // Check if we're the fresh version.
     char path[UTOX_FILE_NAME_LENGTH];
     GetModuleFileName(NULL, path, UTOX_FILE_NAME_LENGTH);
@@ -792,7 +756,6 @@ static bool pending_update(void) {
         memcpy(next, path, UTOX_FILE_NAME_LENGTH);
         FILE *f = fopen(next, "rb");
         if (f) {
-            LOG_ERR("Win Pending", "Updater waiting :D");
             fclose(f);
             char cmd[UTOX_FILE_NAME_LENGTH] = { 0 };
             if (settings.portable_mode) {
@@ -801,9 +764,7 @@ static bool pending_update(void) {
             ShellExecute(NULL, "open", next, cmd, NULL, SW_SHOW);
             return true;
         }
-        LOG_WARN("Win Pending", "No updater waiting for us");
     }
-    LOG_WARN("Win Pending", "Bad file name -- %s ", path);
 
     return false;
 }
@@ -812,7 +773,7 @@ static bool win_init_mutex(HANDLE *mutex, HINSTANCE hInstance, PSTR cmd) {
     *mutex = CreateMutex(NULL, 0, TITLE);
 
     if (!mutex) {
-        LOG_FATAL_ERR(-4, "Win Mutex", "Unable to create windows mutex.");
+        exit(1);
     }
 
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
@@ -823,9 +784,9 @@ static bool win_init_mutex(HANDLE *mutex, HINSTANCE hInstance, PSTR cmd) {
                 .lpData = cmd
             };
             SendMessage(window, WM_COPYDATA, (WPARAM)hInstance, (LPARAM)&data);
-            LOG_FATAL_ERR(-3, "Win Mutex", "Message sent.");
+            exit(1);
         }
-        LOG_FATAL_ERR(-3, "Win Mutex", "Error getting mutex or window.");
+        exit(1);
     }
 
     return true;
@@ -872,21 +833,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE UNUSED(hPrevInstance), PSTR cm
     utox_init();
 
     #ifdef __WIN_LEGACY
-        LOG_WARN("WinMain", "Legacy windows build");
-    #else
-        LOG_WARN("WinMain", "Normal windows build");
-    #endif
+            #else
+            #endif
 
     #ifdef GIT_VERSION
-        LOG_NOTE("WinMain", "uTox version %s \n", GIT_VERSION);
-    #endif
+            #endif
 
     /* if opened with argument, check if uTox is already open and pass the argument to the existing process */
     HANDLE utox_mutex;
     win_init_mutex(&utox_mutex, hInstance, cmd);
 
     if (!skip_updater) {
-        LOG_NOTE("WinMain", "Not skipping updater");
         if (fresh_update()) {
             CloseHandle(utox_mutex);
             exit(0);

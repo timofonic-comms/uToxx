@@ -1,15 +1,14 @@
 #include "dns.h"
 
-#include "debug.h"
 #include "macros.h"
 #include "settings.h"
 #include "utox.h"
 
 #include "native/thread.h"
 
-#include <tox/toxdns.h>
-
+#include <stdlib.h>
 #include <string.h>
+#include <tox/toxdns.h>
 
 #ifdef __WIN32__
 #include <windows.h>
@@ -64,7 +63,6 @@ static void writechecksum(uint8_t *address) {
 
 static int64_t parseargument(uint8_t *dest, char *src, size_t length, void **pdns3) {
     /* parses format groupbot@utox.org -> groupbot._tox.utox.org */
-
     bool reset = 0;
     bool at = 0;
     char *a = src;
@@ -146,18 +144,21 @@ static int64_t parseargument(uint8_t *dest, char *src, size_t length, void **pdn
     }
 
     if (!at) {
-        if ((d - dest) > TOXDNS_MAX_RECOMMENDED_NAME_LENGTH)
+        if ((d - dest) > TOXDNS_MAX_RECOMMENDED_NAME_LENGTH) {
             return -1;
+        }
 
         void *dns3 = istox3("utox.org", sizeof("utox.org") - 1);
 
-        if (!dns3)
+        if (!dns3) {
             return -1;
+        }
 
         uint8_t out[256];
-        int     len = tox_generate_dns3_string(dns3, out, sizeof(out), &pin, dest, d - dest);
-        if (len == -1)
+        int len = tox_generate_dns3_string(dns3, out, sizeof(out), &pin, dest, d - dest);
+        if (len == -1) {
             return -1;
+        }
 
         dest[0] = '_';
         memcpy(dest + 1, out, len);
@@ -169,8 +170,6 @@ static int64_t parseargument(uint8_t *dest, char *src, size_t length, void **pdn
     }
 
     *d = 0;
-
-    LOG_TRACE("DNS", "Parsed: (%.*s)->(%s) pin=%X" , (int)length, src, dest, pin);
 
     return pin;
 }
@@ -185,19 +184,16 @@ static bool parserecord(uint8_t *dest, uint8_t *src, uint32_t pin, void *dns3) {
             uint8_t ch = '\0';
             if (*a >= '0' && *a <= '9') {
                 if (id == dest + 38) {
-                    LOG_TRACE("DNS", "id too long" );
                     return 0;
                 }
                 ch = *a - '0';
             } else if (*a >= 'A' && *a <= 'F') {
                 if (id == dest + 38) {
-                    LOG_TRACE("DNS", "id too long" );
                     return 0;
                 }
                 ch = *a - 'A' + 10;
             } else if (*a != ' ') {
                 if (id != dest + 38) {
-                    LOG_TRACE("DNS", "id too short" );
                     return 0;
                 }
                 _id = 0;
@@ -218,19 +214,16 @@ static bool parserecord(uint8_t *dest, uint8_t *src, uint32_t pin, void *dns3) {
             uint8_t ch = '\0';
             if (*a >= '0' && *a <= '9') {
                 if (id == dest + 32) {
-                    LOG_TRACE("DNS", "id too long" );
                     return 0;
                 }
                 ch = *a - '0';
             } else if (*a >= 'A' && *a <= 'F') {
                 if (id == dest + 32) {
-                    LOG_TRACE("DNS", "id too long" );
                     return 0;
                 }
                 ch = *a - 'A' + 10;
             } else if (*a != ' ') {
                 if (id != dest + 32) {
-                    LOG_TRACE("DNS", "id too short" );
                     return 0;
                 }
                 _pub = 0;
@@ -278,7 +271,6 @@ static bool parserecord(uint8_t *dest, uint8_t *src, uint32_t pin, void *dns3) {
     }
 
     if (!version) {
-        LOG_TRACE("DNS", "invalid version" );
         return 0;
     }
 
@@ -292,8 +284,9 @@ static void dns_thread(void *data) {
 
     void *  dns3 = NULL;
     int64_t ret  = parseargument(result, (char *)data + sizeof(size_t), length, &dns3);
-    if (ret == -1)
+    if (ret == -1) {
         goto FAIL;
+    }
 
     uint32_t pin = ret;
 
@@ -306,7 +299,6 @@ static void dns_thread(void *data) {
         DNS_TXT_DATA *txt = &record->Data.Txt;
         if (record->wType == DNS_TYPE_TEXT && txt->dwStringCount) {
             if (txt->pStringArray[0]) {
-                LOG_TRACE("DNS", "Attempting:\n%s" , txt->pStringArray[0]);
                 if ((success = parserecord(data, (uint8_t *)txt->pStringArray[0], pin, dns3))) {
                     break;
                 }
@@ -326,19 +318,16 @@ static void dns_thread(void *data) {
         pt      = answer + sizeof(HEADER);
 
         if ((len = dn_expand(answer, answend, pt, host, sizeof(host))) < 0) {
-            LOG_TRACE("DNS", "^dn_expand failed" );
             goto FAIL;
         }
 
         pt += len;
         if (pt > answend - 4) {
-            LOG_TRACE("DNS", "^Bad (too short) DNS reply" );
             goto FAIL;
         }
 
         GETSHORT(type, pt);
         if (type != T_TXT) {
-            LOG_TRACE("DNS", "^Broken DNS reply." );
             goto FAIL;
         }
 
@@ -347,13 +336,10 @@ static void dns_thread(void *data) {
         do { /* recurse through CNAME rr's */
             pt += size;
             if ((len = dn_expand(answer, answend, pt, host, sizeof(host))) < 0) {
-                LOG_TRACE("DNS", "^second dn_expand failed" );
                 goto FAIL;
             }
-            LOG_TRACE("DNS", "^Host: %s" , host);
             pt += len;
             if (pt > answend - 10) {
-                LOG_TRACE("DNS", "^Bad (too short) DNS reply" );
                 goto FAIL;
             }
             GETSHORT(type, pt);
@@ -361,46 +347,28 @@ static void dns_thread(void *data) {
             pt += 4;       // GETLONG(cttl, pt);
             GETSHORT(size, pt);
             if (pt + size < answer || pt + size > answend) {
-                LOG_TRACE("DNS", "^DNS rr overflow" );
                 goto FAIL;
             }
         } while (type == T_CNAME);
 
         if (type != T_TXT) {
-            LOG_TRACE("DNS", "^Not a TXT record" );
             goto FAIL;
         }
 
         if (!size || (txtlen = *pt) >= size || !txtlen) {
-            LOG_TRACE("DNS", "^Broken TXT record (txtlen = %d, size = %d)" , txtlen, size);
             goto FAIL;
         }
 
-        // if(!(txt = (char *) malloc(txtlen + 1)))
-        // return NULL;
-
-        // memcpy(txt, pt+1, txtlen);
-        // txt[txtlen] = 0;
-        //*ttl = cttl;
-
-        // answer[len] = 0;
-        // LOG_TRACE("DNS", "%u %u" , txtlen, answend - (pt + 1));
-        LOG_TRACE("DNS", "Attempting:\n%.*s" , txtlen, pt + 1);
-
         pt[txtlen + 1] = 0;
-        success        = parserecord(data, pt + 1, pin, dns3);
-    } else {
-        LOG_TRACE("DNS", "timeout" );
+        success = parserecord(data, pt + 1, pin, dns3);
     }
 #endif
 FAIL:
-
     postmessage_utox(DNS_RESULT, success, 0, data);
 }
 
 void dns_request(char *name, size_t length) {
     if (settings.force_proxy) {
-        LOG_TRACE("DNS", "uTox DNS:\tUnable to do DNS lookup, because we're are using a proxy without UDP!" );
         return;
     }
 

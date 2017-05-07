@@ -1,7 +1,6 @@
 #include "commands.h"
 
 #include "command_funcs.h"
-#include "debug.h"
 #include "flist.h"
 #include "tox.h"
 
@@ -20,15 +19,15 @@ struct Command commands[MAX_NUM_CMDS] = {
 };
 
 uint16_t utox_run_command(char *string, uint16_t string_length, char **cmd, char **argument, int trusted) {
-    if (trusted == 0) {
-        return 0; /* We don't currently support commands from non-trusted sources, before you run commands from friends
-                   * or elsewhere, you MUST implement error checking better than what exists */
+    if (!trusted) {
+        /* We don't currently support commands from non-trusted sources, before you run commands from friends
+         * or elsewhere, you MUST implement error checking better than what exists */
+        return 0;
     }
 
     uint16_t cmd_length = 0, argument_length = 0;
 
     if (string[0] == '/') { /* Cool it's a command we support! */
-        // LOG_TRACE("Commands", "command found!" );
         uint16_t i;
         for (i = 0; i < string_length; ++i) {
             if (string[i] == ' ') {
@@ -51,23 +50,23 @@ uint16_t utox_run_command(char *string, uint16_t string_length, char **cmd, char
             *cmd = string + 1;
         }
     } else {
-        // LOG_TRACE("Commands", "No command found" ); /* Sad, we don't support this command. */
+        /* Sad, we don't support this command. */
         *argument = string;
-        cmd       = NULL;
+        cmd = NULL;
         return 0;
     }
 
-    int i = 0;
-    while(commands[i].cmd){
-        if (commands[i].cmd_length == cmd_length && memcmp(commands[i].cmd, *cmd, cmd_length) == 0) {
-            void* object = flist_get_friend() ? (void*)flist_get_friend() : (void*)flist_get_groupchat();
+    for (int i = 0; commands[i].cmd; ++i) {
+        if (commands[i].cmd_length == cmd_length
+            && memcmp(commands[i].cmd, *cmd, cmd_length) == 0)
+        {
+            void *object = flist_get_friend() ? (void *)flist_get_friend() : (void *)flist_get_groupchat();
             bool ret = commands[i].func(object, *argument, argument_length);
             if (ret) {
                 cmd_length = -1;
             }
             break;
         }
-        i++;
     }
 
     return cmd_length;
@@ -76,8 +75,6 @@ uint16_t utox_run_command(char *string, uint16_t string_length, char **cmd, char
 bool g_select_add_friend_later = 0;
 
 void do_tox_url(uint8_t *url_string, int len) {
-    LOG_TRACE("Commands", "Command: %.*s" , len, url_string);
-
     //! lacks max length checks, writes to inputs even on failure, no notice of failure
     // doesnt reset unset inputs
 
@@ -95,6 +92,7 @@ void do_tox_url(uint8_t *url_string, int len) {
     *l          = 0;
     while (a != end) {
         switch (*a) {
+            // TODO: Remove GNU extensions.
             case 'a' ... 'z':
             case 'A' ... 'Z':
             case '0' ... '9':

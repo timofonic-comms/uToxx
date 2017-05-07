@@ -2,11 +2,9 @@
 
 #include "window.h"
 
-#include "../debug.h"
 #include "../macros.h"
 
 #include "../native/image.h"
-
 #include "../ui/svg.h"
 
 UTOX_WINDOW *curr = NULL;
@@ -72,7 +70,7 @@ void image_set_filter(NATIVE_IMAGE *image, uint8_t filter) {
     switch (filter) {
         case FILTER_NEAREST: image->stretch_mode  = COLORONCOLOR; break;
         case FILTER_BILINEAR: image->stretch_mode = HALFTONE; break;
-        default: LOG_TRACE("Drawing", "Warning: Tried to set image to unrecognized filter(%u)." , filter); return;
+        default:  return;
     }
 }
 
@@ -112,11 +110,11 @@ void draw_image(const NATIVE_IMAGE *image, int x, int y, uint32_t width, uint32_
 
         // stretch image onto temporary bitmap
         if (image->has_alpha) {
-            AlphaBlend(drawdc, 0, 0, image->scaled_width, image->scaled_height, curr->mem_DC, 0, 0, image->width,
-                       image->height, blend_function);
+            AlphaBlend(drawdc, 0, 0, image->scaled_width, image->scaled_height, curr->mem_DC, 0, 0,
+                       image->width, image->height, blend_function);
         } else {
-            StretchBlt(drawdc, 0, 0, image->scaled_width, image->scaled_height, curr->mem_DC, 0, 0, image->width,
-                       image->height, SRCCOPY);
+            StretchBlt(drawdc, 0, 0, image->scaled_width, image->scaled_height, curr->mem_DC, 0, 0,
+                       image->width, image->height, SRCCOPY);
         }
     }
 

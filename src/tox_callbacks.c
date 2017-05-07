@@ -4,7 +4,6 @@
 #include "file_transfers.h"
 #include "friend.h"
 #include "groups.h"
-#include "debug.h"
 #include "macros.h"
 #include "settings.h"
 #include "text.h"
@@ -23,7 +22,7 @@ static void callback_friend_request(Tox *UNUSED(tox), const uint8_t *id, const u
                                     void *UNUSED(userdata)) {
 
     if (settings.block_friend_requests) {
-        LOG_WARN("Tox Callbacks", "Friend request ignored."); // TODO move to friend.c
+         // TODO move to friend.c
         return;
     }
 
@@ -40,25 +39,21 @@ static void callback_friend_message(Tox *UNUSED(tox), uint32_t friend_number, TO
     /* send message to UI */
     FRIEND *f = get_friend(friend_number);
     if (!f) {
-        LOG_ERR("Tox Callbacks", "Could not get friend with number: %u", friend_number);
         return;
     }
 
     switch (type) {
         case TOX_MESSAGE_TYPE_NORMAL: {
             message_add_type_text(&f->msg, 0, (char *)message, length, 1, 0);
-            LOG_INFO("Tox Callbacks", "Friend\t%u\t--\tStandard Message: %.*s" , friend_number, (int)length, message);
             break;
         }
 
         case TOX_MESSAGE_TYPE_ACTION: {
             message_add_type_action(&f->msg, 0, (char *)message, length, 1, 0);
-            LOG_INFO("Tox Callbacks", "Friend\t%u\t--\tAction Message: %.*s" , friend_number, (int)length, message);
             break;
         }
 
         default: {
-            LOG_ERR("Tox Callbacks", "Friend\t%u\t--\tUnsupported message type: %.*s" , friend_number, (int)length, message);
             break;
         }
     }
@@ -66,48 +61,45 @@ static void callback_friend_message(Tox *UNUSED(tox), uint32_t friend_number, TO
 }
 
 static void callback_name_change(Tox *UNUSED(tox), uint32_t fid, const uint8_t *newname, size_t length,
-                                 void *UNUSED(userdata)) {
+                                 void *UNUSED(userdata))
+{
     length     = utf8_validate(newname, length);
     void *data = malloc(length);
     memcpy(data, newname, length);
     postmessage_utox(FRIEND_NAME, fid, length, data);
-    LOG_INFO("Tox Callbacks", "Friend\t%u\t--\tName:\t%.*s", fid, (int)length, newname);
 }
 
 static void callback_status_message(Tox *UNUSED(tox), uint32_t fid, const uint8_t *newstatus, size_t length,
-                                    void *UNUSED(userdata)) {
+                                    void *UNUSED(userdata))
+{
     length     = utf8_validate(newstatus, length);
     void *data = malloc(length);
     memcpy(data, newstatus, length);
     postmessage_utox(FRIEND_STATUS_MESSAGE, fid, length, data);
-    LOG_INFO("Tox Callbacks", "Friend\t%u\t--\tStatus Message:\t%.*s", fid, (int)length, newstatus);
 }
 
-static void callback_user_status(Tox *UNUSED(tox), uint32_t fid, TOX_USER_STATUS status, void *UNUSED(userdata)) {
+static void callback_user_status(Tox *UNUSED(tox), uint32_t fid, TOX_USER_STATUS status,
+                                 void *UNUSED(userdata))
+{
     postmessage_utox(FRIEND_STATE, fid, status, NULL);
-    LOG_INFO("Tox Callbacks", "Friend\t%u\t--\tState:\t%u", fid, status);
 }
 
 static void callback_typing_change(Tox *UNUSED(tox), uint32_t fid, bool is_typing, void *UNUSED(userdata)) {
     postmessage_utox(FRIEND_TYPING, fid, is_typing, NULL);
-    LOG_DEBUG("Tox Callbacks", "Friend\t%u\t--\tTyping:\t%u", fid, is_typing);
 }
 
 static void callback_read_receipt(Tox *UNUSED(tox), uint32_t fid, uint32_t receipt, void *UNUSED(userdata)) {
     FRIEND *f = get_friend(fid);
     if (!f) {
-        LOG_ERR("Tox Callbacks", "Could not get friend with number: %u", fid);
         return;
     }
 
     messages_clear_receipt(&f->msg, receipt);
-    LOG_INFO("Tox Callbacks", "Friend\t%u\t--\tReceipt:\t%u", fid, receipt);
 }
 
 static void callback_connection_status(Tox *tox, uint32_t fid, TOX_CONNECTION status, void *UNUSED(userdata)) {
     FRIEND *f = get_friend(fid);
     if (!f) {
-        LOG_ERR("Tox Callbacks", "Could not get friend with number: %u", fid);
         return;
     }
 
@@ -126,11 +118,8 @@ static void callback_connection_status(Tox *tox, uint32_t fid, TOX_CONNECTION st
     postmessage_utox(FRIEND_ONLINE, fid, !!status, NULL);
 
     if (status == TOX_CONNECTION_UDP) {
-        LOG_INFO("Tox Callbacks", "Friend\t%u\t--\tOnline (UDP)", fid);
     } else if (status == TOX_CONNECTION_TCP) {
-        LOG_INFO("Tox Callbacks", "Friend\t%u\t--\tOnline (TCP)", fid);
     } else {
-        LOG_INFO("Tox Callbacks", "Friend\t%u\t--\tOffline", fid);
         friend_notify_status(f, NULL, 0, "offline");
     }
 }
@@ -146,39 +135,35 @@ void utox_set_callbacks_friends(Tox *tox) {
     tox_callback_friend_connection_status(tox, callback_connection_status);
 }
 
-void callback_av_group_audio(Tox *tox, int groupnumber, int peernumber, const int16_t *pcm, unsigned int samples,
-                             uint8_t channels, unsigned int sample_rate, void *userdata);
+void callback_av_group_audio(Tox *tox, int groupnumber, int peernumber, const int16_t *pcm,
+                             unsigned int samples, uint8_t channels, unsigned int sample_rate,
+                             void *userdata);
 
-static void callback_group_invite(Tox *tox, uint32_t fid, TOX_CONFERENCE_TYPE type, const uint8_t *data, size_t length,
-                                  void *UNUSED(userdata)) {
+static void callback_group_invite(Tox *tox, uint32_t fid, TOX_CONFERENCE_TYPE type,
+                                  const uint8_t *data, size_t length, void *UNUSED(userdata))
+{
     int gid = -1;
     if (type == TOX_CONFERENCE_TYPE_TEXT) {
         gid = tox_conference_join(tox, fid, data, length, NULL);
         group_init(get_group(gid), gid, 0);
-    } else if (type == TOX_CONFERENCE_TYPE_AV) {
-        // TODO FIX THIS AFTER NEW GROUP API IS RELEASED
-        // gid = toxav_join_av_groupchat(tox, fid, data, length, &callback_av_group_audio, NULL);
     }
 
     if (gid != -1) {
         postmessage_utox(GROUP_ADD, gid, 0, tox);
     }
-
-    LOG_TRACE("Tox Callbacks", "Group Invite (%i,f:%i) type %u" , gid, fid, type);
 }
 
 static void callback_group_message(Tox *UNUSED(tox), uint32_t gid, uint32_t pid, TOX_MESSAGE_TYPE type,
-                                   const uint8_t *message, size_t length, void *UNUSED(userdata)) {
+                                   const uint8_t *message, size_t length, void *UNUSED(userdata))
+{
     GROUPCHAT *g = get_group(gid);
 
     switch (type) {
         case TOX_MESSAGE_TYPE_ACTION: {
-            LOG_TRACE("Tox Callbacks", "Group Action (%u, %u): %.*s" , gid, pid, (int)length, message);
             group_add_message(g, pid, message, length, MSG_TYPE_ACTION_TEXT);
             break;
         }
         case TOX_MESSAGE_TYPE_NORMAL: {
-            LOG_INFO("Tox Callbacks", "Group Message (%u, %u): %.*s", gid, pid, (int)length, message);
             group_add_message(g, pid, message, length, MSG_TYPE_TEXT);
             break;
         }
@@ -187,8 +172,10 @@ static void callback_group_message(Tox *UNUSED(tox), uint32_t gid, uint32_t pid,
     postmessage_utox(GROUP_MESSAGE, gid, pid, NULL);
 }
 
-static void callback_group_namelist_change(Tox *tox, uint32_t gid, uint32_t pid, TOX_CONFERENCE_STATE_CHANGE change,
-                                           void *UNUSED(userdata)) {
+static void callback_group_namelist_change(Tox *tox, uint32_t gid, uint32_t pid,
+                                           TOX_CONFERENCE_STATE_CHANGE change,
+                                           void *UNUSED(userdata))
+{
     GROUPCHAT *g = get_group(gid);
 
     switch (change) {
@@ -198,7 +185,6 @@ static void callback_group_namelist_change(Tox *tox, uint32_t gid, uint32_t pid,
             } else {
                 g->peer = calloc(g->peer_count + 2, sizeof(void *));
             }
-            LOG_TRACE("Group", "Add (%u, %u)" , gid, pid);
             bool is_us = 0;
             if (tox_conference_peer_number_is_ours(tox, gid, pid, 0)) {
                 g->our_peer_number = pid;
@@ -223,15 +209,10 @@ static void callback_group_namelist_change(Tox *tox, uint32_t gid, uint32_t pid,
         }
 
         case TOX_CONFERENCE_STATE_CHANGE_PEER_NAME_CHANGE: {
-            LOG_TRACE("Tox Callbacks", "Group:\tPeer name change (%u, %u)" , gid, pid);
-
             if (g->peer) {
                 if (!g->peer[pid]) {
-                    LOG_TRACE("Tox Callbacks", "Tox Group:\tERROR, can't sent a name, for non-existant peer!" );
                     break;
                 }
-            } else {
-                LOG_TRACE("Tox Callbacks", "Tox Group:\tERROR, can't sent a name, for non-existant Group!" );
             }
 
             uint8_t name[TOX_MAX_NAME_LENGTH];
@@ -245,7 +226,6 @@ static void callback_group_namelist_change(Tox *tox, uint32_t gid, uint32_t pid,
         }
 
         case TOX_CONFERENCE_STATE_CHANGE_PEER_EXIT: {
-            LOG_TRACE("Group", "Peer Quit (%u, %u)" , gid, pid);
             group_add_message(g, pid, (const uint8_t *)"<- has Quit!", 12, MSG_TYPE_NOTICE);
 
             pthread_mutex_lock(&messages_lock); /* make sure that messages has posted before we continue */
@@ -257,7 +237,7 @@ static void callback_group_namelist_change(Tox *tox, uint32_t gid, uint32_t pid,
             g->peer = calloc(number_peers, sizeof(void *));
 
             if (!g->peer) {
-                LOG_FATAL_ERR(EXIT_MALLOC, "Tox Callbacks", "Group:\tToxcore is very broken, but we couldn't alloc here.");
+                exit(1);
             }
 
             /* I'm about to break some uTox style here, because I'm expecting
@@ -268,7 +248,7 @@ static void callback_group_namelist_change(Tox *tox, uint32_t gid, uint32_t pid,
                 tox_conference_peer_get_name(tox, gid, i, tmp, NULL);
                 GROUP_PEER *peer = calloc(1, len * sizeof(void *) + sizeof(*peer));
                 if (!peer) {
-                    LOG_FATAL_ERR(EXIT_MALLOC, "Group", "Toxcore is very broken, but we couldn't calloc here.");
+                    exit(1);
                 }
                 /* name and id number (it's worthless, but it's needed */
                 memcpy(peer->name, tmp, len);
@@ -296,20 +276,21 @@ static void callback_group_namelist_change(Tox *tox, uint32_t gid, uint32_t pid,
     }
 }
 
-static void callback_group_topic(Tox *UNUSED(tox), uint32_t gid, uint32_t pid, const uint8_t *title, size_t length,
-                                 void *UNUSED(userdata)) {
+static void callback_group_topic(Tox *UNUSED(tox), uint32_t gid, uint32_t UNUSED(pid),
+                                 const uint8_t *title, size_t length, void *UNUSED(userdata))
+{
     length = utf8_validate(title, length);
-    if (!length)
+    if (!length) {
         return;
+    }
 
     uint8_t *copy_title = malloc(length);
-    if (!copy_title)
+    if (!copy_title) {
         return;
+    }
 
     memcpy(copy_title, title, length);
     postmessage_utox(GROUP_TOPIC, gid, length, copy_title);
-
-    LOG_TRACE("Tox Callbacks", "Group Title (%u, %u): %.*s" , gid, pid, (int)length, title);
 }
 
 void utox_set_callbacks_groups(Tox *tox) {
@@ -321,8 +302,6 @@ void utox_set_callbacks_groups(Tox *tox) {
 
 #ifdef ENABLE_MULTIDEVICE
 static void callback_friend_list_change(Tox *tox, void *user_data) {
-    LOG_ERR("Tox Callbacks", "friend list change, updating roster");
-
     flist_dump_contacts();
     utox_friend_list_init(tox);
     flist_reload_contacts();
@@ -330,9 +309,6 @@ static void callback_friend_list_change(Tox *tox, void *user_data) {
 
 static void callback_mdev_self_name(Tox *tox, uint32_t dev_num, const uint8_t *name, size_t length,
                                     void *UNUSED(userdata)) {
-
-    LOG_TRACE("Tox Callbacks", "Name changed on remote device %u", dev_num);
-
     memcpy(self.name, name, length);
     self.name_length = length;
 
@@ -346,9 +322,6 @@ typedef void tox_mdev_self_status_message_cb(Tox *tox, uint32_t device_number, c
 
 static void callback_mdev_self_status_msg(Tox *tox, uint32_t dev_num, const uint8_t *smsg, size_t length,
                                           void *UNUSED(userdata)) {
-
-    LOG_TRACE("Tox Callbacks", "Status Message changed on remote device %u", dev_num);
-
     memcpy(self.statusmsg, smsg, length);
     self.statusmsg_length = length;
 
@@ -364,8 +337,6 @@ static void callback_mdev_self_state(Tox *tox, uint32_t device_number, TOX_USER_
 
 static void callback_device_sent_message(Tox *tox, uint32_t sending_device, uint32_t target_friend,
                                          TOX_MESSAGE_TYPE type, uint8_t *msg, size_t msg_length) {
-    LOG_TRACE("Tox Callbacks", "Message sent from other device %u\n\t\t%.*s" , sending_device, (uint32_t)msg_length, msg);
-
     switch (type) {
         case TOX_MESSAGE_TYPE_NORMAL: {
             message_add_type_text(&friend[target_friend].msg, 1, msg, msg_length, 1, 0);
@@ -378,7 +349,6 @@ static void callback_device_sent_message(Tox *tox, uint32_t sending_device, uint
         }
 
         default: {
-            LOG_ERR("Tox Callbacks", "Message from Friend\t%u\t--\tof unsupported type: %.*s", target_friend, (uint32_t)msg_length, msg);
         }
     }
     friend_notify_msg(&friend[target_friend], msg, msg_length);

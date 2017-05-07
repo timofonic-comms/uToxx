@@ -1,6 +1,5 @@
 #include "main.h"
 
-#include "../debug.h"
 #include "../main.h"
 
 void video_frame(uint32_t id, uint8_t *img_data, uint16_t width, uint16_t height, bool resize) {
@@ -12,7 +11,6 @@ void video_frame(uint32_t id, uint8_t *img_data, uint16_t width, uint16_t height
     }
 
     if (!hwin || !*hwin) {
-        LOG_ERR("Windows Video", "frame for null window [%u]", id);
         return;
     }
 

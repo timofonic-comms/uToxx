@@ -2,7 +2,6 @@
 
 #include "../flist.h"
 #include "../friend.h"
-#include "../debug.h"
 #include "../main.h" // stbi
 #include "../tox.h"
 
@@ -19,7 +18,6 @@ static bool desktopgrab_video = false;
 static NATIVE_IMAGE *create_utox_image(HBITMAP bmp, bool has_alpha, uint32_t width, uint32_t height) {
     NATIVE_IMAGE *image = malloc(sizeof(NATIVE_IMAGE));
     if (!image) {
-        LOG_ERR("NATIVE Screengrab", "create_utox_image:\t Could not allocate memory for image.");
         return NULL;
     }
 
@@ -180,13 +178,11 @@ void native_screen_grab_desktop(bool video) {
     int w = GetSystemMetrics(SM_CXVIRTUALSCREEN);
     int h = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
-    LOG_TRACE("Native Screengrab", "result: %i %i %i %i" , x, y, w, h);
 
     grab_window = CreateWindowExW(WS_EX_TOOLWINDOW | WS_EX_LAYERED, L"uToxgrab", L"Tox", WS_POPUP,
                                  x, y, w, h,
                                  NULL, NULL, grab_instance, NULL);
     if (!grab_window) {
-        LOG_TRACE("Native Screengrab", "CreateWindowExW() failed" );
         return;
     }
 

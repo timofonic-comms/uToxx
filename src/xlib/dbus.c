@@ -1,9 +1,7 @@
 #ifdef HAVE_DBUS
 #include "dbus.h"
 
-#include "../debug.h"
 #include "../macros.h"
-
 #include "../text.h"
 
 #include <dbus/dbus.h>
@@ -66,7 +64,6 @@ void dbus_notify(char *title, char *content, uint8_t *cid) {
     conn = dbus_bus_get(DBUS_BUS_SESSION, &err);
 
     if (dbus_error_is_set(&err)) {
-        LOG_ERR("Dbus", "Connection Error (%s)\n", err.message);
         dbus_error_free(&err);
     }
 
@@ -77,8 +74,6 @@ void dbus_notify(char *title, char *content, uint8_t *cid) {
     msg = dbus_message_new_method_call(NULL, NOTIFY_OBJECT, NOTIFY_INTERFACE, "Notify");
 
     if (!msg) {
-        // fprintf(stderr, "Message Null\n");
-        // exit(1);
         return;
     }
 
@@ -90,18 +85,16 @@ void dbus_notify(char *title, char *content, uint8_t *cid) {
     STRING body, ARRAY actions, DICT hints, INT32 expire_timeout); */
 
     if (!notify_build_message(msg, title, content, cid)) {
-        // fprintf(stderr, "Out Of Memory!\n");
         return;
     }
 
     dbus_error_init(&err);
 
     if (!dbus_connection_send_with_reply(conn, msg, &pending, -1)) {
-        LOG_FATAL_ERR(EXIT_FAILURE, "Dbus", "Sending failed!");
+        exit(1);
     }
 
     if (!dbus_pending_call_set_notify(pending, &notify_callback, NULL, NULL)) {
-        // fprintf(stderr, "Callback failed!");
         return;
     }
 
@@ -111,8 +104,6 @@ void dbus_notify(char *title, char *content, uint8_t *cid) {
 
     dbus_message_unref(msg);
     dbus_connection_unref(conn);
-
-    return;
 }
 
 #endif

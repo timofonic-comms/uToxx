@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "../src/macros.h"
 #include "../src/chatlog.c"
+#include "../src/macros.h"
 #include "../src/text.c"
 
 #define MOCK_FRIEND_ID "6460FF76319AF777A999ABA2024D5D0AEB202360688ECBABFE56C9403B872D2F"
@@ -95,9 +95,6 @@ bool test_write_chatlog() {
 }
 
 bool test_read_chatlog() {
-    LOG_INFO("test", "testing...");
-//    FAIL("not good!");
-
     // TODO implement
 
     return true;

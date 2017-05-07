@@ -4,24 +4,28 @@
 #include "sidebar.h"
 
 #include "../avatar.h"
-#include "../debug.h"
+#include "../commands.h"
+#include "../dns.h"
 #include "../flist.h"
 #include "../friend.h"
 #include "../macros.h"
+#include "../main.h" // add friend status // TODO this is stupid wrong
+#include "../screen_grab.h"
 #include "../settings.h"
 #include "../theme.h"
 #include "../tox.h"
 
+#include "../av/audio.h"
+#include "../av/utox_av.h"
+#include "../av/video.h"
 #include "../native/dialog.h"
-
+#include "../ui/button.h"
 #include "../ui/draw.h"
 #include "../ui/edit.h"
 #include "../ui/scrollable.h"
 #include "../ui/svg.h"
+#include "../ui/switch.h"
 #include "../ui/text.h"
-
-#include "../main.h" // add friend status // TODO this is stupid wrong
-#include "../dns.h"
 
 #include <string.h>
 
@@ -29,7 +33,6 @@
 static void draw_friend(int x, int y, int w, int height) {
     FRIEND *f = flist_get_friend();
     if (!f) {
-        LOG_ERR("Friend", "Could not get selected friend.\n");
         return;
     }
 
@@ -69,7 +72,6 @@ static void draw_friend(int x, int y, int w, int height) {
 static void draw_friend_request(int x, int y, int w, int h) {
     FREQUEST *req = flist_get_frequest();
     if (!req) {
-        LOG_ERR("Layout Friend", "Unable to draw a friend request without a friend request.");
         return;
     }
 
@@ -79,8 +81,9 @@ static void draw_friend_request(int x, int y, int w, int h) {
 
     if (req->msg && req->length) {
         setfont(FONT_TEXT);
-        utox_draw_text_multiline_within_box(x + SCALE(10), y + SCALE(70), w + x, y, y + h, font_small_lineheight,
-                                            req->msg, req->length, ~0, ~0, 0, 0, true);
+        utox_draw_text_multiline_within_box(x + SCALE(10), y + SCALE(70), w + x, y, y + h,
+                                            font_small_lineheight, req->msg, req->length, ~0, ~0, 0,
+                                            0, true);
     }
 }
 
@@ -96,7 +99,6 @@ static void draw_friend_settings(int x, int y, int UNUSED(width), int UNUSED(hei
 static void draw_friend_deletion(int x, int UNUSED(y), int UNUSED(w), int UNUSED(height)) {
     FRIEND *f = flist_get_friend();
     if (!f) {
-        LOG_ERR("Friend", "Could not get selected friend.");
         return;
     }
 
@@ -289,28 +291,20 @@ static void button_send_friend_request_on_mup(void) {
     edit_resetfocus();
 }
 
-#include "../tox.h"
-
 static void button_call_decline_on_mup(void) {
     FRIEND *f = flist_get_friend();
     if (!f) {
-        LOG_ERR("Friend", "Could not get selected friend.");
         return;
     }
 
     if (f->call_state_friend) {
-        LOG_TRACE("Layout Friend", "Declining call: %u", f->number);
-        postmessage_toxcore(TOX_CALL_DISCONNECT, f->number, 0, NULL);
+            postmessage_toxcore(TOX_CALL_DISCONNECT, f->number, 0, NULL);
     }
 }
 
-#include "../av/utox_av.h"
-#include "../av/audio.h"
-#include "../ui/button.h"
 static void button_call_decline_update(BUTTON *b) {
     FRIEND *f = flist_get_friend();
     if (!f) {
-        LOG_ERR("Friend", "Could not get selected friend.");
         return;
     }
 
@@ -328,32 +322,26 @@ static void button_call_decline_update(BUTTON *b) {
 static void button_call_audio_on_mup(void) {
     FRIEND *f = flist_get_friend();
     if (!f) {
-        LOG_ERR("Friend", "Could not get selected friend.");
         return;
     }
 
     if (f->call_state_self) {
         if (UTOX_SENDING_AUDIO(f->number)) {
-            LOG_TRACE("Layout Friend", "Ending call: %u", f->number);
             /* var 3/4 = bool send video */
             postmessage_toxcore(TOX_CALL_DISCONNECT, f->number, 0, NULL);
         } else {
-            LOG_TRACE("Layout Friend", "Canceling call: friend = %d", f->number);
             postmessage_toxcore(TOX_CALL_DISCONNECT, f->number, 0, NULL);
         }
     } else if (UTOX_AVAILABLE_AUDIO(f->number)) {
-        LOG_TRACE("Layout Friend", "Accept Call: %u", f->number);
         postmessage_toxcore(TOX_CALL_ANSWER, f->number, 0, NULL);
     } else if (f->online) {
         postmessage_toxcore(TOX_CALL_SEND, f->number, 0, NULL);
-        LOG_TRACE("Layout Friend", "Calling friend: %u", f->number);
     }
 }
 
 static void button_call_audio_update(BUTTON *b) {
     FRIEND *f = flist_get_friend();
     if (!f) {
-        LOG_ERR("Friend", "Could not get selected friend.");
         return;
     }
 
@@ -374,38 +362,30 @@ static void button_call_audio_update(BUTTON *b) {
     }
 }
 
-#include "../av/video.h"
 static void button_call_video_on_mup(void) {
     FRIEND *f = flist_get_friend();
     if (!f) {
-        LOG_ERR("Friend", "Could not get selected friend.");
         return;
     }
 
     if (f->call_state_self) {
         if (SELF_ACCEPT_VIDEO(f->number)) {
-            LOG_TRACE("Layout Friend", "Canceling call (video): %u", f->number);
             postmessage_toxcore(TOX_CALL_PAUSE_VIDEO, f->number, 1, NULL);
         } else if (UTOX_SENDING_AUDIO(f->number)) {
-            LOG_TRACE("Layout Friend", "Audio call inprogress, adding video");
             postmessage_toxcore(TOX_CALL_RESUME_VIDEO, f->number, 1, NULL);
         } else {
-            LOG_TRACE("Layout Friend", "Ending call (video): %u", f->number);
             postmessage_toxcore(TOX_CALL_DISCONNECT, f->number, 1, NULL);
         }
     } else if (f->call_state_friend) {
-        LOG_TRACE("Layout Friend", "Accept Call (video): %u %u", f->number, f->call_state_friend);
-        postmessage_toxcore(TOX_CALL_ANSWER, f->number, 1, NULL);
+                postmessage_toxcore(TOX_CALL_ANSWER, f->number, 1, NULL);
     } else if (f->online) {
         postmessage_toxcore(TOX_CALL_SEND, f->number, 1, NULL);
-        LOG_TRACE("Layout Friend", "Calling friend (video): %u", f->number);
     }
 }
 
 static void button_call_video_update(BUTTON *b) {
     FRIEND *f = flist_get_friend();
     if (!f) {
-        LOG_ERR("Friend", "Could not get selected friend.");
         return;
     }
 
@@ -498,20 +478,16 @@ BUTTON button_call_video = {
 
 static void button_send_file_on_mup(void) {
     FRIEND *f = flist_get_friend();
-    if (!f) {
-        LOG_ERR("Friend", "Could not get selected friend.");
+    if (!f || !f->online) {
         return;
     }
 
-    if (f->online) {
-        openfilesend();
-    }
+    openfilesend();
 }
 
 static void button_send_file_update(BUTTON *b) {
     FRIEND *f = flist_get_friend();
     if (!f) {
-        LOG_ERR("Friend", "Could not get selected friend.");
         return;
     }
 
@@ -535,7 +511,6 @@ BUTTON button_send_file = {
     .tooltip_text = {.i18nal = STR_SEND_FILE },
 };
 
-#include "../screen_grab.h"
 static void button_send_screenshot_on_mup(void) {
     FRIEND *f = flist_get_friend();
     if (f != NULL && f->online) {
@@ -546,7 +521,6 @@ static void button_send_screenshot_on_mup(void) {
 static void button_send_screenshot_update(BUTTON *b) {
     FRIEND *f = flist_get_friend();
     if (!f) {
-        LOG_ERR("Friend", "Could not get selected friend.");
         return;
     }
 
@@ -582,8 +556,6 @@ static void switchfxn_autoaccept_ft(void) {
         f->ft_autoaccept = !f->ft_autoaccept;
     }
 }
-
-#include "../ui/switch.h"
 
 static void switch_set_colors(UISWITCH *s) {
     if (s->switch_on) {
@@ -625,7 +597,8 @@ UISWITCH switch_friend_autoaccept_ft = {
 
 
 static void edit_add_new_contact(EDIT *UNUSED(edit)) {
-    friend_add(edit_add_new_friend_id.data, edit_add_new_friend_id.length, edit_add_new_friend_msg.data, edit_add_new_friend_msg.length);
+    friend_add(edit_add_new_friend_id.data, edit_add_new_friend_id.length,
+               edit_add_new_friend_msg.data, edit_add_new_friend_msg.length);
 }
 
 static char e_friend_pubkey_str[TOX_PUBLIC_KEY_SIZE * 2];
@@ -642,7 +615,6 @@ EDIT edit_friend_pubkey = {
 static void edit_friend_alias_onenter(EDIT *UNUSED(edit)) {
     FRIEND *f = flist_get_friend();
     if (!f) {
-        LOG_ERR("Friend", "Could not get selected friend.");
         return;
     }
 
@@ -684,7 +656,6 @@ EDIT edit_add_new_friend_msg = {
     .empty_str = {.i18nal = STR_DEFAULT_FRIEND_REQUEST_MESSAGE },
 };
 
-#include "../commands.h"
 static void e_chat_msg_onenter(EDIT *edit) {
     char *   text   = edit->data;
     uint16_t length = edit->length;
@@ -704,8 +675,7 @@ static void e_chat_msg_onenter(EDIT *edit) {
         return;
     }
 
-    // LOG_TRACE("Layout Friend", "cmd %u", command_length);
-
+    //
     bool action = false;
     if (command_length) {
         length = length - command_length - 2; /* first / and then the SPACE */
@@ -732,7 +702,7 @@ static void e_chat_msg_onenter(EDIT *edit) {
             message_add_type_text(&f->msg, 1, text, length, 1, 1);
         }
     }
-    edit->length      = 0;
+    edit->length = 0;
 }
 
 static void e_chat_msg_onchange(EDIT *UNUSED(edit)) {
@@ -775,14 +745,16 @@ static void button_chat_send_friend_on_mup(void) {
 
 static void button_chat_send_friend_update(BUTTON *b) {
     FRIEND *f = flist_get_friend();
-    if (f) {
-        if (f->online) {
-            b->disabled = false;
-            button_setcolors_success(b);
-        } else {
-            b->disabled = true;
-            button_setcolors_disabled(b);
-        }
+    if (!f) {
+        return;
+    }
+
+    if (f->online) {
+        b->disabled = false;
+        button_setcolors_success(b);
+    } else {
+        b->disabled = true;
+        button_setcolors_disabled(b);
     }
 }
 

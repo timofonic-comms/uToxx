@@ -319,7 +319,6 @@ add_executable(utox ${GUI_TYPE}
     src/friend.c
     src/groups.c
     src/inline_video.c
-    src/logging.c
     src/main.c
     src/messages.c
     src/notify.c

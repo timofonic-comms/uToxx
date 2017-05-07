@@ -13,7 +13,6 @@
 
 #include "inline_video.h"
 
-#include "debug.h"
 #include "macros.h"
 #include "settings.h"
 #include "ui.h"
@@ -52,7 +51,6 @@ void inline_video_draw(INLINE_VID *UNUSED(p), int x, int y, int width, int heigh
         return;
     }
 
-    LOG_TRACE("Inline Video", "Drawing new frame." );
 
     if (current_frame.img && current_frame.size) {
         draw_inline_image(current_frame.img, current_frame.size,
@@ -61,8 +59,10 @@ void inline_video_draw(INLINE_VID *UNUSED(p), int x, int y, int width, int heigh
     }
 }
 
-bool inline_video_mmove(INLINE_VID *UNUSED(p), int UNUSED(x), int UNUSED(y), int UNUSED(width), int UNUSED(height),
-                        int UNUSED(mx), int UNUSED(my), int UNUSED(dx), int UNUSED(dy)) {
+bool inline_video_mmove(INLINE_VID *UNUSED(p), int UNUSED(x), int UNUSED(y), int UNUSED(width),
+                        int UNUSED(height), int UNUSED(mx), int UNUSED(my), int UNUSED(dx),
+                        int UNUSED(dy))
+{
     return 0;
 }
 
@@ -74,7 +74,9 @@ bool inline_video_mright(INLINE_VID *UNUSED(p)) {
     return 0;
 }
 
-bool inline_video_mwheel(INLINE_VID *UNUSED(p), int UNUSED(height), double UNUSED(d), bool UNUSED(smooth)) {
+bool inline_video_mwheel(INLINE_VID *UNUSED(p), int UNUSED(height), double UNUSED(d),
+                         bool UNUSED(smooth))
+{
     return 0;
 }
 

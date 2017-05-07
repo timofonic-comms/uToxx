@@ -122,10 +122,6 @@ static CGRect find_ui_object_in_window(const PANEL *ui) {
         int x = ui_element->x, y = ui_element->y, width = settings.window_width, height = settings.window_height;
 
         for (int i = 0; path[i] != -1; i++) {
-            // LOG_TRACE("Interaction", "@: %d %d %d %d", x, y, width, height);
-            // LOG_TRACE("Interaction", "%d %d %d %p", i, path[i], ui_element->child[path[i]]->type,
-            // ui_element->child[path[i]]->content_scroll);
-
             ui_element = ui_element->child[path[i]];
             switch (ui_element->type) {
                 case 6:
@@ -886,8 +882,7 @@ void native_export_chatlog_init(uint32_t fid) {
 
     FRIEND *f = get_friend(fid);
     if (!f) {
-        LOG_ERR("Cocoa", "Could not get friend with number: %u", fid);
-        return;
+                return;
     }
 
     NSSavePanel *picker = [NSSavePanel savePanel];

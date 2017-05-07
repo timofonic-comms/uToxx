@@ -1,12 +1,11 @@
 #include "../filesys.h"
 
-#include "../debug.h"
-
 #include "../native/filesys.h"
 
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 
@@ -34,8 +33,6 @@ static void opts_to_sysmode(UTOX_FILE_OPTS opts, char *mode) {
     }
 
     mode[3] = 0;
-
-    return;
 }
 
 FILE *native_get_file(const uint8_t *name, size_t *size, UTOX_FILE_OPTS opts, bool portable_mode) {
@@ -59,7 +56,6 @@ FILE *native_get_file(const uint8_t *name, size_t *size, UTOX_FILE_OPTS opts, bo
     }
 
     if (strlen((char *)path) + strlen((char *)name) >= UTOX_FILE_NAME_LENGTH) {
-        LOG_ERR("Filesys", "Load directory name too long" );
         return NULL;
     } else {
         snprintf((char *)path + strlen((char *)path), UTOX_FILE_NAME_LENGTH - strlen((char *)path), "%s", name);
@@ -86,15 +82,13 @@ FILE *native_get_file(const uint8_t *name, size_t *size, UTOX_FILE_OPTS opts, bo
     FILE *fp = fopen((char *)path, mode);
 
     if (!fp && opts & UTOX_FILE_OPTS_READ && opts & UTOX_FILE_OPTS_WRITE) {
-        LOG_WARN("POSIX", "Unable to simple open, falling back to fd" );
         // read wont create a file if it doesn't' already exist. If we're allowed to write, lets try
         // to create the file, then reopen it.
         int fd = open((char *)path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
         fp = fdopen(fd, mode);
     }
 
-    if (fp == NULL) {
-        LOG_TRACE("Filesys", "Could not open %s" , path);
+    if (!fp) {
         return NULL;
     }
 

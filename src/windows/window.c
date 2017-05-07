@@ -5,7 +5,6 @@
 #include "events.h"
 
 #include "../branding.h"
-#include "../debug.h"
 #include "../macros.h"
 #include "../ui.h"
 
@@ -49,13 +48,6 @@ static bool update_DC_BM(UTOX_WINDOW *win, int w, int h) {
 
     return true;
 }
-
-#if 0
-static HWND window_create() {
-    return NULL;
-}
-#endif
-
 
 UTOX_WINDOW *native_window_create_main(int x, int y, int w, int h) {
     static const wchar_t class[] = L"uTox";
@@ -146,10 +138,6 @@ UTOX_WINDOW *native_window_find_notify(void *window) {
 }
 
 
-void native_window_create_screen_select(void) {
-    return;
-}
+void native_window_create_screen_select(void) {}
 
-void native_window_tween(UTOX_WINDOW *UNUSED(win)) {
-    return;
-}
+void native_window_tween(UTOX_WINDOW *UNUSED(win)) {}

@@ -4,10 +4,10 @@
 #include "window.h"
 
 #include "../commands.h"
-#include "../debug.h"
 #include "../flist.h"
 #include "../friend.h"
 #include "../macros.h"
+#include "../main.h" // main_width
 #include "../self.h"
 #include "../settings.h"
 #include "../theme.h"
@@ -15,6 +15,10 @@
 #include "../utox.h"
 
 #include "../av/utox_av.h"
+
+#include "../layout/background.h"
+#include "../layout/notify.h"
+#include "../layout/settings.h"
 
 #include "../native/clipboard.h"
 #include "../native/keyboard.h"
@@ -24,13 +28,8 @@
 #include "../ui/edit.h"
 #include "../ui/svg.h"
 
-#include "../layout/background.h"
-#include "../layout/notify.h"
-#include "../layout/settings.h"
-
 #include <windowsx.h>
 
-#include "../main.h" // main_width
 
 static TRACKMOUSEEVENT tme = {
     sizeof(TRACKMOUSEEVENT),
@@ -86,9 +85,7 @@ static void ShowContextMenu(void) {
 
 /* TODO should this be moved to window.c? */
 static void move_window(int x, int y){
-    LOG_TRACE("Win events", "delta x == %i\n", x);
-    LOG_TRACE("Win events", "delta y == %i\n", y);
-    SetWindowPos(main_window.window, 0, main_window._.x + x, main_window._.y + y, 0, 0,
+            SetWindowPos(main_window.window, 0, main_window._.x + x, main_window._.y + y, 0, 0,
                           SWP_NOSIZE | SWP_NOZORDER | SWP_NOREDRAW);
     main_window._.x += x;
     main_window._.y += y;
@@ -130,7 +127,6 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
             }
         }
 
-        LOG_TRACE("WinEvent", "Uncaught event %u & %u", wParam, lParam);
         return DefWindowProcW(window, msg, wParam, lParam);
     }
 
@@ -139,7 +135,6 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_CLOSE:
         case WM_DESTROY: {
             if (settings.close_to_tray) {
-                LOG_INFO("Events", "Closing to tray." );
                 togglehide(0);
                 return true;
             } else {
@@ -151,12 +146,10 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_GETMINMAXINFO: {
             POINT min = { SCALE(MAIN_WIDTH), SCALE(MAIN_HEIGHT) };
             ((MINMAXINFO *)lParam)->ptMinTrackSize = min;
-
             break;
         }
 
         case WM_CREATE: {
-            LOG_INFO("Windows", "WM_CREATE");
             return false;
         }
 
@@ -413,7 +406,6 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
             ui_mouseleave();
             mouse_tracked = false;
             btn_move_window_down = false;
-            LOG_TRACE("Win events", "mouse leave\n");
             break;
         }
 
