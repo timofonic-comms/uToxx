@@ -17,18 +17,44 @@
 #include <sys/shm.h>
 #include <sys/stat.h>
 
-void video_frame(uint32_t id, uint8_t *img_data, uint16_t width, uint16_t height, bool resize) {
-    if (!video_win[id]) {
+#define MAX_VID_WINDOWS 32 // TODO drop this for dynamic allocation
+static Window video_win[MAX_VID_WINDOWS]; // TODO we should allocate this dynamically but this'll work for now
+static Window preview;        // Video preview
+
+uint16_t find_video_windows(Window w)
+{
+    if (w == preview) {
+        return UINT16_MAX;
+    }
+
+    for (unsigned i = 0; i < MAX_VID_WINDOWS; ++i ) {
+        if (w == video_win[i]) {
+            return i;
+        }
+    }
+
+    return UINT16_MAX;
+}
+
+
+void video_frame(uint16_t id, uint8_t *img_data, uint16_t width, uint16_t height, bool resize) {
+    Window *win = &video_win[id];
+    if (id == UINT16_MAX) {
+        // Preview window
+        win = &preview;
+    }
+
+    if  (!*win) {
         return;
     }
 
     if (resize) {
         XWindowChanges changes = {.width = width, .height = height };
-        XConfigureWindow(display, video_win[id], CWWidth | CWHeight, &changes);
+        XConfigureWindow(display, *win, CWWidth | CWHeight, &changes);
     }
 
     XWindowAttributes attrs;
-    XGetWindowAttributes(display, video_win[id], &attrs);
+    XGetWindowAttributes(display, *win, &attrs);
 
     XImage image = {
         .width            = attrs.width,
@@ -56,13 +82,18 @@ void video_frame(uint32_t id, uint8_t *img_data, uint16_t width, uint16_t height
     GC     default_gc = DefaultGC(display, def_screen_num);
     Pixmap pixmap     = XCreatePixmap(display, main_window.window, attrs.width, attrs.height, default_depth);
     XPutImage(display, pixmap, default_gc, &image, 0, 0, 0, 0, attrs.width, attrs.height);
-    XCopyArea(display, pixmap, video_win[id], default_gc, 0, 0, attrs.width, attrs.height, 0, 0);
+    XCopyArea(display, pixmap, *win, default_gc, 0, 0, attrs.width, attrs.height, 0, 0);
     XFreePixmap(display, pixmap);
     free(new_data);
 }
 
-void video_begin(uint32_t id, char *name, uint16_t name_length, uint16_t width, uint16_t height) {
+void video_begin(uint16_t id, char *name, uint16_t name_length, uint16_t width, uint16_t height) {
     Window *win = &video_win[id];
+    if (id == UINT16_MAX) {
+        // Preview window
+        win = &preview;
+    }
+
     if (*win) {
         return;
     }
@@ -84,13 +115,15 @@ void video_begin(uint32_t id, char *name, uint16_t name_length, uint16_t width, 
     XMapWindow(display, *win);
 }
 
-void video_end(uint32_t id) {
-    if (!video_win[id]) {
-        return;
+void video_end(uint16_t id) {
+    Window *win = &video_win[id];
+    if (id == UINT16_MAX) {
+        // Preview window
+        win = &preview;
     }
 
-    XDestroyWindow(display, video_win[id]);
-    video_win[id] = None;
+    XDestroyWindow(display, *win);
+    *win = None;
 }
 
 static Display *deskdisplay;
