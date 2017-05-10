@@ -6,21 +6,17 @@
 #define WINDOWS_MAIN_H
 #define MAIN_H
 
-/** Select the true main.c for legacy XP support.
- *  else default to xlib
- **/
-#ifndef __WIN_LEGACY
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x0600
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x600
 #endif
 
 #ifndef WINVER
-#define WINVER 0x410
+#define WINVER 0x600
 #endif
 
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 
 #undef CLEARTYPE_QUALITY

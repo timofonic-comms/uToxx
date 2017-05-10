@@ -11,4 +11,4 @@ cmake .. \
     -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain-win64.cmake \
     -DENABLE_TESTS=OFF \
     -DENABLE_WERROR=ON
-make || make VERBOSE=1
+make

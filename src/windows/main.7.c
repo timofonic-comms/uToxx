@@ -1,7 +1,5 @@
-#ifndef __WIN_LEGACY
-
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0600
+#define _WIN32_WINNT 0x600
 #endif
 
 #include "main.h"
@@ -137,5 +135,3 @@ void launch_at_startup(bool should) {
         }
     }
 }
-
-#endif

@@ -697,7 +697,7 @@ static bool pending_update(void) {
     GetModuleFileName(NULL, path, UTOX_FILE_NAME_LENGTH);
 
     // TODO: The updater should work with the binaries we're distributing.
-    // uTox_win64.exe, uTox_win32.exe, uTox_winXP.exe on utox.io, maybe (probably) others on jenkins.
+    // uTox_win64.exe and uTox_win32.exe on utox.io, maybe (probably) others on jenkins.
     char *name_start = strstr(path, "uTox.exe");
     if (!name_start) {
         // Try lowercase too
@@ -785,13 +785,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE UNUSED(hPrevInstance), PSTR cm
 
     // We call utox_init after parse_args()
     utox_init();
-
-    #ifdef __WIN_LEGACY
-            #else
-            #endif
-
-    #ifdef GIT_VERSION
-            #endif
 
     /* if opened with argument, check if uTox is already open and pass the argument to the existing process */
     HANDLE utox_mutex;
