@@ -71,11 +71,5 @@ script:
 after_failure:
   - ./extra/travis/debug_failure.sh
 
-
 notifications:
   email: false
-
-branches:
-  only:
-    - master
-    - develop
