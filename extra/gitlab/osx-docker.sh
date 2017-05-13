@@ -52,7 +52,6 @@ cd ..
 . ./extra/common/build_opus.sh
 . ./extra/common/build_vpx.sh
 
-# install toxcore
 if ! [ -d toxcore ]; then
   git clone --depth=1 --branch=$TOXCORE_REPO_BRANCH $TOXCORE_REPO_URI toxcore
 fi
@@ -76,7 +75,7 @@ if ! ([ -f "$CACHE_DIR/toxcore.sha" ] && diff "$CACHE_DIR/toxcore.sha" toxcore.s
   # mkdir _build
   # autoreconf -fi
   # (cd _build && ../configure --prefix=$CACHE_DIR/usr)
-  make -C_build  || make -C_build VERBOSE=1
+  make -C_build
   make -C_build install
   mv toxcore.sha "$CACHE_DIR/toxcore.sha"
 fi

@@ -1,7 +1,4 @@
 #/usr/bin/env zsh
-#
-
-# openal is a windows thing, just fyi
 
 if ! [ -d openal ]; then
   git clone --depth=1 https://github.com/irungentoo/openal-soft-tox.git openal
@@ -27,7 +24,7 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)" > ./Toolchain-i686-w64-mingw32.cmak
             -DCMAKE_BUILD_TYPE=Debug \
             -DDSOUND_INCLUDE_DIR=/usr/i686-w64-mingw32/include \
             -DDSOUND_LIBRARY=/usr/i686-w64-mingw32/lib/libdsound.a
-  make
+  make -j`nproc`
   make install
   cd ..
   mv openal.sha "$CACHE_DIR/openal.sha"

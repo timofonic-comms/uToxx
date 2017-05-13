@@ -1,6 +1,5 @@
 #/usr/bin/env zsh
 
-# install libvpx, needed for video encoding/decoding
 if ! [ -d libvpx ]; then
   git clone --depth=1 --branch=v1.6.0 https://chromium.googlesource.com/webm/libvpx
 fi
@@ -13,7 +12,7 @@ if ! ([ -f "${CACHE_DIR}/libvpx.sha" ] && diff "${CACHE_DIR}/libvpx.sha" libvpx.
               --disable-examples \
               --disable-unit-tests \
               --disable-shared
-  make -j8
+  make -j`nproc`
   make install
   mv libvpx.sha "${CACHE_DIR}/libvpx.sha"
 fi

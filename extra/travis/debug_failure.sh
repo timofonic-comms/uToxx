@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 set -eux
 
 . ./extra/travis/env.sh

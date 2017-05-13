@@ -1,6 +1,5 @@
 #/usr/bin/env zsh
 
-# install libsodium, needed for crypto
 if ! [ -d libsodium ]; then
   git clone --depth=1 --branch=stable https://github.com/jedisct1/libsodium.git
 fi

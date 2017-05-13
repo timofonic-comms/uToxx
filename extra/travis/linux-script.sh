@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e -u -x
+set -eux
 
 . ./extra/travis/env.sh
 
@@ -8,5 +8,6 @@ cmake . \
   -DENABLE_TESTS=ON -DENABLE_WERROR=ON \
   -DENABLE_DBUS=ON \
   -DENABLE_AUTOUPDATE=ON
-make
+make -j`nproc`
+
 ./run_tests.sh

@@ -1,12 +1,9 @@
 stages:
   - build
-  - dev_tool
   - test
   - deploy
 
-#
-# build
-#
+
 build:linux:64:
   stage: build
   cache:
@@ -15,7 +12,6 @@ build:linux:64:
     paths:
       - cache/
   variables:
-    TOXCORE_REPO: "TokTok/c-toxcore"
     GL_BUILD: "lin64"
   before_script:
     - ./extra/gitlab/linux-before.sh
@@ -24,8 +20,6 @@ build:linux:64:
     - ./extra/gitlab/linux-script.sh
     - cp build/utox uTox-linux-x64
   artifacts:
-    # keep compiled files as artifacts to pass to the test stage
-    # remove them after one hour
     expire_in: 1h
     untracked: true
 
@@ -40,8 +34,6 @@ build:linux:muslc:
     paths:
       - cache/
   variables:
-    TOXCORE_REPO: "TokTok/c-toxcore"
-    TOXCORE_REPO_BRANCH: "v0.1.4"
     GL_BUILD: "linMUSL"
   before_script:
     - apk add freetype-dev
@@ -65,7 +57,6 @@ build:windows:64:
     paths:
       - cache/
   variables:
-    TOXCORE_REPO: "TokTok/c-toxcore"
     GL_BUILD: "win64"
   before_script:
     - ./extra/gitlab/windows-before.sh
@@ -75,26 +66,6 @@ build:windows:64:
   artifacts:
     paths:
       - uTox-Win64.exe
-    expire_in: 6h
-
-build:windows:legacy:
-  stage: build
-  tags:
-    - mingw64
-  cache:
-    paths:
-      - cache/
-  variables:
-    TOXCORE_REPO: "TokTok/c-toxcore"
-    GL_BUILD: "winLEGACY"
-  before_script:
-    - ./extra/gitlab/windows_legacy-before.sh
-  script:
-    - ./extra/gitlab/windows_legacy-script.sh
-    - cp build_win/utox.exe uTox-Win32-LEGACY.exe
-  artifacts:
-    paths:
-      - uTox-Win32-LEGACY.exe
     expire_in: 6h
 
 build:macos:
@@ -113,27 +84,7 @@ build:macos:
       - utox.app/
     expire_in: 6h
 
-#
-## Create development zip
-#
-dev_tool:windows:
-  stage: dev_tool
-  tags:
-    - mingw64
-  script:
-    - echo "Creating development files for windows"
-    - echo "Pulling headers"
-    - echo "Pulling libs from build:windows"
-    - echo "zipping folder"
-    - echo "archving stuff :D"
-  only:
-    - master
-    - tags
-    - triggers
 
-#
-# test
-#
 .test: &test
   stage: test
   cache:
@@ -174,38 +125,3 @@ test:XVFB:
     - ls -la
     - (sleep 2m && killall uTox-muslc-64) &
     - ./uTox-muslc-64 -vvvvv || true
-#
-## Deploy
-#
-deploy:main:
-  stage: deploy
-  tags:
-    - utox.io
-  script:
-    - echo "Deploying to live server"
-  environment:
-    name: utox.io
-    url: https://utox.io/
-  when: manual
-  only:
-    - master
-
-deploy:nightly:
-  stage: deploy
-  tags:
-    - utox.io
-  script:
-    - echo "Deploying to live server"
-    - pwd
-    - ls -la
-    - ls -la ../
-    - whoami
-    - ls -la /srv/http/utox.io/*
-  environment:
-    name: utox.io
-    url: https://utox.io/nightly
-  when: manual
-  only:
-    - master
-    - develop
-    - deploy

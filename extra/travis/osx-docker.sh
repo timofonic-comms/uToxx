@@ -1,5 +1,4 @@
 #!/bin/sh
-
 set -eux
 
 . ./extra/travis/env.sh
@@ -9,7 +8,6 @@ export LDFLAGS="-L/workdir/cache/usr/lib -isysroot /usr/osxcross/bin/../SDK/MacO
 
 # brew install yasm
 
-# install libsodium, needed for crypto
 if ! [ -d libsodium ]; then
   git clone --depth=1 --branch=stable https://github.com/jedisct1/libsodium.git
 fi
@@ -28,7 +26,6 @@ fi
 cd ..
 # rm -rf libsodium
 
-# install libopus, needed for audio encoding/decoding
 if ! [ -f $CACHE_DIR/usr/lib/pkgconfig/opus.pc ]; then
   curl http://downloads.xiph.org/releases/opus/opus-1.1.4.tar.gz -o opus.tar.gz
   tar xzf opus.tar.gz
@@ -40,7 +37,6 @@ if ! [ -f $CACHE_DIR/usr/lib/pkgconfig/opus.pc ]; then
   # rm -rf opus**
 fi
 
-# install libvpx, needed for video encoding/decoding
 if ! [ -d libvpx ]; then
   git clone --depth=1 --branch=v1.6.0 https://chromium.googlesource.com/webm/libvpx
 fi
@@ -55,7 +51,6 @@ fi
 cd ..
 # rm -rf libvpx
 
-# install toxcore
 if ! [ -d toxcore ]; then
   git clone --depth=1 --branch=$TOXCORE_REPO_BRANCH $TOXCORE_REPO_URI toxcore
 fi
@@ -86,4 +81,4 @@ cmake . -DCMAKE_SYSTEM_NAME=Darwin \
         -DENABLE_TESTS=OFF \
         -DENABLE_WERROR=OFF
 
-make || make VERBOSE=1
+make

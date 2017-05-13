@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e -u -x
+set -eux
 
 . ./extra/gitlab/env.sh
 
@@ -11,4 +11,4 @@ cmake .. \
     -DENABLE_TESTS=ON \
     -DENABLE_AUTOUPDATE=ON \
     -DENABLE_WERROR=ON
-make
+make -j`nproc`

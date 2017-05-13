@@ -11,7 +11,6 @@ export CROSS="x86_64-w64-mingw32-"
 . ./extra/common/build_opus.sh
 . ./extra/common/build_vpx.sh
 
-# install toxcore
 if ! [ -d toxcore ]; then
   git clone --depth=1 --branch="$TOXCORE_REPO_BRANCH" "$TOXCORE_REPO_URI" toxcore
 fi
@@ -32,7 +31,7 @@ if ! ([ -f "$CACHE_DIR/toxcore.sha" ] && diff "$CACHE_DIR/toxcore.sha" toxcore.s
         -DCOMPILE_AS_CXX=OFF \
         -DBOOTSTRAP_DAEMON=OFF \
         -B_build -H.
-  make -C_build -j$(nproc)
+  make -C_build -j`nproc`
   make -C_build install
   mv toxcore.sha "$CACHE_DIR/toxcore.sha"
 fi
@@ -63,7 +62,7 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)" > ./Toolchain-x86_64-w64-mingw32.cm
             -DCMAKE_BUILD_TYPE=Debug \
             -DDSOUND_INCLUDE_DIR=/usr/x86_64-w64-mingw32/include \
             -DDSOUND_LIBRARY=/usr/x86_64-w64-mingw32/lib/libdsound.a
-  make
+  make -j`nproc`
   make install
   cd ..
   mv openal.sha "$CACHE_DIR/openal.sha"
@@ -71,7 +70,6 @@ fi
 cd ..
 rm -rf openal
 
-# filter_audio
 export CC=x86_64-w64-mingw32-gcc
 . ./extra/common/filter_audio.sh
 x86_64-w64-mingw32-ranlib "$CACHE_DIR/usr/lib/libfilteraudio.a"

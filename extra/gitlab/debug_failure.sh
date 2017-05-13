@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 set -eux
 
 . ./extra/gitlab/env.sh

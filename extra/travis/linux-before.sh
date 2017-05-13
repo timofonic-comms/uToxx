@@ -1,5 +1,4 @@
 #!/bin/sh
-
 set -eux
 
 . ./extra/travis/env.sh
@@ -7,7 +6,6 @@ set -eux
 . ./extra/common/build_nacl.sh
 . ./extra/common/build_opus.sh
 
-# install libvpx, needed for video encoding/decoding
 if ! [ -d libvpx ]; then
   git clone --depth=1 --branch=v1.6.0 https://chromium.googlesource.com/webm/libvpx
 fi
@@ -22,7 +20,6 @@ fi
 cd ..
 rm -rf libvpx
 
-# install toxcore
 if ! [ -d toxcore ]; then
   git clone --depth=1 --branch=master "$TOXCORE_REPO_URI" toxcore
 fi

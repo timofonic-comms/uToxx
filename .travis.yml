@@ -50,12 +50,12 @@ matrix:
             - libopenal-dev
             - libopenal-data
             - libopenal1
-      env: BUILD=windows TOXCORE_REPO_BRANCH="master"
+      env: BUILD=windows
       compiler: x86_64-w64-mingw32-gcc
 
     - os: osx
       compiler: clang
-      env: BUILD=osx TOXCORE_REPO_BRANCH="v0.1.4"
+      env: BUILD=osx
 
 git:
   depth: 5

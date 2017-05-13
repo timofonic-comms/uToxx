@@ -1,5 +1,4 @@
 #!/bin/sh
-
 set -eux
 
 . ./extra/common/env.sh
@@ -10,7 +9,7 @@ fi
 cd filter_audio
 git rev-parse HEAD > filter_audio.sha
 if ! ([ -f "$CACHE_DIR/filter_audio.sha" ] && diff "$CACHE_DIR/filter_audio.sha" filter_audio.sha); then
-    make
+    make -j`nproc`
     PREFIX="${CACHE_DIR}/usr/" make install
     mv filter_audio.sha "$CACHE_DIR/filter_audio.sha"
 fi

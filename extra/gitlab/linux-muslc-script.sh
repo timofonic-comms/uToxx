@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e -u -x
+set -eux
 
 . ./extra/gitlab/env.sh
 
@@ -14,4 +14,4 @@ cmake .. -DCMAKE_INCLUDE_PATH=$CACHE_DIR/usr/lib \
          -DENABLE_ASAN=OFF \
          -DENABLE_FILTERAUDIO=OFF \
          -DENABLE_DBUS=OFF
-make || make VERBOSE=1
+make -j`nproc`
