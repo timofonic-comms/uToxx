@@ -124,13 +124,13 @@ void launch_at_startup(bool should) {
             path_length += 2;
 
             // 2 bytes per wchar_t
-            uint16_t ret = RegSetKeyValueW(hKey, NULL, L"uTox", REG_SZ, path, path_length * 2);
+            RegSetKeyValueW(hKey, NULL, L"uTox", REG_SZ, path, path_length * 2);
             RegCloseKey(hKey);
         }
     } else {
         HKEY hKey;
-        if (ERROR_SUCCESS == RegOpenKeyW(HKEY_CURRENT_USER, run_key_path, &hKey)) {
-            uint16_t ret = RegDeleteKeyValueW(hKey, NULL, L"uTox");
+        if (RegOpenKeyW(HKEY_CURRENT_USER, run_key_path, &hKey) == ERROR_SUCCESS) {
+            RegDeleteKeyValueW(hKey, NULL, L"uTox");
             RegCloseKey(hKey);
         }
     }
