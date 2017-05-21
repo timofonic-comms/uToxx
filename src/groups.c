@@ -99,7 +99,7 @@ void group_init(GROUPCHAT *g, uint32_t group_number, bool av_group) {
 uint32_t group_add_message(GROUPCHAT *g, uint32_t peer_id, const uint8_t *message, size_t length,
                            uint8_t m_type)
 {
-    pthread_mutex_lock(&messages_lock); /* make sure that messages has posted before we continue */
+    pthread_mutex_lock(&messages_lock);
 
     if (peer_id >= UTOX_MAX_GROUP_PEERS) {
         return UINT32_MAX;
@@ -249,7 +249,6 @@ void group_peer_name_change(GROUPCHAT *g, uint32_t peer_id, const uint8_t *name,
 }
 
 void group_reset_peerlist(GROUPCHAT *g) {
-    /* ARE YOU KIDDING... WHO THOUGHT THIS API WAS OKAY?! */
     for (size_t i = 0; i < g->peer_count; ++i) {
         if (g->peer[i]) {
             free(g->peer[i]);
@@ -259,7 +258,7 @@ void group_reset_peerlist(GROUPCHAT *g) {
 }
 
 void group_free(GROUPCHAT *g) {
-        for (size_t i = 0; i < g->edit_history_length; ++i) {
+    for (size_t i = 0; i < g->edit_history_length; ++i) {
         free(g->edit_history[i]);
     }
 
@@ -269,7 +268,11 @@ void group_free(GROUPCHAT *g) {
 
     for (size_t i = 0; i < g->msg.number; ++i) {
         free(g->msg.data[i]->via.grp.author);
-        free(g->msg.data[i]->via.grp.msg);
+
+        // Freeing this here was causing a double free.
+        // TODO: Is it needed to prevent a memory leak in some cases?
+        // free(g->msg.data[i]->via.grp.msg);
+
         message_free(g->msg.data[i]);
     }
     free(g->msg.data);
@@ -280,7 +283,7 @@ void group_free(GROUPCHAT *g) {
 }
 
 void raze_groups(void) {
-        for (size_t i = 0; i < self.groups_list_count; i++) {
+    for (size_t i = 0; i < self.groups_list_count; i++) {
         GROUPCHAT *g = get_group(i);
         if (!g) {
             continue;
