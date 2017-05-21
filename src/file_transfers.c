@@ -16,6 +16,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #define MAX_INCOMING_COUNT 32
 
@@ -174,15 +175,19 @@ static bool resumeable_name(FILE_TRANSFER *ft, char *name) {
 }
 
 static bool ft_update_resumable(FILE_TRANSFER *ft) {
-    if (ft->resume_file) {
-        fseeko(ft->resume_file, SEEK_SET, 0);
-        if (fwrite(ft, sizeof(FILE_TRANSFER), 1, ft->resume_file) == 1) {
-            fflush(ft->resume_file);
-            return true;
-        }
+    // Check if resume_file is a valid file pointer.
+    struct stat buffer;
+    if (fstat(fileno(ft->resume_file), &buffer) != 0) {
+        return false;
     }
 
-    return false;
+    fseeko(ft->resume_file, SEEK_SET, 0);
+    if (fwrite(ft, sizeof(FILE_TRANSFER), 1, ft->resume_file) != 1) {
+        return false;
+    }
+
+    fflush(ft->resume_file);
+    return true;
 }
 
 /* Create the file transfer resume info file. */
