@@ -1115,21 +1115,15 @@ static void outgoing_file_callback_chunk(Tox *tox, uint32_t friend_number, uint3
     ft->current_size += length;
 }
 
-bool utox_file_start_write(uint32_t friend_number, uint32_t file_number, void *file, bool is_file) {
+bool utox_file_start_write(uint32_t friend_number, uint32_t file_number, const char *file) {
     FILE_TRANSFER *ft = get_file_transfer(friend_number, file_number);
     if (!ft || !file) {
         return false;
     }
 
-    if (is_file) {
-        ft->via.file = (FILE *)file;
-        return true;
-    }
-
     snprintf((char *)ft->path, UTOX_FILE_NAME_LENGTH, "%s", file);
 
-    // TODO use native functions to open this file
-    ft->via.file = fopen(file, "wb");
+    ft->via.file = utox_get_file_simple((char *)ft->path, UTOX_FILE_OPTS_WRITE);
     if (!ft->via.file) {
         break_file(ft);
         return false;
