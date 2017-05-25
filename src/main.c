@@ -237,12 +237,6 @@ void utox_init(void) {
     UTOX_SAVE *save = config_load();
     free(save);
 
-    /* Called by the native main for every platform after loading utox setting,
-     * before showing/drawing any windows. */
-    if (settings.curr_version != settings.last_version) {
-        settings.show_splash = true;
-    }
-
     // We likely want to start this on every system.
     thread(updater_thread, (void *)1);
 }

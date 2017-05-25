@@ -5,8 +5,8 @@
 
 SETTINGS settings = {
     .curr_version = UTOX_VERSION_NUMBER,
-    // .last_version                // included here to match the full struct
-    .show_splash = false,
+    // .last_version      // included here to match the full struct
+    .show_splash = false, // Included here because compatability.
 
     // Low level settings (network, profile, portable-mode)
     .enable_udp     = true,

@@ -15,7 +15,7 @@ typedef struct utox_settings {
     uint32_t curr_version;
     uint32_t next_version;
 
-    bool     show_splash;
+    bool show_splash; // Included here because compatability.
 
     // Low level settings (network, profile, portable-mode)
     bool portable_mode;

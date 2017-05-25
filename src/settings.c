@@ -25,7 +25,7 @@ SETTINGS settings = {
     .curr_version = UTOX_VERSION_NUMBER,
     .next_version = UTOX_VERSION_NUMBER,
 
-    .show_splash = false,
+    .show_splash = false, // Included here because compatability.
 
     // Low level settings (network, profile, portable-mode)
     .enable_udp     = true,

@@ -418,9 +418,6 @@ static void page_close(ITEM *i) {
 
         case ITEM_SETTINGS: {
             if (panel_profile_password.disabled) {
-                panel_splash_page.disabled = true;
-                settings.show_splash = false;
-
                 panel_settings_master.disabled = true;
                 panel_overhead.disabled = true;
 

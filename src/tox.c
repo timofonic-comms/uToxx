@@ -352,11 +352,7 @@ static int init_toxcore(Tox **tox) {
         panel_settings_master.disabled  = false;
     } else {
         panel_profile_password.disabled = true;
-        if (settings.show_splash) {
-            panel_splash_page.disabled = false;
-        } else {
-            panel_settings_master.disabled = false;
-        }
+        panel_settings_master.disabled = false;
         edit_resetfocus();
     }
 
