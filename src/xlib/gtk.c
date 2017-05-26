@@ -245,6 +245,7 @@ static void ugtk_savethread(void *args) {
                     utoxGTK_dialog_run(errordialog);
                     utoxGTK_widget_destroy(errordialog);
                     utoxGTK_widget_destroy(dialog);
+                    free(path);
                     continue;
                 }
             } else {
