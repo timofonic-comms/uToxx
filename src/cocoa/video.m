@@ -53,11 +53,8 @@
 
             [_session beginConfiguration];
             [_session addInput:input];
-            //_session.sessionPreset = AVCaptureSessionPreset640x480;
             [_session commitConfiguration];
 
-            // CGRect tr = CGRectIntegral(AVMakeRectWithAspectRatioInsideRect(desktop_capture_rect.size, (CGRect){0, 0,
-            // 640, 480}));
             video_width             = desktop_capture_rect.size.width;
             video_height            = desktop_capture_rect.size.height;
             _shouldMangleDimensions = NO;
@@ -71,9 +68,12 @@
                 return nil;
             }
 
-            NSError *       error = NULL;
+            NSError *error = NULL;
             AVCaptureInput *input = [[AVCaptureDeviceInput alloc] initWithDevice:dev error:&error];
             [_session beginConfiguration];
+            if (!input) {
+                return nil;
+            }
             [_session addInput:input];
             _session.sessionPreset = AVCaptureSessionPreset640x480;
             [_session commitConfiguration];
