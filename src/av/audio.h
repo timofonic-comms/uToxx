@@ -64,11 +64,11 @@ enum {
     (!!(get_friend(f_number)->call_state_self & TOXAV_FRIEND_CALL_STATE_ACCEPTING_A) \
      && !!(get_friend(f_number)->call_state_friend & TOXAV_FRIEND_CALL_STATE_SENDING_A))
 
-#ifndef AUDIO_FILTERING
-typedef uint8_t Filter_Audio;
-#endif
-
-bool utox_audio_in_device_set(ALCdevice *new_device);
+void utox_audio_in_device_open(void);
+void utox_audio_in_device_close(void);
+void utox_audio_in_listen(void);
+void utox_audio_in_ignore(void);
+void utox_audio_in_device_set(ALCdevice *new_device);
 ALCdevice *utox_audio_in_device_get(void);
 
 bool utox_audio_out_device_set(ALCdevice *new_device);
