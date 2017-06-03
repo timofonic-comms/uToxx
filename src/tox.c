@@ -110,7 +110,9 @@ static int utox_decrypt_data(void *cypher_data, size_t cypher_length, uint8_t *c
             return 0;
         }
         case TOX_ERR_DECRYPTION_NULL:
-        case TOX_ERR_DECRYPTION_INVALID_LENGTH:
+        case TOX_ERR_DECRYPTION_INVALID_LENGTH: {
+            return UTOX_ENC_ERR_LENGTH;
+        }
         case TOX_ERR_DECRYPTION_BAD_FORMAT: {
             return UTOX_ENC_ERR_BAD_DATA;
         }
@@ -270,6 +272,7 @@ static int load_toxcore_save(struct Tox_Options *options) {
             options->savedata_type   = TOX_SAVEDATA_TYPE_TOX_SAVE;
             options->savedata_data   = raw_data;
             options->savedata_length = raw_length;
+
             return 0;
         }
     }
