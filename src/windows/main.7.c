@@ -133,7 +133,6 @@ void launch_at_startup(bool should) {
             path[path_length + 2] = '\0';
             path_length += 2;
 
-            // 2 bytes per wchar_t
             RegSetKeyValueW(hKey, NULL, L"uTox", REG_SZ, path, path_length * 2);
             RegCloseKey(hKey);
         }
