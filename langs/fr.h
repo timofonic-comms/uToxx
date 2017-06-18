@@ -8,24 +8,6 @@ msgid(LANG_ENGLISH_NAME)
 msgstr("FRENCH")
 
 
-/******************************************************************************
- *** Écran d'accueil et historique des modifications                        ***
- ******************************************************************************/
-msgid(SPLASH_TITLE)
-msgstr("Bienvenue sur le nouveau uTox !")
-
-//msgid(SPLASH_TEXT)
-//msgstr("You have just upgraded to version 0.9.5! Release name: Srsly")
-
-//msgid(CHANGE_LOG_TITLE)
-//msgstr("Changes in v0.9.5")
-
-//msgid(CHANGE_LOG_TEXT)
-//msgstr(<Changelog in English>)
-
-/******************************************************************************
- *** Splash Message & Change Log                                            ***
- ******************************************************************************/
 msgid(REQ_SENT)
 msgstr("Demande envoyée. Votre ami apparaîtra en ligne quand il acceptera votre demande.")
 

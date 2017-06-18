@@ -6,43 +6,6 @@ msgstr("Polish")
 
 
 /******************************************************************************
- *** Splash Message & Change Log                                            ***
- ******************************************************************************/
-msgid(SPLASH_TITLE)
-msgstr("Witaj w nowym uTox!")
-
-msgid(SPLASH_TEXT)
-msgstr("uTox został zaktualizowany do wersji 0.9.8! Nazwa kodowa wersji: Srsly v3")
-
-msgid(CHANGE_LOG_TITLE)
-msgstr("Zmiany w v0.9.8")
-
-msgid(CHANGE_LOG_TEXT)
-msgstr(
-"    Usunięto błąd podczas tworzenia nowego profilu\n"
-"\nv0.9.7\n"
-"    Usprawniono interfejs użytkownika \n"
-"    Zamieniono wszystkie listy Tak/Nie na przełączniki\n"
-"    Naprawiono zapisywanie hostów proxy i portów podczas restartów.\n"
-"\nv0.9.5\n"
-"    Wideo w środku okna dla OSX\n"
-"    Usunięto błąd zapisywania historii\n"
-"\nv0.9.3\n"
-"    Usunięto błąd z wiadomościami który powodował sporadyczne awarie w Windows\n"
-"    Zmniejszono liczbę wiadomości które można ponownie wysyłać na raz\n"
-"\nv0.9.2\n"
-"    Poprawiono kod źródłowy/Zmienono ścieżki\n"
-"\nv0.9.1\n"
-"    Usunięto błąd podczas wysyłania wiadomości do nowego znajomego\n"
-"\nv0.9.0\n"
-"   Kolejka wiadomości\n"
-"   Poprawiono czaty grupowe\n"
-"   Eksperymentalna funkcja wideo w środku okna\n"
-"   Mała lista kontaktów\n"
-"   Usprawniono przetwarzanie wiadomości\n"
-"\n")
-
-/******************************************************************************
  *** MISC & UNSORTED                                                        ***
  ******************************************************************************/
 
