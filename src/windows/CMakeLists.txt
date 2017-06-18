@@ -26,9 +26,9 @@ add_library(utoxNATIVE STATIC
     )
 
 target_link_libraries(utoxNATIVE
-    iphlpapi    ws2_32      gdi32       msimg32
-    dnsapi      comdlg32    winmm       ole32
-    oleaut32    strmiids    shell32     opus
+    iphlpapi    ws2_32     gdi32 msimg32
+    comdlg32    winmm      ole32 oleaut32
+    strmiids    shell32    opus
     )
 
 set(WINDOWS_ICON utox.rc)

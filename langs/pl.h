@@ -12,12 +12,6 @@ msgstr("Polish")
 msgid(REQ_SENT)
 msgstr("Wysłano zaproszenie do znajomych. Znajomy/a stanie się dostępny po jego przyjęciu")
 
-msgid(REQ_RESOLVE)
-msgstr("Odnajdowanie nazwy DNS...")
-
-msgid(DNS_DISABLED)
-msgstr("Nie można uzyskać nazwy DNS przez proxy bez UDP!")
-
 msgid(REQ_INVALID_ID)
 msgstr("Błąd: Nieprawidłowy Tox ID")
 

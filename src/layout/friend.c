@@ -5,7 +5,6 @@
 
 #include "../avatar.h"
 #include "../commands.h"
-#include "../dns.h"
 #include "../flist.h"
 #include "../friend.h"
 #include "../macros.h"
@@ -126,13 +125,6 @@ static void draw_add_friend(int x, int UNUSED(y), int UNUSED(w), int height) {
 
     drawstr(x + SCALE(10), SCALE(MAIN_TOP + 58), MESSAGE);
 
-    if (settings.force_proxy) {
-        int push = UTOX_STR_WIDTH(TOXID);
-        setfont(FONT_MISC);
-        setcolor(C_RED);
-        drawstr(x + SCALE(20) + push, SCALE(MAIN_TOP + 12), DNS_DISABLED);
-    }
-
     if (addfriend_status) {
         setfont(FONT_MISC);
         setcolor(C_RED);
@@ -142,9 +134,6 @@ static void draw_add_friend(int x, int UNUSED(y), int UNUSED(w), int height) {
         switch (addfriend_status) {
             case ADDF_SENT:
                 str = SPTR(REQ_SENT);
-                break;
-            case ADDF_DISCOVER:
-                str = SPTR(REQ_RESOLVE);
                 break;
             case ADDF_BADNAME:
                 str = SPTR(REQ_INVALID_ID);

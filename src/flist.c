@@ -567,7 +567,7 @@ static void show_page(ITEM *i) {
 
     selected_item = i;
 
-    addfriend_status = 0;
+    addfriend_status = ADDF_NONE;
 }
 
 void flist_start(void) {

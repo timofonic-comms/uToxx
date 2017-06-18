@@ -231,7 +231,6 @@ if(TOXCORE_STATIC)
     set(TOX_LIBS
         toxencryptsave
         toxav
-        toxdns
         toxcore
         toxgroup
         toxmessenger
@@ -244,7 +243,6 @@ if(TOXCORE_STATIC)
 else()
     set(TOX_LIBS
         toxencryptsave
-        toxdns
         toxav
         toxcore
         )
@@ -317,7 +315,6 @@ add_executable(utox ${GUI_TYPE}
     src/command_funcs.c
     src/commands.c
     src/devices.c
-    src/dns.c
     src/file_transfers.c
     src/filesys.c
     src/flist.c
