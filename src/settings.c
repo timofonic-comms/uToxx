@@ -56,6 +56,7 @@ SETTINGS settings = {
     .use_mini_flist         = false,
     .magic_flist_enabled    = false,
 
+    .video_fps              = 25,
 
     // Notifications / Alerts
     .ringtone_enabled       = true,
@@ -176,6 +177,14 @@ UTOX_SAVE *config_load(void) {
     loaded_audio_out_device         = save->audio_device_out;
     loaded_audio_in_device          = save->audio_device_in;
 
+    settings.video_fps              = save->video_fps;
+
+    edit_video_fps.length =
+        snprintf((char *)edit_video_fps.data, edit_video_fps.maxlength + 1, "%u", save->video_fps);
+    if (edit_video_fps.length > edit_video_fps.maxlength) {
+        edit_video_fps.length = edit_video_fps.maxlength;
+    }
+
     // TODO: Don't clobber (and start saving) commandline flags.
 
     // Allow users to override theme on the cmdline.
@@ -219,6 +228,7 @@ void config_save(UTOX_SAVE *save_in) {
     save->use_mini_flist                = settings.use_mini_flist;
     save->magic_flist_enabled           = settings.magic_flist_enabled;
 
+    save->video_fps                     = (settings.video_fps == 0) ? 25 : settings.video_fps;
 
     save->disableudp              = !settings.enable_udp;
     save->enableipv6              = settings.enable_ipv6;

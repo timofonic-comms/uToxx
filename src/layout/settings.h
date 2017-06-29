@@ -78,6 +78,8 @@ extern EDIT /* Profile */
             edit_proxy_ip,
             edit_proxy_port,
             edit_profile_password,
-            edit_nospam;
+            edit_nospam,
+            /* Video */
+            edit_video_fps;
 
 #endif // LAYOUT_SETTINGS_H
