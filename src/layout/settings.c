@@ -31,7 +31,7 @@
 
 /* Top bar for user settings */
 static void draw_settings_header(int x, int y, int w, int UNUSED(height)) {
-    (void)w; // Silence an irreverent warning when GIT_VERSION is undefined
+    (void)w; // Silence an irrelevant warning when GIT_VERSION is undefined
     setcolor(COLOR_MAIN_TEXT);
     setfont(FONT_SELF_NAME);
     drawstr(x + SCALE(10), y + SCALE(10), UTOX_SETTINGS);
@@ -40,8 +40,8 @@ static void draw_settings_header(int x, int y, int w, int UNUSED(height)) {
     char ver_string[64];
     int  count = snprintf(ver_string, 64, "Toxcore v%u.%u.%u",
                             tox_version_major(), tox_version_minor(), tox_version_patch());
-    drawtextwidth_right(x + w - textwidth(ver_string, count) , textwidth(ver_string, count), SCALE(10),
-                        ver_string, count);
+    drawtextwidth_right(x + w - textwidth(ver_string, count) , textwidth(ver_string, count),
+                        SCALE(10), ver_string, count);
 
     setfont(FONT_SELF_NAME); // x adjustment depends on the font type being set first
     x += SCALE(25) + UTOX_STR_WIDTH(UTOX_SETTINGS);
@@ -112,7 +112,8 @@ static void draw_settings_sub_header(int x, int y, int width, int UNUSED(height)
     x = next_x;
 
     /* Draw the text and bars for notification settings */
-    setcolor(!button_settings_sub_notifications.mouseover ? COLOR_MAIN_TEXT : COLOR_MAIN_TEXT_SUBTEXT);
+    setcolor(!button_settings_sub_notifications.mouseover ? COLOR_MAIN_TEXT
+                                                          : COLOR_MAIN_TEXT_SUBTEXT);
     next_x += SCALE(20) + UTOX_STR_WIDTH(NOTIFICATIONS_BUTTON);
     drawstr(x + SCALE(10), y + SCALE(10), NOTIFICATIONS_BUTTON);
     if (panel_settings_notifications.disabled) {
@@ -249,7 +250,10 @@ static void draw_settings_text_adv(int x, int y, int UNUSED(w), int UNUSED(heigh
     drawstr(x + SCALE(20) + BM_SWITCH_WIDTH, y + SCALE(30),  IPV6);
     drawstr(x + SCALE(20) + BM_SWITCH_WIDTH, y + SCALE(60),  UDP);
     drawstr(x + SCALE(20) + BM_SWITCH_WIDTH, y + SCALE(90),  PROXY);
-    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH, y + SCALE(120), PROXY_FORCE); // TODO draw ONLY when settings.use_proxy = true
+
+    // TODO draw ONLY when settings.use_proxy = true
+    drawstr(x + SCALE(20) + BM_SWITCH_WIDTH, y + SCALE(120), PROXY_FORCE);
+
     drawtext(x + SCALE(353), y + SCALE(89), ":", 1); // Little addr port separator
 
     drawstr(x + SCALE(20)+ BM_SWITCH_WIDTH, y + SCALE(150), BLOCK_FRIEND_REQUESTS);
@@ -475,11 +479,15 @@ static void update_show_nospam_button_text(void) {
 
 static void update_show_password_button_text(void) {
     if (panel_profile_password_settings.disabled) {
-        maybe_i18nal_string_set_i18nal(&button_show_password_settings.button_text, STR_SHOW_UI_PASSWORD);
-        maybe_i18nal_string_set_i18nal(&button_show_password_settings.tooltip_text, STR_SHOW_UI_PASSWORD_TOOLTIP);
+        maybe_i18nal_string_set_i18nal(&button_show_password_settings.button_text,
+                                       STR_SHOW_UI_PASSWORD);
+        maybe_i18nal_string_set_i18nal(&button_show_password_settings.tooltip_text,
+                                       STR_SHOW_UI_PASSWORD_TOOLTIP);
     } else {
-        maybe_i18nal_string_set_i18nal(&button_show_password_settings.button_text, STR_HIDE_UI_PASSWORD);
-        maybe_i18nal_string_set_i18nal(&button_show_password_settings.tooltip_text, STR_HIDE_UI_PASSWORD_TOOLTIP);
+        maybe_i18nal_string_set_i18nal(&button_show_password_settings.button_text,
+                                       STR_HIDE_UI_PASSWORD);
+        maybe_i18nal_string_set_i18nal(&button_show_password_settings.tooltip_text,
+                                       STR_HIDE_UI_PASSWORD_TOOLTIP);
     }
 }
 
@@ -491,7 +499,7 @@ BUTTON button_settings = {
     .on_mup       = button_settings_on_mup,
     .disabled     = false,
     .nodraw       = false,
-    .tooltip_text = {.i18nal = STR_USERSETTINGS },
+    .tooltip_text = { .i18nal = STR_USERSETTINGS },
 };
 
 static void disable_all_setting_sub(void) {
@@ -542,7 +550,6 @@ static void button_settings_sub_notifications_on_mup(void){
     panel_settings_notifications.disabled = false;
 }
 
-
 static void button_add_device_to_self_mdown(void) {
 #ifdef ENABLE_MULTIDEVICE
     devices_self_add(edit_add_new_device_to_self.data, edit_add_new_device_to_self.length);
@@ -554,48 +561,48 @@ BUTTON
 button_settings_sub_profile = {
     .nodraw = true,
     .on_mup = button_settings_sub_profile_on_mup,
-    .tooltip_text = {.i18nal = STR_PROFILE_BUTTON },
-    .button_text  = {.i18nal = STR_PROFILE_BUTTON },
+    .tooltip_text = { .i18nal = STR_PROFILE_BUTTON },
+    .button_text  = { .i18nal = STR_PROFILE_BUTTON },
 },
 
 button_settings_sub_devices = {
     .nodraw = true,
     .on_mup = button_settings_sub_devices_on_mup,
-    .tooltip_text = {.i18nal = STR_DEVICES_BUTTON },
-    .button_text  = {.i18nal = STR_DEVICES_BUTTON },
+    .tooltip_text = { .i18nal = STR_DEVICES_BUTTON },
+    .button_text  = { .i18nal = STR_DEVICES_BUTTON },
 },
 
 button_settings_sub_ui = {
     .nodraw = true,
     .on_mup = button_settings_sub_ui_on_mup,
-    .tooltip_text = {.i18nal = STR_USER_INTERFACE_BUTTON },
-    .button_text  = {.i18nal = STR_USER_INTERFACE_BUTTON },
+    .tooltip_text = { .i18nal = STR_USER_INTERFACE_BUTTON },
+    .button_text  = { .i18nal = STR_USER_INTERFACE_BUTTON },
 },
 
 button_settings_sub_av = {
     .nodraw = true,
     .on_mup = button_settings_sub_av_on_mup,
-    .tooltip_text = {.i18nal = STR_AUDIO_VIDEO_BUTTON },
-    .button_text  = {.i18nal = STR_AUDIO_VIDEO_BUTTON },
+    .tooltip_text = { .i18nal = STR_AUDIO_VIDEO_BUTTON },
+    .button_text  = { .i18nal = STR_AUDIO_VIDEO_BUTTON },
 },
 
 button_settings_sub_notifications = {
     .nodraw = true,
     .on_mup = button_settings_sub_notifications_on_mup,
-    .tooltip_text = {.i18nal = STR_NOTIFICATIONS_BUTTON },
-    .button_text  = {.i18nal = STR_NOTIFICATIONS_BUTTON },
+    .tooltip_text = { .i18nal = STR_NOTIFICATIONS_BUTTON },
+    .button_text  = { .i18nal = STR_NOTIFICATIONS_BUTTON },
 },
 
 button_settings_sub_adv = {
     .nodraw = true,
     .on_mup = button_settings_sub_adv_on_mup,
-    .tooltip_text = {.i18nal = STR_ADVANCED_BUTTON },
-    .button_text  = {.i18nal = STR_ADVANCED_BUTTON },
+    .tooltip_text = { .i18nal = STR_ADVANCED_BUTTON },
+    .button_text  = { .i18nal = STR_ADVANCED_BUTTON },
 },
 
 button_add_new_device_to_self = {
     .bm_fill         = BM_SBUTTON,
-    .button_text = {.i18nal = STR_ADD },
+    .button_text = { .i18nal = STR_ADD },
     // .update   = button_setcolors_success,
     .on_mup      = button_add_device_to_self_mdown,
 };
@@ -635,9 +642,11 @@ static void button_change_nospam_on_mup(void) {
 }
 
 static void button_revert_nospam_on_mup(void) {
-    if (self.old_nospam == 0 || self.nospam == self.old_nospam) { //nospam can not be 0
+    if (self.old_nospam == 0 || self.nospam == self.old_nospam) {
+        // nospam can not be 0
         return;
     }
+
     postmessage_toxcore(TOX_SELF_CHANGE_NOSPAM, self.old_nospam, 0, NULL);
     button_revert_nospam.disabled = true;
 }
@@ -676,8 +685,8 @@ static void button_videopreview_on_mup(void) {
         postmessage_utoxav(UTOXAV_STOP_VIDEO, 0, 1, NULL);
     } else if (video_width && video_height) {
         postmessage_utoxav(UTOXAV_START_VIDEO, 0, 1, NULL);
-    } else {
-            }
+    }
+
     settings.video_preview = !settings.video_preview;
 }
 
@@ -694,7 +703,7 @@ BUTTON button_copyid = {
     .update   = button_setcolors_success,
     .on_mup   = button_copyid_on_mup,
     .disabled = false,
-    .button_text = {.i18nal = STR_COPY_TOX_ID },
+    .button_text = { .i18nal = STR_COPY_TOX_ID },
 };
 
 BUTTON button_callpreview = {
@@ -721,16 +730,16 @@ BUTTON button_lock_uTox = {
     .bm_fill      = BM_SBUTTON,
     .update       = button_setcolors_success,
     .on_mup       = button_lock_uTox_on_mup,
-    .button_text  = {.i18nal = STR_LOCK },
-    .tooltip_text = {.i18nal = STR_LOCK_UTOX },
+    .button_text  = { .i18nal = STR_LOCK },
+    .tooltip_text = { .i18nal = STR_LOCK_UTOX },
 };
 
 BUTTON button_show_password_settings = {
     .bm_fill      = BM_SBUTTON,
     .update       = button_setcolors_success,
     .on_mup       = button_show_password_settings_on_mup,
-    .button_text  = {.i18nal = STR_SHOW_UI_PASSWORD },
-    .tooltip_text = {.i18nal = STR_SHOW_UI_PASSWORD_TOOLTIP },
+    .button_text  = { .i18nal = STR_SHOW_UI_PASSWORD },
+    .tooltip_text = { .i18nal = STR_SHOW_UI_PASSWORD_TOOLTIP },
 };
 
 BUTTON button_export_chatlog = {
@@ -738,16 +747,16 @@ BUTTON button_export_chatlog = {
     .update       = button_setcolors_success,
     .on_mup       = button_export_chatlog_on_mup,
     .disabled     = false,
-    .button_text  = {.i18nal = STR_FRIEND_EXPORT_CHATLOG },
-    .tooltip_text = {.i18nal = STR_FRIEND_EXPORT_CHATLOG },
+    .button_text  = { .i18nal = STR_FRIEND_EXPORT_CHATLOG },
+    .tooltip_text = { .i18nal = STR_FRIEND_EXPORT_CHATLOG },
 };
 
 BUTTON button_change_nospam = {
     .bm_fill      = BM_SBUTTON,
     .update       = button_setcolors_success,
     .on_mup       = button_change_nospam_on_mup,
-    .button_text  = {.i18nal = STR_RANDOMIZE_NOSPAM},
-    .tooltip_text = {.i18nal = STR_RANDOMIZE_NOSPAM},
+    .button_text  = { .i18nal = STR_RANDOMIZE_NOSPAM},
+    .tooltip_text = { .i18nal = STR_RANDOMIZE_NOSPAM},
 };
 
 BUTTON button_revert_nospam = {
@@ -755,15 +764,15 @@ BUTTON button_revert_nospam = {
     .update       = button_setcolors_success,
     .on_mup       = button_revert_nospam_on_mup,
     .disabled     = true,
-    .button_text  = {.i18nal = STR_REVERT_NOSPAM},
-    .tooltip_text = {.i18nal = STR_REVERT_NOSPAM},
+    .button_text  = { .i18nal = STR_REVERT_NOSPAM},
+    .tooltip_text = { .i18nal = STR_REVERT_NOSPAM},
 };
 
 BUTTON button_show_nospam = {
     .bm_fill      = BM_SBUTTON,
     .update       = button_setcolors_success,
-    .tooltip_text = {.i18nal = STR_SHOW_NOSPAM},
-    .button_text  = {.i18nal = STR_SHOW_NOSPAM},
+    .tooltip_text = { .i18nal = STR_SHOW_NOSPAM},
+    .button_text  = { .i18nal = STR_SHOW_NOSPAM},
     .on_mup       = button_show_nospam_on_mup,
 };
 
@@ -862,7 +871,7 @@ UISWITCH switch_save_chat_history = {
     .style_icon_on  = BM_YES,
     .update         = switch_update,
     .on_mup         = switchfxn_logging,
-    .tooltip_text   = {.i18nal = STR_SAVE_CHAT_HISTORY },
+    .tooltip_text   = { .i18nal = STR_SAVE_CHAT_HISTORY },
 };
 
 UISWITCH switch_mini_contacts = {
@@ -872,7 +881,7 @@ UISWITCH switch_mini_contacts = {
     .style_icon_on  = BM_YES,
     .update         = switch_update,
     .on_mup         = switchfxn_mini_contacts,
-    .tooltip_text   = {.i18nal = STR_SETTINGS_UI_MINI_ROSTER },
+    .tooltip_text   = { .i18nal = STR_SETTINGS_UI_MINI_ROSTER },
 };
 
 
@@ -894,7 +903,7 @@ UISWITCH switch_magic_sidebar = {
     .style_icon_on  = BM_YES,
     .update         = switch_update,
     .on_mup         = switchfxn_magic_sidebar,
-    .tooltip_text   = {.i18nal = STR_SETTINGS_UI_AUTO_HIDE_SIDEBAR },
+    .tooltip_text   = { .i18nal = STR_SETTINGS_UI_AUTO_HIDE_SIDEBAR },
 };
 
 UISWITCH switch_ipv6 = {
@@ -904,7 +913,7 @@ UISWITCH switch_ipv6 = {
     .style_icon_on  = BM_YES,
     .update         = switch_update,
     .on_mup         = switchfxn_ipv6,
-    .tooltip_text   = {.i18nal = STR_IPV6 },
+    .tooltip_text   = { .i18nal = STR_IPV6 },
 };
 
 UISWITCH switch_udp = {
@@ -914,7 +923,7 @@ UISWITCH switch_udp = {
     .style_icon_on  = BM_YES,
     .update         = switch_update,
     .on_mup         = switchfxn_udp,
-    .tooltip_text   = {.i18nal = STR_UDP },
+    .tooltip_text   = { .i18nal = STR_UDP },
 };
 
 UISWITCH switch_close_to_tray = {
@@ -924,7 +933,7 @@ UISWITCH switch_close_to_tray = {
     .style_icon_on  = BM_YES,
     .update         = switch_update,
     .on_mup         = switchfxn_close_to_tray,
-    .tooltip_text   = {.i18nal = STR_CLOSE_TO_TRAY },
+    .tooltip_text   = { .i18nal = STR_CLOSE_TO_TRAY },
 };
 
 UISWITCH switch_start_in_tray = {
@@ -934,7 +943,7 @@ UISWITCH switch_start_in_tray = {
     .style_icon_on  = BM_YES,
     .update         = switch_update,
     .on_mup         = switchfxn_start_in_tray,
-    .tooltip_text   = {.i18nal = STR_START_IN_TRAY },
+    .tooltip_text   = { .i18nal = STR_START_IN_TRAY },
 };
 
 UISWITCH switch_auto_startup = {
@@ -944,7 +953,7 @@ UISWITCH switch_auto_startup = {
     .style_icon_on  = BM_YES,
     .update         = switch_update,
     .on_mup         = switchfxn_auto_startup,
-    .tooltip_text   = {.i18nal = STR_AUTO_STARTUP },
+    .tooltip_text   = { .i18nal = STR_AUTO_STARTUP },
 };
 
 UISWITCH switch_typing_notes = {
@@ -954,7 +963,7 @@ UISWITCH switch_typing_notes = {
     .style_icon_on  = BM_YES,
     .update         = switch_update,
     .on_mup         = switchfxn_typing_notes,
-    .tooltip_text   = {.i18nal = STR_SEND_TYPING_NOTIFICATIONS },
+    .tooltip_text   = { .i18nal = STR_SEND_TYPING_NOTIFICATIONS },
 };
 
 UISWITCH switch_audible_notifications = {
@@ -964,7 +973,7 @@ UISWITCH switch_audible_notifications = {
     .style_icon_on  = BM_YES,
     .update         = switch_update,
     .on_mup         = switchfxn_audible_notifications,
-    .tooltip_text   = {.i18nal = STR_AUDIONOTIFICATIONS },
+    .tooltip_text   = { .i18nal = STR_AUDIONOTIFICATIONS },
 };
 
 UISWITCH switch_push_to_talk = {
@@ -974,7 +983,7 @@ UISWITCH switch_push_to_talk = {
     .style_icon_on  = BM_YES,
     .update         = switch_update,
     .on_mup         = switchfxn_push_to_talk,
-    .tooltip_text   = {.i18nal = STR_PUSH_TO_TALK },
+    .tooltip_text   = { .i18nal = STR_PUSH_TO_TALK },
 };
 
 UISWITCH switch_audio_filtering = {
@@ -984,7 +993,7 @@ UISWITCH switch_audio_filtering = {
     .style_icon_on  = BM_YES,
     .update         = switch_update,
     .on_mup         = switchfxn_audio_filtering,
-    .tooltip_text   = {.i18nal = STR_AUDIOFILTERING },
+    .tooltip_text   = { .i18nal = STR_AUDIOFILTERING },
 };
 
 UISWITCH switch_status_notifications = {
@@ -994,7 +1003,7 @@ UISWITCH switch_status_notifications = {
     .style_icon_on  = BM_YES,
     .update         = switch_update,
     .on_mup         = switchfxn_status_notifications,
-    .tooltip_text   = {.i18nal = STR_STATUS_NOTIFICATIONS },
+    .tooltip_text   = { .i18nal = STR_STATUS_NOTIFICATIONS },
 };
 
 UISWITCH switch_block_friend_requests = {
@@ -1004,7 +1013,7 @@ UISWITCH switch_block_friend_requests = {
     .style_icon_on  = BM_YES,
     .update         = switch_update,
     .on_mup         = switchfxn_block_friend_requests,
-    .tooltip_text   = {.i18nal = STR_BLOCK_FRIEND_REQUESTS },
+    .tooltip_text   = { .i18nal = STR_BLOCK_FRIEND_REQUESTS },
 };
 
 static void switchfxn_proxy(void) {
@@ -1046,7 +1055,7 @@ UISWITCH switch_proxy = {
     .style_icon_on  = BM_YES,
     .update         = switch_update,
     .on_mup         = switchfxn_proxy,
-    .tooltip_text   = {.i18nal = STR_PROXY }
+    .tooltip_text   = { .i18nal = STR_PROXY }
 };
 
 UISWITCH switch_proxy_force = {
@@ -1056,7 +1065,7 @@ UISWITCH switch_proxy_force = {
     .style_icon_on  = BM_YES,
     .update         = switch_update,
     .on_mup         = switchfxn_proxy_force,
-    .tooltip_text   = {.i18nal = STR_PROXY_FORCE },
+    .tooltip_text   = { .i18nal = STR_PROXY_FORCE },
 };
 
 static void dropdown_audio_in_onselect(uint16_t i, const DROPDOWN *dm) {
@@ -1108,14 +1117,16 @@ static void dropdown_notify_groupchats_onselect(const uint16_t i, const DROPDOWN
     g->notify = i;
 }
 
-static void dropdown_global_group_notifications_onselect(const uint16_t i, const DROPDOWN *UNUSED(dm)) {
+static void dropdown_global_group_notifications_onselect(const uint16_t i,
+                                                         const DROPDOWN *UNUSED(dm))
+{
     settings.group_notifications = i;
 }
 
 static UTOX_I18N_STR dpidrops[] = {
-    STR_DPI_TINY, STR_DPI_060,   STR_DPI_070, STR_DPI_080, STR_DPI_090, STR_DPI_NORMAL, STR_DPI_110,
-    STR_DPI_120,  STR_DPI_130,   STR_DPI_140, STR_DPI_BIG, STR_DPI_160, STR_DPI_170,    STR_DPI_180,
-    STR_DPI_190,  STR_DPI_LARGE, STR_DPI_210, STR_DPI_220, STR_DPI_230, STR_DPI_240,    STR_DPI_HUGE,
+    STR_DPI_TINY, STR_DPI_060, STR_DPI_070, STR_DPI_080, STR_DPI_090, STR_DPI_NORMAL, STR_DPI_110,
+    STR_DPI_120, STR_DPI_130, STR_DPI_140, STR_DPI_BIG, STR_DPI_160, STR_DPI_170, STR_DPI_180,
+    STR_DPI_190, STR_DPI_LARGE, STR_DPI_210, STR_DPI_220, STR_DPI_230, STR_DPI_240, STR_DPI_HUGE,
 };
 
 DROPDOWN dropdown_audio_in = {
@@ -1188,7 +1199,7 @@ static char edit_name_data[128],
             edit_proxy_ip_data[256],
             edit_proxy_port_data[8],
             edit_profile_password_data[65535],
-            edit_nospam_data[(sizeof(uint32_t) * 2) + 1] = { 0 };
+            edit_nospam_data[(sizeof(uint32_t) * 2) + 1];
 #ifdef ENABLE_MULTIDEVICE
 static char edit_add_self_device_data[TOX_ADDRESS_SIZE * 4];
 #endif
@@ -1217,7 +1228,8 @@ static void edit_status_msg_onenter(EDIT *edit) {
     uint16_t length = edit->length;
 
     if (length) {
-        length = (length <= TOX_MAX_STATUS_MESSAGE_LENGTH) ? length : TOX_MAX_STATUS_MESSAGE_LENGTH;
+        length = (length <= TOX_MAX_STATUS_MESSAGE_LENGTH) ? length
+                                                           : TOX_MAX_STATUS_MESSAGE_LENGTH;
         memcpy(self.statusmsg, data, length);
         self.statusmsg_length = length;
     } else {
@@ -1226,7 +1238,7 @@ static void edit_status_msg_onenter(EDIT *edit) {
 
     update_tray();
 
-    postmessage_toxcore(TOX_SELF_SET_STATUS, length, 0, self.statusmsg); //!
+    postmessage_toxcore(TOX_SELF_SET_STATUS, length, 0, self.statusmsg);
 }
 
 EDIT edit_status_msg = {
@@ -1242,7 +1254,9 @@ static void edit_proxy_ip_port_onlosefocus(EDIT *UNUSED(edit)) {
 
     settings.proxy_port = strtol((char *)edit_proxy_port.data, NULL, 0);
 
-    if (memcmp(proxy_address, edit_proxy_ip.data, edit_proxy_ip.length) == 0 && proxy_address[edit_proxy_ip.length] == 0) {
+    if (memcmp(proxy_address, edit_proxy_ip.data, edit_proxy_ip.length) == 0
+        && proxy_address[edit_proxy_ip.length] == 0)
+    {
         return;
     }
 
@@ -1260,7 +1274,7 @@ EDIT edit_proxy_ip = {
     .data        = edit_proxy_ip_data,
     .maxlength   = sizeof edit_proxy_ip_data - 1,
     .onlosefocus = edit_proxy_ip_port_onlosefocus,
-    .empty_str = {.i18nal = STR_PROXY_EDIT_HINT_IP },
+    .empty_str = { .i18nal = STR_PROXY_EDIT_HINT_IP },
     /* TODO .ontab = change to proxy port field */
 };
 
@@ -1268,7 +1282,7 @@ EDIT edit_proxy_port = {
     .data        = edit_proxy_port_data,
     .maxlength   = sizeof edit_proxy_port_data - 1,
     .onlosefocus = edit_proxy_ip_port_onlosefocus,
-    .empty_str = {.i18nal = STR_PROXY_EDIT_HINT_PORT },
+    .empty_str = { .i18nal = STR_PROXY_EDIT_HINT_PORT },
 };
 
 static void edit_profile_password_update(EDIT *UNUSED(edit)) {
@@ -1278,7 +1292,7 @@ static void edit_profile_password_update(EDIT *UNUSED(edit)) {
 }
 
 EDIT edit_profile_password = {
-    .maxlength = sizeof(edit_profile_password) - 1,
+    .maxlength = sizeof edit_profile_password - 1,
     .data      = edit_profile_password_data,
     // .onchange    = edit_profile_password_update,
     .onlosefocus = edit_profile_password_update,
@@ -1293,21 +1307,17 @@ EDIT edit_toxid = {
     .select_completely = 1,
 };
 
-static void edit_change_nospam_onenter(EDIT *edit) {
-    char *endptr;
-    edit_nospam_data[edit->length] = '\0';
-    long int nospam = strtol(edit_nospam_data, &endptr, 16);
+static void edit_change_nospam_onenter(EDIT *UNUSED(edit)) {
+    long int nospam = strtol(edit_nospam_data, NULL, 16);
     if (nospam == 0 || nospam < 0) {
         return;
-    } else if (endptr == edit_nospam_data) {
-        LOG_ERR("Nospam", "No numbers found.");
-        return;
     }
+
     postmessage_toxcore(TOX_SELF_CHANGE_NOSPAM, nospam, 0, NULL);
 }
 
 EDIT edit_nospam = {
-    .maxlength    = sizeof(edit_nospam_data),
+    .maxlength    = sizeof edit_nospam_data - 1,
     .data         = edit_nospam_data,
     .noborder     = false,
     .onenter      = edit_change_nospam_onenter,
