@@ -1,7 +1,6 @@
 #include "chatlog.h"
 
 #include "filesys.h"
-// TODO including native.h files should never be needed, refactor filesys.h to provide necessary API
 #include "messages.h"
 #include "text.h"
 
@@ -16,7 +15,9 @@ static FILE* chatlog_get_file(char hex[TOX_PUBLIC_KEY_SIZE * 2], bool append) {
 
     FILE *file;
     if (append) {
-        file = utox_get_file(name, NULL, UTOX_FILE_OPTS_READ | UTOX_FILE_OPTS_WRITE | UTOX_FILE_OPTS_MKDIR);
+        file = utox_get_file(name, NULL, UTOX_FILE_OPTS_READ
+                                         | UTOX_FILE_OPTS_WRITE
+                                         | UTOX_FILE_OPTS_MKDIR);
         if (!file) {
             return NULL;
         }
@@ -34,9 +35,7 @@ size_t utox_save_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], uint8_t *data, size_
     if (!fp) {
         return 0;
     }
-    // Seek to the beginning of the file first because grayhatter has had issues with this on Windows.
-    // (and he really doesn't want uTox eating people's chat logs)
-    fseeko(fp, 0, SEEK_SET);
+
     fseeko(fp, 0, SEEK_END);
     off_t offset = ftello(fp);
     fwrite(data, length, 1, fp);
@@ -124,7 +123,8 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
         }
 
         if (count) {
-            /* we have to skip the author name for now, it's left here for group chats support in the future */
+            // We have to skip the author name for now.
+            // It's left here for group chats support in the future.
             fseeko(file, header.author_length, SEEK_CUR);
             if (header.msg_length > 1 << 16) {
                 if (size) {
@@ -192,7 +192,9 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
     return start;
 }
 
-bool utox_update_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t offset, uint8_t *data, size_t length) {
+bool utox_update_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t offset,
+                         uint8_t *data, size_t length)
+{
     FILE *file = chatlog_get_file(hex, true);
 
     if (!file) {
@@ -227,37 +229,34 @@ void utox_export_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], FILE *dest_file) {
         return;
     }
 
+    struct tm tm_prev = { .tm_mday = 1 };
+
     LOG_FILE_MSG_HEADER header;
     FILE *file = chatlog_get_file(hex, false);
 
-    struct tm *tm_curr;
-    struct tm_tmp {
-        int tm_year;
-        int tm_mon;
-        int tm_mday;
-    } tm_prev = { .tm_mday = 1};
-
     while (fread(&header, sizeof(header), 1, file) == 1) {
-
-        tm_curr = localtime(&header.time);
+        struct tm *tm_curr = localtime(&header.time);
 
         char buffer[128];
         if (tm_curr->tm_year > tm_prev.tm_year
-            || (tm_curr->tm_year == tm_prev.tm_year && tm_curr->tm_mon > tm_prev.tm_mon)
-            || (tm_curr->tm_year == tm_prev.tm_year && tm_curr->tm_mon == tm_prev.tm_mon && tm_curr->tm_mday > tm_prev.tm_mday))
+            || (tm_curr->tm_year == tm_prev.tm_year
+                && tm_curr->tm_mon > tm_prev.tm_mon)
+            || (tm_curr->tm_year == tm_prev.tm_year
+                && tm_curr->tm_mon == tm_prev.tm_mon
+                && tm_curr->tm_mday > tm_prev.tm_mday))
         {
-            size_t len = strftime(buffer, 128,  "Day has changed to %A %B %d %Y\n", tm_curr);
+            size_t len = strftime(buffer, 128, "Day has changed to %A %B %d %Y\n", tm_curr);
             fwrite(buffer, len, 1, dest_file);
         }
 
-        /* Write Timestamp */
+        // Write timestamp
         fprintf(dest_file, "[%02d:%02d] ", tm_curr->tm_hour, tm_curr->tm_min);
         tm_prev.tm_year = tm_curr->tm_year;
         tm_prev.tm_mon = tm_curr->tm_mon;
         tm_prev.tm_mday = tm_curr->tm_mday;
 
         int c;
-        /* Write Author */
+        // Write author
         fwrite("<", 1, 1, dest_file);
         for (size_t i = 0; i < header.author_length; ++i) {
             c = fgetc(file);
@@ -267,7 +266,7 @@ void utox_export_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], FILE *dest_file) {
         }
         fwrite(">", 1, 1, dest_file);
 
-        /* Write text */
+        // Write text
         fwrite(" ", 1, 1, dest_file);
         for (size_t i = 0; i < header.msg_length; ++i) {
             c = fgetc(file);
