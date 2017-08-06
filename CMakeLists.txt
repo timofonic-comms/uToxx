@@ -50,27 +50,37 @@ else()
 endif()
 
 
-###########
-# Options #
-###########
+#############################
+# System-dependent defaults #
+#############################
 
-option(UTOX_STATIC          "Link uTox statically"                                          OFF)
-option(TOXCORE_STATIC       "Build uTox with the static version of Toxcore"                 OFF)
+# Windows only compiles statically.
+if (WINDOWS)
+    set(STATIC_DEFAULT ON)
+else()
+    set(STATIC_DEFAULT OFF)
+endif()
 
-# disable ASAN for macOS due to "AddressSanitizer: odr-violation: global". see #957
-if (APPLE OR (UTOX_STATIC AND WINDOWS))
+# Disable ASAN for macOS due to "AddressSanitizer: odr-violation: global". see #957
+# Windows doesn't compile with asan enabled.
+if (APPLE OR WINDOWS)
     set(ASAN_DEFAULT OFF)
 else()
     set(ASAN_DEFAULT ON)
 endif()
 
-option(ENABLE_ASAN          "Enable Address Sanitizer on debug builds"          ${ASAN_DEFAULT})
-option(ENABLE_TESTS         "Whether to build test binaries (currently linux only)"         ON )
-option(ENABLE_WERROR        "Error on Warning, whether to put -Werror flag to the compiler" OFF)
-option(ENABLE_FILTERAUDIO   "Enable Filter Audio"                                           ON )
-option(ENABLE_AUTOUPDATE    "Enable Auto-updater"                                           OFF)
+###########
+# Options #
+###########
 
-option(ENABLE_LTO           "Enable link time optimizations"                                ON )
+option(UTOX_STATIC        "Link uTox statically"                                 ${STATIC_DEFAULT} )
+option(TOXCORE_STATIC     "Build uTox with the static version of Toxcore"        ${STATIC_DEFAULT} )
+option(ENABLE_ASAN        "Enable Address Sanitizer on debug builds"               ${ASAN_DEFAULT} )
+option(ENABLE_TESTS       "Whether to build test binaries (currently linux only)"               ON )
+option(ENABLE_WERROR      "Error on Warning, whether to put -Werror flag to the compiler"       OFF)
+option(ENABLE_FILTERAUDIO "Enable Filter Audio"                                                 ON )
+option(ENABLE_AUTOUPDATE  "Enable Auto-updater"                                                 OFF)
+option(ENABLE_LTO         "Enable link time optimizations"                                      ON )
 
 
 #################################
@@ -121,13 +131,15 @@ include(CheckCCompilerFlag)
 function(add_cflag flag)
     string(REGEX REPLACE "[^a-zA-Z0-9_]" "_" var ${flag})
     if(NOT DEFINED HAVE_C${var})
-        message(STATUS "checking for C compiler flag: ${flag}")
+        message(STATUS "Checking for C compiler flag: ${flag}")
     endif()
     set(CMAKE_REQUIRED_QUIET TRUE)
 
     check_c_compiler_flag("${flag}" HAVE_C${var} QUIET)
     if(HAVE_C${var})
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${flag}" PARENT_SCOPE)
+    else()
+        message(STATUS "Warning: can't find flag ${flag}")
     endif()
 endfunction()
 
@@ -173,7 +185,11 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-z,noexecstack")
     endif()
 elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
-    # enable Link Time Optimization on clang
+    # Disable warning for `= { 0 }` in Clang.
+    # Remove once they've resolved https://bugs.llvm.org//show_bug.cgi?id=21689
+    add_cflag("-Wno-missing-field-initializers")
+
+    # Enable Link Time Optimization on Clang
     if(ENABLE_LTO)
         add_cflag("-flto")
     endif()
@@ -190,7 +206,7 @@ elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
         endif()
     endif()
 else()
-    message(SEND_ERROR "Unknown compiler name")
+    message(STATUS "Unknown compiler name: You may have to set up your compiler flags yourself.")
 endif()
 
 # set define for GIT_VERSION
@@ -198,17 +214,13 @@ if(GIT_VERSION)
     add_cflag("-DGIT_VERSION='\"${GIT_VERSION}\"'")
 endif()
 
+
 #######################################################################
 # Build options
 #######################################################################
-# sanitize memory issues in Debug builds
-# https://gcc.gnu.org/gcc-4.8/changes.html
+
 # https://github.com/google/sanitizers/wiki/AddressSanitizer
 if (ENABLE_ASAN)
-    if (UTOX_STATIC AND WINDOWS)
-        message(SEND_ERROR "ASAN is incompatible with static compilation on Windows.")
-    endif()
-
     add_cflag("-fsanitize=address")
     add_cflag("-fno-omit-frame-pointer")
 endif()
@@ -373,20 +385,24 @@ elseif(UNIX)
         )
 endif()
 
-#######################################################################
-#
-# Testing
-#
-#######################################################################
+
+###########
+# Testing #
+###########
+
 if(ENABLE_TESTS)
   if(UNIX)
-    # tests currently only run on linux
+    # Tests currently only run on Linux and macOS.
     enable_testing()
     add_subdirectory(tests)
   endif()
 endif()
 
-# print a summary of build options
+
+#############
+# Info dump #
+#############
+
 message("Build options:")
 message("- CMake Module Path:        ${CMAKE_MODULE_PATH}")
 message("----------------------------------")
@@ -400,13 +416,14 @@ message("- Windows Legacy:          ${WIN_XP_LEGACY}")
 message("- Enable DBus:             ${ENABLE_DBUS}")
 message("- Enable Tests             ${ENABLE_TESTS}")
 
-message("* CMAKE SYSTEM is '${CMAKE_SYSTEM_NAME}'")
+message("* CMake system is '${CMAKE_SYSTEM_NAME}'")
+message("* CMake build type is '${CMAKE_BUILD_TYPE}'")
 message("* C Compiler is '${CMAKE_C_COMPILER}' with the following flags:")
 message("* C flags for Debug:       ${CMAKE_C_FLAGS_DEBUG}")
 message("* C flags for Release:     ${CMAKE_C_FLAGS_RELEASE}")
 message("* C flags for all types:   ${CMAKE_C_FLAGS}")
 
-if (ENABLE_ASAN)
+if(ENABLE_ASAN)
     message("")
     message("  TIP: You may want to set the env variable  ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer  for ASAN to show nicer stack traces.")
     message("       See <http://clang.llvm.org/docs/AddressSanitizer.html#symbolizing-the-reports> for more details.")
