@@ -1,9 +1,11 @@
 #/usr/bin/env zsh
 
+OPUS_VERSION="1.2.1"
+
 if ! [ -f "$CACHE_DIR/usr/lib/pkgconfig/opus.pc" ]; then
-  curl http://downloads.xiph.org/releases/opus/opus-1.1.4.tar.gz -o opus.tar.gz
+  curl https://ftp.osuosl.org/pub/xiph/releases/opus/opus-${OPUS_VERSION}.tar.gz -o opus.tar.gz
   tar xzf opus.tar.gz
-  cd opus-1.1.4
+  cd opus-${OPUS_VERSION}
   ./configure "$TARGET_HOST" \
               --prefix="$CACHE_DIR/usr" \
               --disable-extra-programs \

@@ -3,6 +3,8 @@ set -eux
 
 . ./extra/travis/env.sh
 
+OPUS_VERSION="1.2.1"
+
 export CFLAGS=" -m64 -I/workdir/cache/usr/include -isystem /workdir/cache/usr/include -isystem /workdir/cache/usr/include/opus -isysroot /usr/osxcross/bin/../SDK/MacOSX10.10.sdk -mmacosx-version-min=10.10 -m64 -arch x86_64 -DNDEBUG -O3 -Wall"
 export LDFLAGS="-L/workdir/cache/usr/lib -isysroot /usr/osxcross/bin/../SDK/MacOSX10.10.sdk -mmacosx-version-min=10.10 -m64 -arch x86_64"
 
@@ -27,9 +29,9 @@ cd ..
 # rm -rf libsodium
 
 if ! [ -f $CACHE_DIR/usr/lib/pkgconfig/opus.pc ]; then
-  curl http://downloads.xiph.org/releases/opus/opus-1.1.4.tar.gz -o opus.tar.gz
+  curl https://ftp.osuosl.org/pub/xiph/releases/opus/opus-${OPUS_VERSION}.tar.gz -o opus.tar.gz
   tar xzf opus.tar.gz
-  cd opus-1.1.4
+  cd opus-${OPUS_VERSION}
   ./configure --prefix=$CACHE_DIR/usr --host="x86_64-apple-darwin14" --disable-extra-programs --disable-doc --disable-shared
   make -j8
   make install
