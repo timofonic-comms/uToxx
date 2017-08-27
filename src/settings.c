@@ -39,13 +39,7 @@ SETTINGS settings = {
     .block_friend_requests  = false,
     .save_encryption        = true,
 
-    // uTox internals
-    .auto_update        = false,
-    .update_to_develop  = false,
-    .send_version       = false,
-
     // .portable_mode               // included here to match the full struct
-
 
     // User interface settings
     .audiofilter_enabled    = true,
@@ -129,9 +123,7 @@ UTOX_SAVE *config_load(void) {
     // -- Grayhatter, probably...
     switch_proxy_force.switch_on = false;
 
-    switch_auto_startup.switch_on       = save->auto_startup;
-    switch_auto_update.switch_on        = save->auto_update;
-
+    switch_auto_startup.switch_on = save->auto_startup;
 
     switch_audible_notifications.switch_on = save->audible_notifications_enabled;
     switch_audio_filtering.switch_on       = save->audio_filtering_enabled;
@@ -188,11 +180,6 @@ UTOX_SAVE *config_load(void) {
 
     loaded_audio_out_device         = save->audio_device_out;
     loaded_audio_in_device          = save->audio_device_in;
-
-    settings.auto_update            = save->auto_update;
-    switch_auto_update.switch_on    = save->auto_update;
-    settings.update_to_develop      = save->update_to_develop;
-    settings.send_version           = save->send_version;
 
     // TODO: Don't clobber (and start saving) commandline flags.
 
@@ -252,10 +239,6 @@ void config_save(UTOX_SAVE *save_in) {
     save->utox_last_version    = settings.curr_version;
     save->group_notifications  = settings.group_notifications;
     save->status_notifications = settings.status_notifications;
-
-    save->auto_update           = settings.auto_update;
-    save->update_to_develop     = settings.update_to_develop;
-    save->send_version          = settings.send_version;
 
     memcpy(save->proxy_ip, proxy_address, 256); /* Magic number inside toxcore */
 

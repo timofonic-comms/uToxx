@@ -335,7 +335,6 @@ add_executable(utox ${GUI_TYPE}
     src/tox_callbacks.c
     src/ui.c
     src/ui_i18n.c
-    src/updater.c
     src/utox.c
     src/window.c
 
@@ -388,7 +387,6 @@ message("----------------------------------")
 message("- Add ASAN:                ${ENABLE_ASAN}")
 message("- Error on Warning:        ${ENABLE_WERROR}")
 message("- Filter Audio:            ${ENABLE_FILTERAUDIO}")
-message("- Auto Updater:            ${ENABLE_AUTOUPDATE}")
 message("- uTox Static:             ${UTOX_STATIC}")
 message("- Toxcore Static:          ${TOXCORE_STATIC}")
 message("-- Platform Options --------------")

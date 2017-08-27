@@ -17,7 +17,6 @@
 #include "../text.h"
 #include "../theme.h"
 #include "../tox.h"
-#include "../updater.h"
 #include "../utox.h"
 
 #include "../av/utox_av.h"
@@ -662,9 +661,7 @@ int main(int argc, char *argv[]) {
 
     int8_t should_launch_at_startup;
     int8_t set_show_window;
-    bool   skip_updater;
     parse_args(argc, argv,
-               &skip_updater,
                &should_launch_at_startup,
                &set_show_window);
 

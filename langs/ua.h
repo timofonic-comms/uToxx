@@ -210,9 +210,6 @@ msgstr("Додатково")
 msgid(NOTIFICATIONS_BUTTON)
 msgstr("Сповіщення")
 
-msgid(AUTO_UPDATE)
-msgstr("Автоматично оновлювати uTox")
-
 msgid(PROFILE_SETTINGS)
 msgstr("Налаштування профілю")
 

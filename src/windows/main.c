@@ -20,7 +20,6 @@
 #include "../theme.h"
 #include "../tox.h"
 #include "../ui.h"
-#include "../updater.h"
 #include "../utox.h"
 
 #include "../av/utox_av.h"
@@ -652,80 +651,6 @@ static void cursors_init(void) {
     cursors[CURSOR_ZOOM_OUT] = LoadCursor(NULL, IDC_SIZEALL);
 }
 
-static bool fresh_update(void) {
-    char path[UTOX_FILE_NAME_LENGTH];
-    GetModuleFileName(NULL, path, UTOX_FILE_NAME_LENGTH);
-
-    char *name_start = strstr(path, "next_uTox.exe");
-    if (!name_start) {
-        return false;
-    }
-
-    // This is the freshly downloaded exe.
-    // make a backup of the old file
-    char backup[UTOX_FILE_NAME_LENGTH];
-    strcpy(name_start, "uTox_backup.exe");
-    memcpy(backup, path, UTOX_FILE_NAME_LENGTH);
-
-    char real[UTOX_FILE_NAME_LENGTH];
-    strcpy(name_start, "uTox.exe");
-    memcpy(real, path, UTOX_FILE_NAME_LENGTH);
-        if (MoveFileEx(real, backup, MOVEFILE_REPLACE_EXISTING) == 0) {
-        // Failed
-        return false;
-    }
-
-    char new[UTOX_FILE_NAME_LENGTH];
-    strcpy(name_start, "next_uTox.exe");
-    memcpy(new, path, UTOX_FILE_NAME_LENGTH);
-        if (CopyFile(new, real, 0) == 0) {
-        // Failed
-        return false;
-    }
-
-
-    char cmd[UTOX_FILE_NAME_LENGTH];
-    size_t next = snprintf(cmd, UTOX_FILE_NAME_LENGTH, " --skip-updater --delete-updater %s", new);
-    if (settings.portable_mode) {
-        snprintf(cmd + next, UTOX_FILE_NAME_LENGTH - next, " -p");
-    }
-    ShellExecute(NULL, "open", real, cmd, NULL, SW_SHOW);
-    DeleteFile(new);
-    return true;
-}
-
-static bool pending_update(void) {
-    // Check if we're the fresh version.
-    char path[UTOX_FILE_NAME_LENGTH];
-    GetModuleFileName(NULL, path, UTOX_FILE_NAME_LENGTH);
-
-    // TODO: The updater should work with the binaries we're distributing.
-    // uTox_win64.exe and uTox_win32.exe on utox.io, maybe (probably) others on jenkins.
-    char *name_start = strstr(path, "uTox.exe");
-    if (!name_start) {
-        // Try lowercase too
-        name_start = strstr(path, "utox.exe");
-    }
-
-    if (name_start) {
-        char next[UTOX_FILE_NAME_LENGTH];
-        strcpy(name_start, "next_uTox.exe");
-        memcpy(next, path, UTOX_FILE_NAME_LENGTH);
-        FILE *f = fopen(next, "rb");
-        if (f) {
-            fclose(f);
-            char cmd[UTOX_FILE_NAME_LENGTH] = { 0 };
-            if (settings.portable_mode) {
-                snprintf(cmd, UTOX_FILE_NAME_LENGTH, " -p");
-            }
-            ShellExecute(NULL, "open", next, cmd, NULL, SW_SHOW);
-            return true;
-        }
-    }
-
-    return false;
-}
-
 static bool win_init_mutex(HANDLE *mutex, HINSTANCE hInstance, PSTR cmd) {
     *mutex = CreateMutex(NULL, 0, TITLE);
 
@@ -741,8 +666,8 @@ static bool win_init_mutex(HANDLE *mutex, HINSTANCE hInstance, PSTR cmd) {
                 .lpData = cmd
             };
             SendMessage(window, WM_COPYDATA, (WPARAM)hInstance, (LPARAM)&data);
-            exit(1);
         }
+
         exit(1);
     }
 
@@ -768,8 +693,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE UNUSED(hPrevInstance), PSTR cm
     }
 
     int8_t should_launch_at_startup, set_show_window;
-    bool   skip_updater;
-    parse_args(argc, argv, &skip_updater, &should_launch_at_startup, &set_show_window);
+    parse_args(argc, argv, &should_launch_at_startup, &set_show_window);
     GlobalFree(argv);
 
     if (settings.portable_mode == true) {
@@ -792,18 +716,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE UNUSED(hPrevInstance), PSTR cm
     /* if opened with argument, check if uTox is already open and pass the argument to the existing process */
     HANDLE utox_mutex;
     win_init_mutex(&utox_mutex, hInstance, cmd);
-
-    if (!skip_updater) {
-        if (fresh_update()) {
-            CloseHandle(utox_mutex);
-            exit(0);
-        }
-
-        if (pending_update()) {
-            CloseHandle(utox_mutex);
-            exit(0);
-        }
-    }
 
     if (should_launch_at_startup == 1) {
         launch_at_startup(1);

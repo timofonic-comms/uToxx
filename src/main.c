@@ -2,7 +2,6 @@
 
 #include "settings.h"
 #include "theme.h"
-#include "updater.h"
 
 #include "native/filesys.h"
 #include "native/main.h"
@@ -91,15 +90,10 @@ bool utox_data_save_ftinfo(char hex[TOX_PUBLIC_KEY_SIZE * 2], uint8_t *data, siz
 
 /* Shared function between all four platforms */
 void parse_args(int argc, char *argv[],
-                bool *skip_updater,
                 int8_t *should_launch_at_startup,
                 int8_t *set_show_window)
 {
     // set default options
-    if (skip_updater) {
-        *skip_updater = false;
-    }
-
     if (should_launch_at_startup) {
         *should_launch_at_startup = 0;
     }
@@ -113,8 +107,6 @@ void parse_args(int argc, char *argv[],
         { "portable", no_argument, NULL, 'p' },
         { "set", required_argument, NULL, 's' },
         { "unset", required_argument, NULL, 'u' },
-        { "skip-updater", no_argument, NULL, 'N' },
-        { "delete-updater", required_argument, NULL, 'D'},
         { "version", no_argument, NULL, 0 },
         { "silent", no_argument, NULL, 'S' },
         { "verbose", no_argument, NULL, 'v' },
@@ -183,23 +175,6 @@ void parse_args(int argc, char *argv[],
                 break;
             }
 
-            case 'N': {
-                if (skip_updater) {
-                    *skip_updater = true;
-                }
-                break;
-            }
-            case 'D': {
-                if (strstr(optarg, "uTox_updater")) {
-                    // We're using the windows version of strstr() here
-                    // because it's currently the only platform supported
-                    // by the updater.
-                    // TODO expose this as a function in updater.c
-                    remove(optarg);
-                }
-                break;
-            }
-
             case 0: {
                 exit(EXIT_SUCCESS);
                 break;
@@ -236,9 +211,6 @@ void utox_init(void) {
 
     UTOX_SAVE *save = config_load();
     free(save);
-
-    // We likely want to start this on every system.
-    thread(updater_thread, (void *)1);
 }
 
 void utox_raze(void) {}

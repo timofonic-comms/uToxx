@@ -514,7 +514,6 @@ void launch_at_startup(bool should) {
 int main(int argc, char const *argv[]) {
     int8_t should_launch_at_startup;
     int8_t set_show_window;
-    bool   skip_updater;
 
     utox_init();
 
@@ -522,13 +521,12 @@ int main(int argc, char const *argv[]) {
     settings.window_height = DEFAULT_HEIGHT;
 
     parse_args(argc, argv,
-               &skip_updater,
                &should_launch_at_startup,
                &set_show_window);
 
     setlocale(LC_ALL, "");
 
-    LANG                       = systemlang();
+    LANG = systemlang();
     dropdown_language.selected = dropdown_language.over = LANG;
 
     /* set the width/height of the drawing region */

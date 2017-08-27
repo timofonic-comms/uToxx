@@ -15,16 +15,16 @@ typedef struct utox_settings {
     uint32_t curr_version;
     uint32_t next_version;
 
-    bool show_splash; // Included here because compatability.
+    bool show_splash; // Unused, included here because compatability.
 
     // Low level settings (network, profile, portable-mode)
     bool portable_mode;
 
     bool save_encryption;
 
-    bool auto_update;
-    bool update_to_develop;
-    bool send_version;
+    bool auto_update;       // Unused, included here because compatability.
+    bool update_to_develop; // Unused, included here because compatability.
+    bool send_version;      // Unused, included here because compatability.
 
     bool force_proxy;
     bool enable_udp;
@@ -108,9 +108,9 @@ typedef struct utox_save {
     uint32_t utox_last_version; // I don't like this here either,
     // but I'm not ready to rewrite and update this struct yet.
 
-    uint8_t auto_update         : 1;
-    uint8_t update_to_develop   : 1;
-    uint8_t send_version        : 1;
+    uint8_t auto_update         : 1; // Unused, included here because compatability.
+    uint8_t update_to_develop   : 1; // Unused, included here because compatability.
+    uint8_t send_version        : 1; // Unused, included here because compatability.
     uint8_t zero_2              : 5;
     uint8_t zero_3              : 8;
 
