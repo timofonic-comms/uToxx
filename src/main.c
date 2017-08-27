@@ -7,6 +7,8 @@
 #include "native/main.h"
 #include "native/thread.h"
 
+#include "av/utox_av.h"
+
 #include <getopt.h>
 #include <stdlib.h>
 #include <string.h>
@@ -211,6 +213,8 @@ void utox_init(void) {
 
     UTOX_SAVE *save = config_load();
     free(save);
+
+    thread(utox_av_ctrl_thread, NULL);
 }
 
 void utox_raze(void) {}

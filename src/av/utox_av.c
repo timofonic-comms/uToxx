@@ -5,6 +5,7 @@
 
 #include "../flist.h"
 #include "../friend.h"
+#include "../groups.h"
 #include "../inline_video.h"
 #include "../macros.h"
 #include "../tox.h"
@@ -32,24 +33,8 @@ void postmessage_utoxav(uint8_t msg, uint32_t param1, uint32_t param2, void *dat
     toxav_thread_msg = 1;
 }
 
-#define VERIFY_AUDIO_IN()                    \
-    do {                                     \
-        if (call_count) {                    \
-            if (!audio_in) {                 \
-                utox_audio_in_device_open(); \
-                utox_audio_in_listen();      \
-                audio_in = 1;                \
-            }                                \
-        } else {                             \
-            utox_audio_in_ignore();          \
-            utox_audio_in_device_close();    \
-            audio_in = 0;                    \
-        }                                    \
-        yieldcpu(5);                         \
-    } while (0)
-
-void utox_av_ctrl_thread(void *args) {
-    ToxAV *av = args;
+void utox_av_ctrl_thread(void *UNUSED(args)) {
+    ToxAV *av = NULL;
 
     utox_av_ctrl_init = 1;
 
@@ -57,14 +42,23 @@ void utox_av_ctrl_thread(void *args) {
     volatile bool     audio_in   = 0;
     // volatile bool video_on  = 0;
 
-    thread(utox_audio_thread, av);
-    thread(utox_video_thread, av);
-
     while (1) {
         if (toxav_thread_msg) {
             TOX_MSG *msg = &toxav_msg;
             if (msg->msg == UTOXAV_KILL) {
                 break;
+            } else if (msg->msg == UTOXAV_NEW_TOX_INSTANCE) {
+                if (av) { /* toxcore restart */
+                    toxav_kill(av);
+                    postmessage_audio(UTOXAUDIO_NEW_AV_INSTANCE, 0, 0, msg->data);
+                    postmessage_video(UTOXVIDEO_NEW_AV_INSTANCE, 0, 0, msg->data);
+                } else {
+                    thread(utox_audio_thread, msg->data);
+                    thread(utox_video_thread, msg->data);
+                }
+
+                av = msg->data;
+                set_av_callbacks(av);
             }
 
             if (!utox_audio_thread_init || !utox_video_thread_init) {
@@ -78,9 +72,7 @@ void utox_av_ctrl_thread(void *args) {
                     break;
                 }
 
-                case UTOXAV_INCOMING_CALL_ANSWER: {
-                    VERIFY_AUDIO_IN();
-                    FRIEND *f = get_friend(msg->param1);
+                case UTOXAV_INCOMING_CALL_ANSWER: {                    FRIEND *f = get_friend(msg->param1);
                     postmessage_audio(UTOXAUDIO_STOP_RINGTONE, msg->param1, msg->param2, NULL);
                     postmessage_audio(UTOXAUDIO_START_FRIEND, msg->param1, msg->param2, NULL);
                     f->call_state_self = (TOXAV_FRIEND_CALL_STATE_SENDING_A | TOXAV_FRIEND_CALL_STATE_ACCEPTING_A);
@@ -99,7 +91,6 @@ void utox_av_ctrl_thread(void *args) {
 
                 case UTOXAV_OUTGOING_CALL_PENDING: {
                     call_count++;
-                    VERIFY_AUDIO_IN();
                     postmessage_audio(UTOXAUDIO_PLAY_RINGTONE, msg->param1, msg->param2, NULL);
                     FRIEND *f = get_friend(msg->param1);
                     f->call_state_self = (TOXAV_FRIEND_CALL_STATE_SENDING_A | TOXAV_FRIEND_CALL_STATE_ACCEPTING_A);
@@ -121,16 +112,32 @@ void utox_av_ctrl_thread(void *args) {
                 case UTOXAV_CALL_END: {
                     call_count--;
                     FRIEND *f = get_friend(msg->param1);
-                    if (f && f->call_state_self
-                             & (TOXAV_FRIEND_CALL_STATE_SENDING_V | TOXAV_FRIEND_CALL_STATE_ACCEPTING_V))
+                    if (f
+                        && f->call_state_self & (TOXAV_FRIEND_CALL_STATE_SENDING_V
+                                                 | TOXAV_FRIEND_CALL_STATE_ACCEPTING_V))
                     {
                         utox_video_stop(false);
                     }
 
                     postmessage_audio(UTOXAUDIO_STOP_FRIEND, msg->param1, msg->param2, NULL);
                     postmessage_audio(UTOXAUDIO_STOP_RINGTONE, msg->param1, msg->param2, NULL);
+                    break;
+                }
 
-                    VERIFY_AUDIO_IN();
+                case UTOXAV_GROUPCALL_START: {
+                    call_count++;
+                    postmessage_audio(UTOXAUDIO_GROUPCHAT_START, msg->param1, msg->param2, NULL);
+                    break;
+                }
+
+                case UTOXAV_GROUPCALL_END: {
+                    GROUPCHAT *g = get_group(msg->param1);
+                    if (!g || !call_count) {
+                        break;
+                    }
+
+                    postmessage_audio(UTOXAUDIO_GROUPCHAT_STOP, msg->param1, msg->param2, NULL);
+                    call_count--;
                     break;
                 }
 
@@ -139,7 +146,6 @@ void utox_av_ctrl_thread(void *args) {
                     if (msg->param1) {
                         /* Start audio preview */
                         call_count++;
-                        VERIFY_AUDIO_IN();
                         postmessage_audio(UTOXAUDIO_START_PREVIEW, 0, 0, NULL);
                     }
                     break;
@@ -180,8 +186,7 @@ void utox_av_ctrl_thread(void *args) {
 
                 case UTOXAV_SET_AUDIO_IN: {
                     if (audio_in) {
-                        utox_audio_in_ignore();
-                        utox_audio_in_device_close();
+                        postmessage_audio(UTOXAUDIO_CHANGE_MIC, 0, 0, NULL);
                     }
 
                     utox_audio_in_device_set(msg->data);
@@ -192,17 +197,17 @@ void utox_av_ctrl_thread(void *args) {
                         break;
                     }
 
-                    if (audio_in) {
-                        utox_audio_in_device_open();
-                        utox_audio_in_listen();
-                    }
+                    // TODO get a count in audio.c and allow count restore
+                    // if (audio_in) {
+                    //     utox_audio_in_device_open();
+                    //     utox_audio_in_listen();
+                    // }
                     break;
                 }
 
                 case UTOXAV_SET_AUDIO_OUT: {
-                    utox_audio_out_device_close();
+                    postmessage_audio(UTOXAUDIO_CHANGE_SPEAKER, 0, 0, NULL);
                     utox_audio_out_device_set(msg->data);
-                    utox_audio_out_device_open();
                     break;
                 }
 
@@ -215,13 +220,16 @@ void utox_av_ctrl_thread(void *args) {
                     break;
                 }
             }
-
-            VERIFY_AUDIO_IN();
         }
 
         toxav_thread_msg = false;
-        toxav_iterate(av);
-        yieldcpu(toxav_iteration_interval(av));
+
+        if (av) {
+            toxav_iterate(av);
+            yieldcpu(toxav_iteration_interval(av));
+        } else {
+            yieldcpu(10);
+        }
     }
 
 
@@ -235,6 +243,8 @@ void utox_av_ctrl_thread(void *args) {
 
     toxav_thread_msg  = false;
     utox_av_ctrl_init = false;
+
+    toxav_kill(av);
 }
 
 static void utox_av_incoming_call(ToxAV *UNUSED(av), uint32_t friend_number,

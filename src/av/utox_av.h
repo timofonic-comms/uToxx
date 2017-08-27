@@ -39,11 +39,14 @@ enum {
 
     UTOXAV_SET_VIDEO_IN,
     UTOXAV_SET_VIDEO_OUT,
+
+    UTOXAV_NEW_TOX_INSTANCE,
 };
 
 enum {
     // kill the video thread
     UTOXVIDEO_KILL,
+    UTOXVIDEO_NEW_AV_INSTANCE,
     /*    UTOXVIDEO_RECORD_START,
     UTOXVIDEO_RECORD_STOP,
     UTOXVIDEO_SET,
@@ -51,6 +54,8 @@ enum {
     UTOXVIDEO_PREVIEW_STOP,
 */
 };
+
+typedef struct groupchat GROUPCHAT;
 
 /* send a message to the toxav thread
  */
@@ -64,9 +69,10 @@ void utox_av_local_call_control(ToxAV *av, uint32_t friend_number, TOXAV_CALL_CO
 
 void set_av_callbacks(ToxAV *av);
 
-// void callback_av_group_audio(Tox *tox, int groupnumber, int peernumber, const int16_t *pcm, unsigned int samples,
-//                                     uint8_t channels, unsigned int sample_rate, void *userdata);
-// void group_av_peer_add(GROUPCHAT *g, int peernumber);
-// void group_av_peer_remove(GROUPCHAT *g, int peernumber);
+void callback_av_group_audio(void *tox, int groupnumber, int peernumber, const int16_t *pcm, unsigned int samples,
+                                    uint8_t channels, unsigned int sample_rate, void *userdata);
+
+void group_av_peer_add(GROUPCHAT *g, int peernumber);
+void group_av_peer_remove(GROUPCHAT *g, int peernumber);
 
 #endif

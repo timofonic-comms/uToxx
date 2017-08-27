@@ -206,8 +206,6 @@ void tox_settingschanged(void) {
     dropdown_list_clear(&dropdown_audio_out);
     dropdown_list_clear(&dropdown_video);
 
-    postmessage_utoxav(UTOXAV_KILL, 0, 0, NULL);
-
     // send the reconfig message!
     postmessage_toxcore(0, 1, 0, NULL);
 
@@ -431,26 +429,15 @@ void toxcore_thread(void *UNUSED(args)) {
         } else {
             init_self(tox);
 
-            // Start the tox av session.
-            TOXAV_ERR_NEW toxav_error;
-            av = toxav_new(tox, &toxav_error);
-
-            // Give toxcore the av functions to call
-            set_av_callbacks(av);
+            av = toxav_new(tox, NULL);
 
             tox_thread_init = UTOX_TOX_THREAD_INIT_SUCCESS;
 
-            /* init the friends list. */
             flist_start();
             postmessage_utox(UPDATE_TRAY, 0, 0, NULL);
             postmessage_utox(PROFILE_DID_LOAD, 0, 0, NULL);
 
-            // Start the treads
-            thread(utox_av_ctrl_thread, av);
-
-            /* Moved into the utoxav ctrl thread */
-            // thread(utox_audio_thread, av);
-            // thread(utox_video_thread, av);
+            postmessage_utoxav(UTOXAV_NEW_TOX_INSTANCE, 0, 0, av);
         }
 
         bool connected = 0;
@@ -510,13 +497,6 @@ void toxcore_thread(void *UNUSED(args)) {
         write_save(tox);
         edit_setstr(&edit_profile_password, (char *)"", 0);
 
-        // Wait for all a/v threads to return 0
-        while (utox_audio_thread_init || utox_video_thread_init || utox_av_ctrl_init) {
-            yieldcpu(1);
-        }
-
-        // Stop av threads, and toxcore.
-        toxav_kill(av);
         tox_kill(tox);
     }
 
@@ -611,7 +591,7 @@ static void tox_thread_message(Tox *tox, ToxAV *av, uint64_t time, uint8_t msg, 
             /* param1: length of message
              * data: friend id + message
              */
-            uint32_t           fid;
+            uint32_t fid;
             TOX_ERR_FRIEND_ADD f_err;
 
             if (!param1) {
@@ -926,23 +906,44 @@ static void tox_thread_message(Tox *tox, ToxAV *av, uint64_t time, uint8_t msg, 
             int g_num = -1;
 
             TOX_ERR_CONFERENCE_NEW error = 0;
-            if (param1) {
+            if (param2) {
                 // TODO FIX THIS AFTER NEW GROUP API
-                // g = toxav_add_av_groupchat(tox, &callback_av_group_audio, NULL);
-                g_num = tox_conference_new(tox, &error);
+                g_num = toxav_add_av_groupchat(tox, callback_av_group_audio, NULL);
             } else {
                 g_num = tox_conference_new(tox, &error);
             }
 
             if (g_num != -1) {
-                if (group_create(g_num, param2)) {
-                    postmessage_utox(GROUP_ADD, g_num, param2, NULL);
+                GROUPCHAT *g = get_group(g_num);
+                if (!g) {
+                    if (!group_create(g_num, param2)) {
+                        break;
+                    }
+                } else {
+                    group_init(g, g_num, param2);
                 }
+                postmessage_utox(GROUP_ADD, g_num, param2, NULL);
             }
+
+            uint8_t pkey[TOX_PUBLIC_KEY_SIZE];
+            tox_conference_peer_get_public_key(tox, g_num, 0, pkey, NULL);
+            uint64_t pkey_to_number = 0;
+
+            for (int key_i = 0; key_i < TOX_PUBLIC_KEY_SIZE; ++key_i) {
+                pkey_to_number += pkey[key_i];
+            }
+            srand(pkey_to_number);
+            uint32_t name_color = RGB(rand(), rand(), rand());
+
+            group_peer_add(get_group(g_num), 0, 1, name_color);
+            group_peer_name_change(get_group(g_num), 0, (uint8_t *)self.name, self.name_length);
+            postmessage_utox(GROUP_PEER_ADD, g_num, 0, NULL);
+
             save_needed = true;
             break;
         }
         case TOX_GROUP_JOIN: {
+            break;
         }
         case TOX_GROUP_PART: {
             /* param1: group #
@@ -990,18 +991,14 @@ static void tox_thread_message(Tox *tox, ToxAV *av, uint64_t time, uint8_t msg, 
             break;
         }
         case TOX_GROUP_AUDIO_START: {
-            /* Disabled */
-            /* param1: group #
-             */
-            break;
+            // We have to take the long way around, because the UI shouldn't depend on AV
             postmessage_utox(GROUP_AUDIO_START, param1, 0, NULL);
+            break;
         }
         case TOX_GROUP_AUDIO_END: {
-            /* Disabled */
-            /* param1: group #
-             */
-            break;
+            // We have to take the long way around, because the UI shouldn't depend on AV
             postmessage_utox(GROUP_AUDIO_END, param1, 0, NULL);
+            break;
         }
     }
 }

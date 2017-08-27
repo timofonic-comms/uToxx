@@ -139,7 +139,8 @@ static void button_group_audio_on_mup(void) {
         return;
     }
 
-    if (g->audio_calling) {
+    // We have to take the long way around, because the UI shouldn't depend on AV
+    if (g->active_call) {
         postmessage_toxcore(TOX_GROUP_AUDIO_END, g->number, 0, NULL);
     } else {
         postmessage_toxcore(TOX_GROUP_AUDIO_START, g->number, 0, NULL);
@@ -155,7 +156,7 @@ static void button_group_audio_update(BUTTON *b) {
 
     if (g->av_group) {
         b->disabled = false;
-        if (g->audio_calling) {
+        if (g->active_call) {
             button_setcolors_danger(b);
         } else {
             button_setcolors_success(b);
@@ -167,8 +168,8 @@ static void button_group_audio_update(BUTTON *b) {
 }
 
 BUTTON button_group_audio = {
-    .bm_fill          = BM_LBUTTON,
-    .bm_icon          = BM_CALL,
+    .bm_fill      = BM_LBUTTON,
+    .bm_icon      = BM_CALL,
     .icon_w       = _BM_LBICON_WIDTH,
     .icon_h       = _BM_LBICON_HEIGHT,
     .on_mup       = button_group_audio_on_mup,
@@ -381,16 +382,16 @@ static void e_chat_msg_ontab(EDIT *edit) {
     }
 }
 
-void e_chat_msg_onenter(EDIT *edit) {
+void e_group_msg_onenter(EDIT *edit) {
+    char *text = edit->data;
     uint16_t length = edit->length;
     if (length <= 0) {
         return;
     }
 
-    char *text = edit->data;
-
-    uint16_t command_length = 0;
-    char *   command = NULL, *argument = NULL;
+    uint16_t command_length = 0; //, argument_length = 0;
+    char *command = NULL;
+    char *argument = NULL;
 
     command_length = utox_run_command(text, length, &command, &argument, 1);
 
@@ -424,7 +425,9 @@ void e_chat_msg_onenter(EDIT *edit) {
             return;
         }
         memcpy(d, text, length);
-        postmessage_toxcore((action ? TOX_GROUP_SEND_ACTION : TOX_GROUP_SEND_MESSAGE), g->number, length, d);
+        postmessage_toxcore(action ? TOX_GROUP_SEND_ACTION
+                                   : TOX_GROUP_SEND_MESSAGE,
+                            g->number, length, d);
     }
 
     completion.active = 0;
@@ -475,7 +478,7 @@ EDIT edit_chat_msg_group = {
     .multiline   = true,
     .maxlength   = sizeof e_chat_msg_group_data - 1,
     .data        = e_chat_msg_group_data,
-    .onenter     = e_chat_msg_onenter,
+    .onenter     = e_group_msg_onenter,
     .ontab       = e_chat_msg_ontab,
     .onshifttab  = e_chat_msg_onshifttab,
     .onlosefocus = edit_msg_onlosefocus,
@@ -506,57 +509,9 @@ EDIT edit_group_topic = {
     .empty_str   = {.plain = STRING_INIT("") },
 };
 
-void e_msg_onenter_group(EDIT *edit) {
-    uint16_t length = edit->length;
-    if (length <= 0) {
-        return;
-    }
-
-    char *text   = edit->data;
-
-    char *command = NULL, *argument = NULL;
-    uint16_t command_length = utox_run_command(text, length, &command, &argument, 1);
-
-    // TODO: Magic number
-    if (command_length == UINT16_MAX) {
-        edit->length = 0;
-        return;
-    }
-
-    bool action = false;
-    if (command_length) {
-        length = length - command_length - 2; /* first / and then the SPACE */
-        text   = argument;
-        if ((command_length == 2) && (!memcmp(command, "me", 2))) {
-            if (argument) {
-                action = true;
-            } else {
-                return;
-            }
-        }
-    }
-
-    if (!text) {
-        return;
-    }
-
-    GROUPCHAT *g = flist_get_groupchat();
-    if (g) {
-        void *d = malloc(length);
-        if (!d) {
-            return;
-        }
-        memcpy(d, text, length);
-        postmessage_toxcore((action ? TOX_GROUP_SEND_ACTION : TOX_GROUP_SEND_MESSAGE), g->number, length, d);
-    }
-
-    completion.active = 0;
-    edit->length      = 0;
-}
-
 static void button_chat_send_on_mup(void) {
     if (flist_get_type() == ITEM_GROUP) {
-        e_msg_onenter_group(&edit_chat_msg_group);
+        e_group_msg_onenter(&edit_chat_msg_group);
         // reset focus to the chat window on send to prevent segfault. May break on android.
         edit_setfocus(&edit_chat_msg_group);
     }

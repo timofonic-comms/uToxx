@@ -129,28 +129,28 @@ void utox_set_callbacks_friends(Tox *tox) {
     tox_callback_friend_connection_status(tox, callback_connection_status);
 }
 
-void callback_av_group_audio(Tox *tox, int groupnumber, int peernumber, const int16_t *pcm,
-                             unsigned int samples, uint8_t channels, unsigned int sample_rate,
-                             void *userdata);
+void callback_av_group_audio(void *tox, int groupnumber, int peernumber, const int16_t *pcm, unsigned int samples,
+                             uint8_t channels, unsigned int sample_rate, void *userdata);
 
-static void callback_group_invite(Tox *tox, uint32_t fid, TOX_CONFERENCE_TYPE type,
-                                  const uint8_t *data, size_t length, void *UNUSED(userdata))
+static void callback_group_invite(Tox *tox, uint32_t fid, TOX_CONFERENCE_TYPE type, const uint8_t *data, size_t length,
+                                  void *UNUSED(userdata))
 {
-    if (type != TOX_CONFERENCE_TYPE_TEXT) {
-        // Only text groups supported right now.
-        return;
+    uint32_t gid = UINT32_MAX;
+    if (type == TOX_CONFERENCE_TYPE_TEXT) {
+        gid = tox_conference_join(tox, fid, data, length, NULL);
+    } else if (type == TOX_CONFERENCE_TYPE_AV) {
+        gid = toxav_join_av_groupchat(tox, fid, data, length, callback_av_group_audio, NULL);
     }
 
-    uint32_t gid = tox_conference_join(tox, fid, data, length, NULL);
     if (gid == UINT32_MAX) {
         return;
     }
 
     GROUPCHAT *g = get_group(gid);
     if (!g) {
-        group_create(gid, false);
+        group_create(gid, type == TOX_CONFERENCE_TYPE_AV ? true : false);
     } else {
-        group_init(g, gid, 0);
+        group_init(g, gid, type == TOX_CONFERENCE_TYPE_AV ? true : false);
     }
 
     postmessage_utox(GROUP_ADD, gid, 0, tox);
@@ -180,6 +180,9 @@ static void callback_group_namelist_change(Tox *tox, uint32_t gid, uint32_t pid,
                                            void *UNUSED(userdata))
 {
     GROUPCHAT *g = get_group(gid);
+    if (!g) {
+        return;
+    }
 
     switch (change) {
         case TOX_CONFERENCE_STATE_CHANGE_PEER_JOIN: {
@@ -219,9 +222,9 @@ static void callback_group_namelist_change(Tox *tox, uint32_t gid, uint32_t pid,
             }
 
             uint8_t name[TOX_MAX_NAME_LENGTH];
-            size_t  len = tox_conference_peer_get_name_size(tox, gid, pid, NULL);
+            size_t len = tox_conference_peer_get_name_size(tox, gid, pid, NULL);
             tox_conference_peer_get_name(tox, gid, pid, name, NULL);
-            len         = utf8_validate(name, len);
+            len = utf8_validate(name, len);
             group_peer_name_change(g, pid, name, len);
 
             postmessage_utox(GROUP_PEER_NAME, gid, pid, NULL);
