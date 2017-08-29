@@ -42,15 +42,12 @@ enum {
     TOX_SELF_SET_STATE,
     TOX_SELF_CHANGE_NOSPAM,
 
-    TOX_SELF_NEW_DEVICE,
-
     /* Wooo pixturs */
     TOX_AVATAR_SET,
     TOX_AVATAR_UNSET,
 
     /* Interact with contacts */
     TOX_FRIEND_NEW,
-    TOX_FRIEND_NEW_DEVICE,
     TOX_FRIEND_ACCEPT,
     TOX_FRIEND_DELETE,
     TOX_FRIEND_ONLINE,

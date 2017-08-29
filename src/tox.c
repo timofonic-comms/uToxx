@@ -150,29 +150,12 @@ static void toxcore_bootstrap(Tox *tox, bool ipv6_enabled) {
 static void set_callbacks(Tox *tox) {
     utox_set_callbacks_friends(tox);
     utox_set_callbacks_groups(tox);
-    #ifdef ENABLE_MULTIDEVICE
-    utox_set_callbacks_mdevice(tox);
-    #endif
     utox_set_callbacks_file_transfer(tox);
 }
 
 void tox_after_load(Tox *tox) {
     utox_friend_list_init(tox);
     init_groups();
-
-    #ifdef ENABLE_MULTIDEVICE
-    // self.group_list_count = tox_self_get_(tox);
-    self.device_list_count = tox_self_get_device_count(tox);
-
-    // devices_update_list();
-    utox_devices_init();
-    devices_update_ui();
-
-    uint32_t i;
-    for (i = 0; i < self.device_list_count; ++i) {
-        utox_device_init(tox, i);
-    }
-    #endif
 
     self.name_length = tox_self_get_name_size(tox);
     tox_self_get_name(tox, (uint8_t *)self.name);
@@ -216,10 +199,6 @@ static void write_save(Tox *tox) {
 void tox_settingschanged(void) {
     // free everything
     tox_connected = 0;
-
-#ifdef ENABLE_MULTIDEVICE
-    utox_devices_decon();
-#endif
 
     flist_freeall();
 
@@ -327,10 +306,6 @@ static int init_toxcore(Tox **tox) {
     tox_options_set_proxy_type(&topt, TOX_PROXY_TYPE_NONE);
     tox_options_set_proxy_host(&topt, proxy_address);
     tox_options_set_proxy_port(&topt, settings.proxy_port);
-
-    #ifdef ENABLE_MULTIDEVICE
-    tox_options_set_mdev_mirror_sent(&topt, 1);
-    #endif
 
     save_status = load_toxcore_save(&topt);
 
@@ -614,20 +589,6 @@ static void tox_thread_message(Tox *tox, ToxAV *av, uint64_t time, uint8_t msg, 
             break;
         }
 
-        case TOX_SELF_NEW_DEVICE: {
-        #ifdef ENABLE_MULTIDEVICE
-
-            TOX_ERR_DEVICE_ADD error = 0;
-            tox_self_add_device(tox, data + TOX_ADDRESS_SIZE, param1, data, &error);
-
-            if (!error) {
-                self.device_list_count++;
-            }
-        #endif
-            break;
-        }
-
-
         /* Avatar status */
         case TOX_AVATAR_SET: {
             /* param1: avatar format
@@ -679,15 +640,6 @@ static void tox_thread_message(Tox *tox, ToxAV *av, uint64_t time, uint8_t msg, 
                 postmessage_utox(FRIEND_SEND_REQUEST, 0, fid, data);
             }
             save_needed = 1;
-            break;
-        }
-
-        case TOX_FRIEND_NEW_DEVICE: {
-        #ifdef ENABLE_MULTIDEVICE
-            tox_friend_add_device(tox, data, param1, 0);
-            free(data);
-            save_needed = 1;
-        #endif
             break;
         }
 

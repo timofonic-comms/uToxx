@@ -27,13 +27,11 @@ static void button_name_on_mup(void) {
         // jump to the network settings when unable to create tox instance
         panel_settings_adv.disabled             = false;
         panel_settings_profile.disabled         = true;
-        panel_settings_devices.disabled         = true;
         panel_settings_ui.disabled              = true;
         panel_settings_av.disabled              = true;
         panel_settings_notifications.disabled   = true;
     } else {
         panel_settings_profile.disabled         = false;
-        panel_settings_devices.disabled         = true;
         panel_settings_ui.disabled              = true;
         panel_settings_av.disabled              = true;
         panel_settings_adv.disabled             = true;
@@ -49,14 +47,12 @@ static void button_statusmsg_on_mup(void) {
         panel_settings_adv.disabled             = false;
 
         panel_settings_profile.disabled         = true;
-        panel_settings_devices.disabled         = true;
         panel_settings_ui.disabled              = true;
         panel_settings_av.disabled              = true;
         panel_settings_notifications.disabled   = true;
     } else {
         panel_settings_profile.disabled         = false;
 
-        panel_settings_devices.disabled         = true;
         panel_settings_ui.disabled              = true;
         panel_settings_av.disabled              = true;
         panel_settings_adv.disabled             = true;

@@ -17,9 +17,6 @@ struct utox_self {
     size_t groups_list_count;
     size_t groups_list_size;
 
-    size_t device_list_count;
-    size_t device_list_size;
-
     char   id_str[TOX_ADDRESS_SIZE * 2];
     size_t id_str_length;
 

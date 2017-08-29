@@ -314,7 +314,6 @@ add_executable(utox ${GUI_TYPE}
     src/chrono.c
     src/command_funcs.c
     src/commands.c
-    src/devices.c
     src/file_transfers.c
     src/filesys.c
     src/flist.c

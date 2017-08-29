@@ -73,20 +73,6 @@ static void draw_settings_sub_header(int x, int y, int width, int UNUSED(height)
     drawvline(next_x, y, y + SCALE(28), COLOR_EDGE_NORMAL);
     x = next_x;
 
-    /* Draw the text and bars for device settings */
-#ifdef ENABLE_MULTIDEVICE
-    setcolor(!button_settings_sub_devices.mouseover ? COLOR_MAIN_TEXT : COLOR_MAIN_TEXT_SUBTEXT);
-    next_x += SCALE(20) + UTOX_STR_WIDTH(DEVICES_BUTTON);
-    drawstr(x + SCALE(10), y, + SCALE(10), DEVICES_BUTTON);
-    if (panel_settings_devices.disabled) {
-        DRAW_UNDERLINE();
-    } else {
-        DRAW_OVERLINE();
-    }
-    drawvline(next_x, y, y, + SCALE(28), COLOR_EDGE_NORMAL);
-    x = next_x;
-#endif
-
     /* Draw the text and bars for User interface settings */
     setcolor(!button_settings_sub_ui.mouseover ? COLOR_MAIN_TEXT : COLOR_MAIN_TEXT_SUBTEXT);
     next_x += SCALE(20) + UTOX_STR_WIDTH(USER_INTERFACE_BUTTON);
@@ -149,20 +135,6 @@ static void draw_settings_text_profile(int x, int y, int UNUSED(w), int UNUSED(h
     drawstr(x + SCALE(10), y + SCALE(65), STATUSMESSAGE);
     drawstr(x + SCALE(10), y + SCALE(120), TOXID);
     drawstr(x + SCALE(10), y + SCALE(175), LANGUAGE);
-}
-
-// Devices settings page
-static void draw_settings_text_devices(int x, int y, int UNUSED(w), int UNUSED(h)) {
-    setcolor(COLOR_MAIN_TEXT);
-    setfont(FONT_SELF_NAME);
-    drawstr(x + SCALE(10), y + SCALE(10), DEVICES_ADD_NEW);
-
-    drawstr(x + SCALE(10), y + SCALE(60), DEVICES_NUMBER);
-
-    char   str[10];
-    size_t strlen = snprintf(str, 10, "%zu", self.device_list_count);
-
-    drawtext(x + SCALE(10), y + SCALE(75), str, strlen);
 }
 
 static void draw_settings_text_password(int x, int y, int UNUSED(w), int UNUSED(h)) {
@@ -340,14 +312,12 @@ panel_settings_subheader = {
     .drawfunc = draw_settings_sub_header,
     .child = (PANEL*[]) {
         (PANEL*)&button_settings_sub_profile,
-        (PANEL*)&button_settings_sub_devices,
         (PANEL*)&button_settings_sub_ui,
         (PANEL*)&button_settings_sub_av,
         (PANEL*)&button_settings_sub_notifications,
         (PANEL*)&button_settings_sub_adv,
         (PANEL*)&scrollbar_settings,
         &panel_settings_profile,
-        &panel_settings_devices,
         &panel_settings_ui,
         &panel_settings_av,
         &panel_settings_notifications,
@@ -370,14 +340,6 @@ panel_settings_profile = {
         (PANEL*)&dropdown_language,
         NULL
     }
-},
-/* Panel to draw settings page */
-panel_settings_devices = {
-    .type = PANEL_NONE,
-    .disabled = 1,
-    .drawfunc = draw_settings_text_devices,
-    .content_scroll = &scrollbar_settings,
-    .child = NULL,
 },
 panel_settings_ui = {
     .type = PANEL_NONE,
@@ -505,7 +467,6 @@ BUTTON button_settings = {
 static void disable_all_setting_sub(void) {
     flist_selectsettings();
     panel_settings_profile.disabled         = true;
-    panel_settings_devices.disabled         = true;
     panel_settings_ui.disabled              = true;
     panel_settings_av.disabled              = true;
     panel_settings_notifications.disabled   = true;
@@ -518,12 +479,6 @@ static void button_settings_sub_profile_on_mup(void) {
     scrollbar_settings.content_height = SCALE(260);
     disable_all_setting_sub();
     panel_settings_profile.disabled = false;
-}
-
-static void button_settings_sub_devices_on_mup(void) {
-    scrollbar_settings.content_height = SCALE(260);
-    disable_all_setting_sub();
-    panel_settings_devices.disabled = false;
 }
 
 static void button_settings_sub_ui_on_mup(void) {
@@ -550,26 +505,12 @@ static void button_settings_sub_notifications_on_mup(void){
     panel_settings_notifications.disabled = false;
 }
 
-static void button_add_device_to_self_mdown(void) {
-#ifdef ENABLE_MULTIDEVICE
-    devices_self_add(edit_add_new_device_to_self.data, edit_add_new_device_to_self.length);
-    edit_resetfocus();
-#endif
-}
-
 BUTTON
 button_settings_sub_profile = {
     .nodraw = true,
     .on_mup = button_settings_sub_profile_on_mup,
     .tooltip_text = { .i18nal = STR_PROFILE_BUTTON },
     .button_text  = { .i18nal = STR_PROFILE_BUTTON },
-},
-
-button_settings_sub_devices = {
-    .nodraw = true,
-    .on_mup = button_settings_sub_devices_on_mup,
-    .tooltip_text = { .i18nal = STR_DEVICES_BUTTON },
-    .button_text  = { .i18nal = STR_DEVICES_BUTTON },
 },
 
 button_settings_sub_ui = {
@@ -598,13 +539,6 @@ button_settings_sub_adv = {
     .on_mup = button_settings_sub_adv_on_mup,
     .tooltip_text = { .i18nal = STR_ADVANCED_BUTTON },
     .button_text  = { .i18nal = STR_ADVANCED_BUTTON },
-},
-
-button_add_new_device_to_self = {
-    .bm_fill         = BM_SBUTTON,
-    .button_text = { .i18nal = STR_ADD },
-    // .update   = button_setcolors_success,
-    .on_mup      = button_add_device_to_self_mdown,
 };
 
 static void button_lock_uTox_on_mup(void) {
@@ -1200,9 +1134,6 @@ static char edit_name_data[128],
             edit_proxy_port_data[8],
             edit_profile_password_data[65535],
             edit_nospam_data[(sizeof(uint32_t) * 2) + 1];
-#ifdef ENABLE_MULTIDEVICE
-static char edit_add_self_device_data[TOX_ADDRESS_SIZE * 4];
-#endif
 
 
 static void edit_name_onenter(EDIT *edit) {
@@ -1322,18 +1253,4 @@ EDIT edit_nospam = {
     .noborder     = false,
     .onenter      = edit_change_nospam_onenter,
     .onlosefocus  = edit_change_nospam_onenter,
-};
-
-
-static char edit_add_new_device_to_self_data[TOX_ADDRESS_SIZE * 4];
-static void edit_add_new_device_to_self_onenter(EDIT *UNUSED(edit)) {
-#ifdef ENABLE_MULTIDEVICE
-    devices_self_add(edit_add_new_device_to_self.data, edit_add_new_device_to_self.length);
-#endif
-}
-
-EDIT edit_add_new_device_to_self = {
-    .data      = edit_add_new_device_to_self_data,
-    .maxlength = sizeof edit_add_new_device_to_self_data - 1,
-    .onenter   = edit_add_new_device_to_self_onenter,
 };

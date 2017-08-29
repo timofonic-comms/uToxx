@@ -226,11 +226,10 @@ void ui_rescale(uint8_t scale) {
 
     panel_main.y = 0;
 
-    scrollbar_settings.panel.y        = 32;  /* TODO magic numbers are bad */
-    scrollbar_settings.content_height = 300; /* TODO magic numbers are bad */
+    scrollbar_settings.panel.y        = 32;
+    scrollbar_settings.content_height = 300;
 
     panel_settings_master.y        = 0;
-    panel_settings_devices.y       = 32;
     panel_settings_adv.y           = 32;
 
     scrollbar_friend.panel.y      = MAIN_TOP;
@@ -270,11 +269,6 @@ void ui_rescale(uint8_t scale) {
     CREATE_BUTTON(settings_sub_profile,         settings_x, 0, 12, 28);
     settings_x += 20 + UN_SCALE(UTOX_STR_WIDTH(PROFILE_BUTTON));
 
-#ifdef ENABLE_MULTIDEVICE
-    CREATE_BUTTON(settings_sub_devices,         settings_x, 0, 12, 28);
-    settings_x += 20 + UN_SCALE(UTOX_STR_WIDTH(DEVICES_BUTTON));
-#endif
-
     CREATE_BUTTON(settings_sub_ui,              settings_x, 0, 12, 28);
     settings_x += 20 + UN_SCALE(UTOX_STR_WIDTH(USER_INTERFACE_BUTTON));
 
@@ -285,13 +279,6 @@ void ui_rescale(uint8_t scale) {
     settings_x += 20 + UN_SCALE(UTOX_STR_WIDTH(NOTIFICATIONS_BUTTON));
 
     CREATE_BUTTON(settings_sub_adv,             settings_x, 0, 12, 28);
-
-
-    /* Devices */
-    CREATE_BUTTON(add_new_device_to_self, -10 - BM_SBUTTON_WIDTH, 28, BM_SBUTTON_WIDTH, BM_SBUTTON_HEIGHT);
-
-    CREATE_EDIT(add_new_device_to_self, 10, 27, 0 - UTOX_STR_WIDTH(ADD) - BM_SBUTTON_WIDTH, 24);
-
 
     /* Friend Add Page */
     CREATE_BUTTON(send_friend_request, -10 - _BM_SBUTTON_WIDTH, MAIN_TOP + 168, _BM_SBUTTON_WIDTH,
@@ -380,19 +367,10 @@ static void panel_update(PANEL *p, int x, int y, int width, int height) {
     FIX_XY_CORDS_FOR_SUBPANELS();
 
     switch (p->type) {
-        case PANEL_NONE: {
-            if (p == &panel_settings_devices) {
-                #ifdef ENABLE_MULTIDEVICE
-                devices_update_ui();
-                #endif
-            }
-            break;
-        }
-
         case PANEL_MESSAGES: {
             if (p->object) {
                 MESSAGES *m = p->object;
-                m->width    = width;
+                m->width = width;
                 messages_updateheight(m, width);
             }
             break;

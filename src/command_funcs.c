@@ -18,22 +18,6 @@ bool slash_send_file(void *object, char *filepath, int UNUSED(arg_length)) {
     return true;
 }
 
-bool slash_device(void *object, char *arg, int UNUSED(arg_length)) {
-    FRIEND *f = object;
-    uint8_t id[TOX_ADDRESS_SIZE * 2];
-    string_to_id(id, arg);
-
-    void *data = calloc(1, TOX_ADDRESS_SIZE);
-    if (!data) {
-        return false;
-    }
-
-    memcpy(data, id, TOX_ADDRESS_SIZE);
-    postmessage_toxcore(TOX_FRIEND_NEW_DEVICE, f->number, 0, data);
-    return true;
-}
-
-
 bool slash_alias(void *object, char *arg, int arg_length) {
     FRIEND *f =  object;
     if (arg) {
