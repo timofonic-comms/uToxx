@@ -15,22 +15,14 @@ typedef struct utox_settings {
     uint32_t curr_version;
     uint32_t next_version;
 
-    bool show_splash; // Unused, included here because compatability.
-
     // Low level settings (network, profile, portable-mode)
     bool portable_mode;
 
     bool save_encryption;
 
-    bool auto_update;       // Unused, included here because compatability.
-    bool update_to_develop; // Unused, included here because compatability.
-    bool send_version;      // Unused, included here because compatability.
-
     bool force_proxy;
     bool enable_udp;
     bool enable_ipv6;
-
-    bool block_friend_requests;
 
     bool use_proxy;
     uint16_t proxy_port;

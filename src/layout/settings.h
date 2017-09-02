@@ -54,8 +54,7 @@ extern UISWITCH /* User Interface Tab */
                 switch_ipv6,
                 switch_udp,
                 switch_proxy,
-                switch_proxy_force,
-                switch_block_friend_requests;
+                switch_proxy_force;
 
 typedef struct dropdown DROPDOWN;
 extern DROPDOWN /* Profile */

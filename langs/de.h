@@ -530,8 +530,5 @@ msgstr("Nospam zurücksetzen")
 msgid(NOSPAM_WARNING)
 msgstr("Änderungen am Nospam machen die alte Tox ID ungültig. uTox wird die ID nicht auf Namensservern aktualisieren.")
 
-msgid(BLOCK_FRIEND_REQUESTS)
-msgstr("Freundschaftsanfragen blockieren")
-
 msgid(SHOW_NOSPAM)
 msgstr("Nospam Einstellungen anzeigen")

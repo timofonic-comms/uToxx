@@ -111,7 +111,8 @@ static void draw_settings_sub_header(int x, int y, int width, int UNUSED(height)
     x = next_x;
 
     /* Draw the text and bars for advanced settings */
-    setcolor(!button_settings_sub_adv.mouseover ? COLOR_MAIN_TEXT : COLOR_MAIN_TEXT_SUBTEXT);
+    setcolor(!button_settings_sub_adv.mouseover ? COLOR_MAIN_TEXT
+                                                : COLOR_MAIN_TEXT_SUBTEXT);
     next_x += SCALE(20) + UTOX_STR_WIDTH(ADVANCED_BUTTON);
     drawstr(x + SCALE(10), y + SCALE(10), ADVANCED_BUTTON);
     if (panel_settings_adv.disabled) {
@@ -140,23 +141,23 @@ static void draw_settings_text_profile(int x, int y, int UNUSED(w), int UNUSED(h
 static void draw_settings_text_password(int x, int y, int UNUSED(w), int UNUSED(h)) {
     setcolor(COLOR_MAIN_TEXT);
     setfont(FONT_SELF_NAME);
-    drawstr(x + SCALE(10), y + SCALE(215), PROFILE_PASSWORD);
+    drawstr(x + SCALE(10), y + SCALE(185), PROFILE_PASSWORD);
 
     setfont(FONT_MISC);
     setcolor(C_RED);
-    drawstr(x + SCALE(10), y + SCALE(289), PROFILE_PW_WARNING);
-    drawstr(x + SCALE(10), y + SCALE(301), PROFILE_PW_NO_RECOVER);
+    drawstr(x + SCALE(10), y + SCALE(259), PROFILE_PW_WARNING);
+    drawstr(x + SCALE(10), y + SCALE(271), PROFILE_PW_NO_RECOVER);
 }
 
 static void draw_nospam_settings(int x, int y, int UNUSED(w), int UNUSED(h)){
     setfont(FONT_MISC);
     setcolor(C_RED);
-    drawstr(x + SCALE(95), y + SCALE(218), NOSPAM_WARNING);
+    drawstr(x + SCALE(95), y + SCALE(188), NOSPAM_WARNING);
 
     setcolor(COLOR_MAIN_TEXT);
     setfont(FONT_SELF_NAME);
 
-    drawstr(x + SCALE(10), y + SCALE(215), NOSPAM);
+    drawstr(x + SCALE(10), y + SCALE(185), NOSPAM);
 }
 
 // UI settings page
@@ -227,8 +228,6 @@ static void draw_settings_text_adv(int x, int y, int UNUSED(w), int UNUSED(heigh
     drawstr(x + SCALE(20) + BM_SWITCH_WIDTH, y + SCALE(120), PROXY_FORCE);
 
     drawtext(x + SCALE(353), y + SCALE(89), ":", 1); // Little addr port separator
-
-    drawstr(x + SCALE(20)+ BM_SWITCH_WIDTH, y + SCALE(150), BLOCK_FRIEND_REQUESTS);
 }
 
 
@@ -259,7 +258,7 @@ boxfor_password_entry_login = {
 },
 boxfor_password_entry_change = {
     .type = PANEL_NONE,
-    .x = 0, .y = 180,
+    .x = 0, .y = 120,
     .child = (PANEL*[]) {
         (PANEL*)&edit_profile_password,
         NULL
@@ -402,7 +401,6 @@ panel_settings_adv = {
         (PANEL*)&switch_udp,
         (PANEL*)&button_show_password_settings,
         &panel_profile_password_settings,
-        (PANEL*)&switch_block_friend_requests,
         (PANEL*)&button_show_nospam,
         &panel_nospam_settings,
         NULL,
@@ -794,10 +792,6 @@ static void switchfxn_status_notifications(void) {
     settings.status_notifications = !settings.status_notifications;
 }
 
-static void switchfxn_block_friend_requests(void) {
-    settings.block_friend_requests = !settings.block_friend_requests;
-}
-
 UISWITCH switch_save_chat_history = {
     .style_outer    = BM_SWITCH,
     .style_toggle   = BM_SWITCH_TOGGLE,
@@ -938,16 +932,6 @@ UISWITCH switch_status_notifications = {
     .update         = switch_update,
     .on_mup         = switchfxn_status_notifications,
     .tooltip_text   = { .i18nal = STR_STATUS_NOTIFICATIONS },
-};
-
-UISWITCH switch_block_friend_requests = {
-    .style_outer    = BM_SWITCH,
-    .style_toggle   = BM_SWITCH_TOGGLE,
-    .style_icon_off = BM_NO,
-    .style_icon_on  = BM_YES,
-    .update         = switch_update,
-    .on_mup         = switchfxn_block_friend_requests,
-    .tooltip_text   = { .i18nal = STR_BLOCK_FRIEND_REQUESTS },
 };
 
 static void switchfxn_proxy(void) {

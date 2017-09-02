@@ -662,9 +662,6 @@ msgstr("Відновити антиспам-код")
 msgid(NOSPAM_WARNING)
 msgstr("Зміна антиспам-коду зробить недійсним ваш старий Tox ID. uTox не оновлює ваш ID на серверах імен.")
 
-msgid(BLOCK_FRIEND_REQUESTS)
-msgstr("Заборонити запити на додання друзів")
-
 msgid(SHOW_NOSPAM)
 msgstr("Показати антиспам-код")
 

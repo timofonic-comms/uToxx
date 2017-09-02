@@ -195,7 +195,6 @@ typedef enum {
     STR_NOSPAM_WARNING,
     STR_SHOW_NOSPAM,
     STR_HIDE_NOSPAM,
-    STR_BLOCK_FRIEND_REQUESTS,
 
 
     // Interact with texts / clipboard

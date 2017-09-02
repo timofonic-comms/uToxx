@@ -18,14 +18,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void callback_friend_request(Tox *UNUSED(tox), const uint8_t *id, const uint8_t *msg, size_t length,
-                                    void *UNUSED(userdata)) {
-
-    if (settings.block_friend_requests) {
-         // TODO move to friend.c
-        return;
-    }
-
+static void callback_friend_request(Tox *UNUSED(tox), const uint8_t *id, const uint8_t *msg,
+                                    size_t length, void *UNUSED(userdata)) {
     length = utf8_validate(msg, length);
 
     uint16_t r_number = friend_request_new(id, msg, length);

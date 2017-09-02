@@ -194,17 +194,18 @@ static void settings_ADV(void) {
     CREATE_EDIT(proxy_port,    360, 87, 60,  24);
     CREATE_SWITCH(proxy_force, 10, 117, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
 
-    CREATE_SWITCH(block_friend_requests, 10, 147, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
+    CREATE_BUTTON(show_password_settings, 10,  147, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
+    CREATE_BUTTON(show_nospam,            300, 147, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
 
-    CREATE_BUTTON(show_password_settings, 10,  177, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
-    CREATE_BUTTON(show_nospam,            300, 177, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
+    CREATE_EDIT(nospam,           10,  205, -10, 24);
+    CREATE_BUTTON(change_nospam,  10,  235, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
+    CREATE_BUTTON(revert_nospam,  300, 235, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
 
-    CREATE_EDIT(nospam,           10,  235, -10, 24);
-    CREATE_BUTTON(change_nospam,  10,  265, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
-    CREATE_BUTTON(revert_nospam,  300, 265, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
+    // Offset for this one is weird because its y pos is added to numbers set in layout/settings.c.
+    // The position entered here is accurate on the lock screen, but not in the settings.
+    CREATE_EDIT(profile_password, 10,  85, -10, 24);
 
-    CREATE_EDIT(profile_password, 10,  55, -10, 24);
-    CREATE_BUTTON(lock_uTox,      10,  265, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
+    CREATE_BUTTON(lock_uTox,      10,  235, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
 }
 
 void ui_set_scale(uint8_t scale) {

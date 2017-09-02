@@ -6,7 +6,6 @@
 SETTINGS settings = {
     .curr_version = UTOX_VERSION_NUMBER,
     // .last_version      // included here to match the full struct
-    .show_splash = false, // Included here because compatability.
 
     // Low level settings (network, profile, portable-mode)
     .enable_udp     = true,
@@ -17,7 +16,6 @@ SETTINGS settings = {
     .proxy_port     = 0,
 
     // Tox level settings
-    .block_friend_requests  = false,
     .save_encryption        = true,
 
     // testing always in portable mode to not touch any real tox profile!
