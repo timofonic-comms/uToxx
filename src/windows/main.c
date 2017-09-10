@@ -652,24 +652,24 @@ static void cursors_init(void) {
 }
 
 static bool win_init_mutex(HANDLE *mutex, HINSTANCE hInstance, PSTR cmd) {
-    *mutex = CreateMutex(NULL, 0, TITLE);
+    // *mutex = CreateMutex(NULL, 0, TITLE);
 
-    if (!mutex) {
-        exit(1);
-    }
+    // if (!mutex) {
+    //     exit(1);
+    // }
 
-    if (GetLastError() == ERROR_ALREADY_EXISTS) {
-        HWND window = FindWindow(TITLE, NULL);
-        if (window) {
-            COPYDATASTRUCT data = {
-                .cbData = strlen(cmd),
-                .lpData = cmd
-            };
-            SendMessage(window, WM_COPYDATA, (WPARAM)hInstance, (LPARAM)&data);
-        }
+    // if (GetLastError() == ERROR_ALREADY_EXISTS) {
+    //     HWND window = FindWindow(TITLE, NULL);
+    //     if (window) {
+    //         COPYDATASTRUCT data = {
+    //             .cbData = strlen(cmd),
+    //             .lpData = cmd
+    //         };
+    //         SendMessage(window, WM_COPYDATA, (WPARAM)hInstance, (LPARAM)&data);
+    //     }
 
-        exit(1);
-    }
+    //     exit(1);
+    // }
 
     return true;
 }

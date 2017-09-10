@@ -36,7 +36,7 @@ typedef enum {
     ITEM_FREQUEST,
 
     ITEM_GROUP,
-    ITEM_GROUP_REQUEST,
+    ITEM_GROUP_INVITE,
     ITEM_GROUP_CREATE,
 } ITEM_TYPE;
 
@@ -49,6 +49,7 @@ void flist_start(void);
 void flist_add_friend(FRIEND *f);
 void flist_add_friend_accepted(FRIEND *f, FREQUEST *req);
 void flist_add_group(GROUPCHAT *g);
+void flist_add_group_request(uint8_t request_id);
 void flist_add_frequest(FREQUEST *f);
 void flist_delete_sitem(void);
 void flist_delete_rmouse_item(void);
@@ -71,6 +72,7 @@ void flist_reload_contacts(void);
 FRIEND *flist_get_friend(void);
 FREQUEST *flist_get_frequest(void);
 GROUPCHAT *flist_get_groupchat(void);
+uint8_t flist_get_group_invite_id(void);
 ITEM_TYPE flist_get_type(void);
 
 /* UI functions */

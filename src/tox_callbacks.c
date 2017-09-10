@@ -4,6 +4,7 @@
 #include "file_transfers.h"
 #include "friend.h"
 #include "groups.h"
+#include "group_invite.h"
 #include "macros.h"
 #include "settings.h"
 #include "text.h"
@@ -132,28 +133,20 @@ void utox_set_callbacks_friends(Tox *tox) {
 void callback_av_group_audio(void *tox, int groupnumber, int peernumber, const int16_t *pcm, unsigned int samples,
                              uint8_t channels, unsigned int sample_rate, void *userdata);
 
-static void callback_group_invite(Tox *tox, uint32_t fid, TOX_CONFERENCE_TYPE type, const uint8_t *data, size_t length,
-                                  void *UNUSED(userdata))
+static void callback_group_invite(Tox *tox, uint32_t friend_number, TOX_CONFERENCE_TYPE type,
+                                  const uint8_t *cookie, size_t length, void *UNUSED(userdata))
 {
     uint32_t gid = UINT32_MAX;
     if (type == TOX_CONFERENCE_TYPE_TEXT) {
-        gid = tox_conference_join(tox, fid, data, length, NULL);
+        gid = tox_conference_join(tox, fid, cookie, length, NULL);
     } else if (type == TOX_CONFERENCE_TYPE_AV) {
-        gid = toxav_join_av_groupchat(tox, fid, data, length, callback_av_group_audio, NULL);
+        gid = toxav_join_av_groupchat(tox, fid, cookie, length, callback_av_group_audio, NULL);
     }
 
-    if (gid == UINT32_MAX) {
-        return;
-    }
+    const uint8_t request_id = group_invite_new(friend_number, cookie, length);
 
-    GROUPCHAT *g = get_group(gid);
-    if (!g) {
-        group_create(gid, type == TOX_CONFERENCE_TYPE_AV ? true : false);
-    } else {
-        group_init(g, gid, type == TOX_CONFERENCE_TYPE_AV ? true : false);
-    }
-
-    postmessage_utox(GROUP_ADD, gid, 0, tox);
+    postmessage_utox(GROUP_INCOMING_REQUEST, request_id, 0, NULL);
+    postmessage_audio(UTOXAUDIO_PLAY_NOTIFICATION, NOTIFY_TONE_FRIEND_REQUEST, NULL, NULL);
 }
 
 static void callback_group_message(Tox *UNUSED(tox), uint32_t gid, uint32_t pid, TOX_MESSAGE_TYPE type,

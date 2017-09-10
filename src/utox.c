@@ -547,6 +547,14 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
             redraw();
             break;
         }
+
+        case GROUP_INCOMING_REQUEST: {
+            const uint8_t request_id = param1;
+            flist_add_group_request(request_id);
+            redraw();
+            break;
+        }
+
         case GROUP_MESSAGE: {
             GROUPCHAT *g = get_group(param1);
             if (!g) {

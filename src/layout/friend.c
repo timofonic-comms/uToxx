@@ -174,8 +174,9 @@ static void draw_add_friend(int x, int UNUSED(y), int UNUSED(w), int height) {
         }
 
         utox_draw_text_multiline_within_box(x + SCALE(10), MAIN_TOP + SCALE(166),
-                                            settings.window_width - BM_SBUTTON_WIDTH - SCALE(10), 0, height,
-                                            font_small_lineheight, str->str, str->length, 0xFFFF, 0, 0, 0, 1);
+                                            settings.window_width - BM_SBUTTON_WIDTH - SCALE(10),
+                                            0, height, font_small_lineheight, str->str, str->length,
+                                            0xFFFF, 0, 0, 0, 1);
     }
 }
 
@@ -291,7 +292,7 @@ static void button_call_decline_on_mup(void) {
     }
 
     if (f->call_state_friend) {
-            postmessage_toxcore(TOX_CALL_DISCONNECT, f->number, 0, NULL);
+        postmessage_toxcore(TOX_CALL_DISCONNECT, f->number, 0, NULL);
     }
 }
 
@@ -430,7 +431,7 @@ BUTTON button_add_new_contact = {
 };
 
 BUTTON button_send_friend_request = {
-    .bm_fill         = BM_SBUTTON,
+    .bm_fill     = BM_SBUTTON,
     .button_text = {.i18nal = STR_ADD },
     .update      = button_setcolors_success,
     .on_mup      = button_send_friend_request_on_mup,
@@ -537,7 +538,7 @@ BUTTON button_send_screenshot = {
 };
 
 BUTTON button_accept_friend = {
-    .bm_fill         = BM_SBUTTON,
+    .bm_fill     = BM_SBUTTON,
     .button_text = {.i18nal = STR_ADD },
     .update      = button_setcolors_success,
     .on_mup      = button_accept_friend_on_mup,

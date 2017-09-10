@@ -319,6 +319,7 @@ add_executable(utox ${GUI_TYPE}
     src/flist.c
     src/friend.c
     src/groups.c
+    src/group_invite.c
     src/inline_video.c
     src/main.c
     src/messages.c

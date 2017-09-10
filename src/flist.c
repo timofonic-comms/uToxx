@@ -4,6 +4,7 @@
 
 #include "avatar.h"
 #include "friend.h"
+#include "group_invite.h"
 #include "groups.h"
 #include "macros.h"
 #include "self.h"
@@ -25,6 +26,7 @@
 #include "layout/background.h"
 #include "layout/friend.h"
 #include "layout/group.h"
+#include "layout/group_invite.h"
 #include "layout/settings.h"
 #include "layout/sidebar.h"
 
@@ -222,13 +224,23 @@ static void drawitem(ITEM *i, int x, int y, int width) {
             break;
         }
 
-        case ITEM_GROUP_REQUEST: {
-            GROUP_REQUEST *g = get_group_request(i->id_number);
-            if (!g) {
-                break;
-            }
+        case ITEM_GROUP_INVITE: {
+            // uint32_t friend_id = group_invite_get_friend_id(i->id_number);
 
-            // idk. do stuff??
+
+            // FRIEND *f = get_friend(friend_id);
+            // if (!f) {
+            //     return;
+            // }
+
+            drawalpha(group_bitmap, avatar_x, y + ROSTER_AVATAR_TOP, default_w, default_w,
+                      selected_item == i ? COLOR_MAIN_TEXT : COLOR_LIST_TEXT);
+
+            char *title = "Groupchat invite";
+
+            flist_draw_name(i, name_x, name_y, width, title, NULL,
+                            strlen(title), 0, 0, 0);
+
 
             break;
         }
@@ -301,10 +313,11 @@ static ITEM *item_hit(int mx, int my, int UNUSED(height)) {
         real_height /= 2;
     }
 
-    /* Mouse is outside the list */
-    if (mx < SCROLL_WIDTH || mx >= SCALE(230) || my < 0 // TODO magic numbers are bad 230 should be width
+    // TODO magic numbers are bad 230 should be width
+    if (mx < SCROLL_WIDTH || mx >= SCALE(230) || my < 0
         || my >= (int)(showncount * real_height))
     {
+        // Mouse is outside the list
         mouse_in_list = false;
         return NULL;
     } else {
@@ -420,6 +433,12 @@ static void page_close(ITEM *i) {
             panel_chat.disabled  = true;
             panel_group.disabled = true;
 
+            break;
+        }
+
+        case ITEM_GROUP_INVITE: {
+            panel_chat.disabled         = true;
+            panel_group_invite.disabled = true;
             break;
         }
 
@@ -539,6 +558,12 @@ static void page_open(ITEM *i) {
             break;
         }
 
+        case ITEM_GROUP_INVITE: {
+            panel_chat.disabled         = false;
+            panel_group_invite.disabled = false;
+            break;
+        }
+
         case ITEM_SETTINGS: {
             if (panel_profile_password.disabled) {
                 button_settings.disabled       = 1;
@@ -626,10 +651,10 @@ void flist_add_friend_accepted(FRIEND *f, FREQUEST *req) {
     }
 }
 
-void flist_add_group_request(GROUP_REQUEST *g) {
+void flist_add_group_request(uint8_t request_id) {
     ITEM *i = newitem();
-    i->item = ITEM_GROUP_REQUEST;
-    i->id_number = g->number;
+    i->item = ITEM_GROUP_INVITE;
+    i->id_number = request_id;
 }
 
 void flist_add_group(GROUPCHAT *g) {
@@ -646,7 +671,8 @@ void flist_add_frequest(FREQUEST *r) {
 
 void group_av_peer_remove(GROUPCHAT *g, int peernumber);
 
-// FIXME removing multiple items without moving the mouse causes asan neg-size-param error on memmove!
+// FIXME removing multiple items without moving the mouse causes asan neg-size-param
+//       error on memmove!
 static void deleteitem(ITEM *i) {
     right_mouse_item = NULL;
 
@@ -778,6 +804,7 @@ static void push_selected(void) {
         case ITEM_ADD:
         case ITEM_FREQUEST:
         case ITEM_GROUP:
+        case ITEM_GROUP_INVITE:
         case ITEM_GROUP_CREATE: {
             return;
         }
@@ -826,6 +853,7 @@ static void pop_selected(void) {
 
         case ITEM_FREQUEST:
         case ITEM_GROUP:
+        case ITEM_GROUP_INVITE:
         case ITEM_GROUP_CREATE: {
             show_page(&item_settings);
             return;
@@ -870,6 +898,14 @@ GROUPCHAT *flist_get_groupchat(void) {
     }
 
     return NULL;
+}
+
+uint8_t flist_get_group_invite_id(void) {
+    if (flist_get_type() == ITEM_GROUP_INVITE) {
+        return selected_item->id_number;
+    }
+
+    return UINT8_MAX;
 }
 
 ITEM_TYPE flist_get_type(void) {
