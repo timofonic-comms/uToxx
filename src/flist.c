@@ -161,8 +161,8 @@ static void drawitem(ITEM *i, int x, int y, int width) {
 
             // draw avatar or default image
             if (friend_has_avatar(f)) {
-                draw_avatar_image(f->avatar->img, avatar_x, avatar_y, f->avatar->width, f->avatar->height,
-                                  default_w, default_w);
+                draw_avatar_image(f->avatar->img, avatar_x, avatar_y, f->avatar->width,
+                                  f->avatar->height, default_w, default_w);
             } else {
                 drawalpha(contact_bitmap, avatar_x, avatar_y, default_w, default_w,
                           selected_item == i ? COLOR_MAIN_TEXT : COLOR_LIST_TEXT);
@@ -175,6 +175,21 @@ static void drawitem(ITEM *i, int x, int y, int width) {
             break;
         }
 
+        case ITEM_FREQUEST: {
+            FREQUEST *r = get_frequest(i->id_number);
+            if (!r) {
+                break;
+            }
+
+            char name[TOX_ADDRESS_SIZE * 2];
+            id_to_string(name, r->bin_id);
+
+            drawalpha(contact_bitmap, avatar_x, y + ROSTER_AVATAR_TOP, default_w, default_w,
+                      selected_item == i ? COLOR_MAIN_TEXT : COLOR_LIST_TEXT);
+            flist_draw_name(i, name_x, name_y, width, name, r->msg, sizeof(name), r->length, 0, 0);
+            break;
+        }
+
         case ITEM_GROUP: {
             GROUPCHAT *g = get_group(i->id_number);
             if (!g) {
@@ -182,7 +197,7 @@ static void drawitem(ITEM *i, int x, int y, int width) {
             }
 
             drawalpha(group_bitmap, avatar_x, avatar_y, default_w, default_w,
-                      (selected_item == i) ? COLOR_MAIN_TEXT : COLOR_LIST_TEXT);
+                      selected_item == i ? COLOR_MAIN_TEXT : COLOR_LIST_TEXT);
 
             bool color_overide = false;
             uint32_t color = 0;
@@ -207,18 +222,14 @@ static void drawitem(ITEM *i, int x, int y, int width) {
             break;
         }
 
-        case ITEM_FREQUEST: {
-            FREQUEST *r = get_frequest(i->id_number);
-            if (!r) {
+        case ITEM_GROUP_REQUEST: {
+            GROUP_REQUEST *g = get_group_request(i->id_number);
+            if (!g) {
                 break;
             }
 
-            char name[TOX_ADDRESS_SIZE * 2];
-            id_to_string(name, r->bin_id);
+            // idk. do stuff??
 
-            drawalpha(contact_bitmap, avatar_x, y + ROSTER_AVATAR_TOP, default_w, default_w,
-                      selected_item == i ? COLOR_MAIN_TEXT : COLOR_LIST_TEXT);
-            flist_draw_name(i, name_x, name_y, width, name, r->msg, sizeof(name), r->length, 0, 0);
             break;
         }
 
@@ -228,10 +239,6 @@ static void drawitem(ITEM *i, int x, int y, int width) {
             flist_draw_name(i, name_x, name_y, width, S(CREATEGROUPCHAT), S(CURSOR_CLICK_RIGHT),
                             SLEN(CREATEGROUPCHAT), SLEN(CURSOR_CLICK_RIGHT), 1,
                             selected_item == i ? COLOR_MAIN_TEXT : COLOR_LIST_TEXT);
-            break;
-        }
-
-        default: {
             break;
         }
     }
@@ -617,6 +624,12 @@ void flist_add_friend_accepted(FRIEND *f, FREQUEST *req) {
             return;
         }
     }
+}
+
+void flist_add_group_request(GROUP_REQUEST *g) {
+    ITEM *i = newitem();
+    i->item = ITEM_GROUP_REQUEST;
+    i->id_number = g->number;
 }
 
 void flist_add_group(GROUPCHAT *g) {

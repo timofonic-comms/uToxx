@@ -62,9 +62,9 @@ FREQUEST *get_frequest(uint16_t frequest_number) {
 
 static FREQUEST *frequest_make(uint16_t frequest_number) {
     if (frequest_number >= frequest_list_size) {
-                FREQUEST *tmp = realloc(frequests, sizeof(FREQUEST) * (frequest_number + 1));
+        FREQUEST *tmp = realloc(frequests, sizeof(FREQUEST) * (frequest_number + 1));
         if (!tmp) {
-                        return NULL;
+            return NULL;
         }
 
         frequests = tmp;
