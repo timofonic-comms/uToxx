@@ -565,7 +565,7 @@ void utox_message_dispatch(UTOX_MSG utox_msg_id, uint16_t param1, uint16_t param
             if (selected != g) {
                 g->unread_msg = true;
             }
-            redraw(); // ui_drawmain();
+            redraw();
 
             break;
         }

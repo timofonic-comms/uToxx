@@ -8,8 +8,9 @@
 
 // Returns a new GROUP_REQUEST or NULL on failure. Caller assumes ownership.
 uint8_t group_invite_new(const uint32_t friend_number,
-                          const uint8_t *cookie,
-                          const size_t length);
+                         const uint8_t *cookie,
+                         const size_t length,
+                         const bool is_av_group);
 
 // Returns a bool indicating whether the group invite was accepted successfully.
 // Calling this function frees the GROUP_REQUEST passed.

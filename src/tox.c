@@ -18,9 +18,9 @@
 #include "av/utox_av.h"
 #include "av/video.h"
 
-
-#include "ui/edit.h"     // FIXME the toxcore thread shouldn't be interacting directly with the UI
-#include "ui/switch.h"   // FIXME the toxcore thread shouldn't be interacting directly with the UI
+// FIXME the toxcore thread shouldn't be interacting directly with the UI
+#include "ui/edit.h"
+#include "ui/switch.h"
 #include "ui/dropdown.h"
 
 #include "layout/background.h"

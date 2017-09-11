@@ -130,20 +130,12 @@ void utox_set_callbacks_friends(Tox *tox) {
     tox_callback_friend_connection_status(tox, callback_connection_status);
 }
 
-void callback_av_group_audio(void *tox, int groupnumber, int peernumber, const int16_t *pcm, unsigned int samples,
-                             uint8_t channels, unsigned int sample_rate, void *userdata);
-
 static void callback_group_invite(Tox *tox, uint32_t friend_number, TOX_CONFERENCE_TYPE type,
                                   const uint8_t *cookie, size_t length, void *UNUSED(userdata))
 {
-    uint32_t gid = UINT32_MAX;
-    if (type == TOX_CONFERENCE_TYPE_TEXT) {
-        gid = tox_conference_join(tox, fid, cookie, length, NULL);
-    } else if (type == TOX_CONFERENCE_TYPE_AV) {
-        gid = toxav_join_av_groupchat(tox, fid, cookie, length, callback_av_group_audio, NULL);
-    }
-
-    const uint8_t request_id = group_invite_new(friend_number, cookie, length);
+    const uint8_t request_id = group_invite_new(friend_number,
+                                                cookie, length,
+                                                type == TOX_CONFERENCE_TYPE_AV);
 
     postmessage_utox(GROUP_INCOMING_REQUEST, request_id, 0, NULL);
     postmessage_audio(UTOXAUDIO_PLAY_NOTIFICATION, NOTIFY_TONE_FRIEND_REQUEST, NULL, NULL);
@@ -198,8 +190,7 @@ static void callback_group_namelist_change(Tox *tox, uint32_t gid, uint32_t pid,
                 pkey_to_number += pkey[key_i];
             }
             srand(pkey_to_number);
-            uint32_t name_color = 0;
-            name_color          = RGB(rand(), rand(), rand());
+            uint32_t name_color = RGB(rand(), rand(), rand());
 
             group_peer_add(g, pid, is_us, name_color);
 
@@ -208,10 +199,8 @@ static void callback_group_namelist_change(Tox *tox, uint32_t gid, uint32_t pid,
         }
 
         case TOX_CONFERENCE_STATE_CHANGE_PEER_NAME_CHANGE: {
-            if (g->peer) {
-                if (!g->peer[pid]) {
-                    break;
-                }
+            if (g->peer && !g->peer[pid]) {
+                break;
             }
 
             uint8_t name[TOX_MAX_NAME_LENGTH];

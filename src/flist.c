@@ -522,9 +522,6 @@ static void page_open(ITEM *i) {
 
         case ITEM_GROUP: {
             GROUPCHAT *g = get_group(i->id_number);
-            if (!g) {
-                exit(1);
-            }
 
             memcpy(edit_chat_msg_group.data, g->typed, g->typed_length);
             edit_chat_msg_group.length = g->typed_length;
@@ -699,6 +696,10 @@ static void deleteitem(ITEM *i) {
             GROUPCHAT *g = get_group(i->id_number);
             postmessage_toxcore(TOX_GROUP_PART, g->number, 0, NULL);
             group_free(g);
+            break;
+        }
+
+        case ITEM_GROUP_INVITE: {
             break;
         }
 

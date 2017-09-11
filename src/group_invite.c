@@ -13,7 +13,7 @@ typedef struct group_invite {
     uint32_t friend_number;
     const uint8_t *cookie;
     size_t length;
-    bool av_group;
+    bool is_av_group;
 } GROUP_INVITE;
 
 static GROUP_INVITE *invites[MAX_GROUP_INVITES];
@@ -52,22 +52,34 @@ uint8_t group_invite_new(const uint32_t friend_number,
     invite->friend_number = friend_number;
     invite->cookie = cookie;
     invite->length = length;
-    invite->av_group = is_av_group;
+    invite->is_av_group = is_av_group;
 
     invites[invite_id] = invite;
-    printf("created group invite %d from friend %u\n",
-           invite_id, invites[invite_id]->friend_number);
-    fflush(NULL);
 
     return invite_id;
 }
 
+// Yeah, this is ugly and hacky, but to be fair, I only moved it here from tox_callbacks.c.
+void callback_av_group_audio(void *tox, int groupnumber, int peernumber, const int16_t *pcm,
+                             unsigned int samples, uint8_t channels, unsigned int sample_rate,
+                             void *userdata);
+
 bool group_invite_accept(Tox *tox, const uint8_t invite_id) {
-    const uint32_t group_id = tox_conference_join(tox,
-                                                  invites[invite_id]->friend_number,
-                                                  invites[invite_id]->cookie,
-                                                  invites[invite_id]->length,
-                                                  NULL);
+    uint32_t group_id = UINT32_MAX;
+
+    if (invites[invite_id]->is_av_group) {
+        group_id = toxav_join_av_groupchat(tox,
+                                           invites[invite_id]->friend_number,
+                                           invites[invite_id]->cookie,
+                                           invites[invite_id]->length,
+                                           )
+    } else {
+        group_id = tox_conference_join(tox,
+                                       invites[invite_id]->friend_number,
+                                       invites[invite_id]->cookie,
+                                       invites[invite_id]->length,
+                                       NULL);
+    }
     if (group_id == UINT32_MAX) {
         group_invite_free(invite_id);
         return false;
