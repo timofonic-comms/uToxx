@@ -54,9 +54,6 @@ endif()
 # Options #
 ###########
 
-option(UTOX_STATIC          "Link uTox statically"                                          OFF)
-option(TOXCORE_STATIC       "Build uTox with the static version of Toxcore"                 OFF)
-
 # disable ASAN for macOS due to "AddressSanitizer: odr-violation: global". see #957
 if (APPLE OR (UTOX_STATIC AND WINDOWS))
     set(ASAN_DEFAULT OFF)
@@ -68,9 +65,9 @@ option(ENABLE_ASAN          "Enable Address Sanitizer on debug builds"          
 option(ENABLE_TESTS         "Whether to build test binaries (currently linux only)"         ON )
 option(ENABLE_WERROR        "Error on Warning, whether to put -Werror flag to the compiler" OFF)
 option(ENABLE_FILTERAUDIO   "Enable Filter Audio"                                           ON )
-option(ENABLE_AUTOUPDATE    "Enable Auto-updater"                                           OFF)
 
-option(ENABLE_LTO           "Enable link time optimizations"                                ON )
+option(UTOX_STATIC          "Link uTox statically"                                          OFF)
+option(TOXCORE_STATIC       "Build uTox with the static version of Toxcore"                 OFF)
 
 
 #################################
@@ -91,9 +88,10 @@ elseif(OPENBSD OR NETBSD)
 endif()
 
 
-#######################################################################
-# CMake Settings
-#######################################################################
+##################
+# CMake Settings #
+##################
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 # make version available in C files
@@ -109,9 +107,9 @@ if(${CMAKE_BUILD_TYPE} MATCHES Debug)
 endif()
 
 
-#######################################################################
-# C compiler flags
-#######################################################################
+####################
+# C compiler flags #
+####################
 
 set(CMAKE_C_STANDARD 11) # this requires at least cmake 3.1
 
@@ -121,21 +119,21 @@ include(CheckCCompilerFlag)
 function(add_cflag flag)
     string(REGEX REPLACE "[^a-zA-Z0-9_]" "_" var ${flag})
     if(NOT DEFINED HAVE_C${var})
-        message(STATUS "checking for C compiler flag: ${flag}")
+        message(STATUS "Checking for flag: ${flag}")
     endif()
     set(CMAKE_REQUIRED_QUIET TRUE)
 
     check_c_compiler_flag("${flag}" HAVE_C${var} QUIET)
     if(HAVE_C${var})
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${flag}" PARENT_SCOPE)
+    else()
+        message(WARNING "Unable to find flag: ${flag}")
     endif()
 endfunction()
 
 # Grab environment CFLAGS.
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} $ENV{CFLAGS}")
 
-# Warn on non-ISO C.
-#add_cflag("-pedantic") # throws a lot of warning, quite sure we do not want this at current state.
 ## Add all warning flags we can.
 add_cflag("-Wall")
 add_cflag("-Wextra")
@@ -154,18 +152,13 @@ add_cflag("-fPIC")
 
 ## Optimization Flags
 
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os")
+
 # Fix GNU stack
 if(CMAKE_C_COMPILER_ID MATCHES "GNU")
-    # Have ld strip the symbols from Release and MinSizeRel build types.
-    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os")
-    set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} -Os -s")
 
     if(LINUX)
-        # enable Link Time Optimization on gcc (linux only currently)
-        # TODO someone should figure out how this works on windows, or we need to have gitlab-ci for GCC
-        if(ENABLE_LTO)
-            add_cflag("-flto")
-        endif()
+        add_cflag("-flto")
 
         set(CMAKE_AR "gcc-ar")
         set(CMAKE_RANLIB "gcc-ranlib")
@@ -173,16 +166,9 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-z,noexecstack")
     endif()
 elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
-    # enable Link Time Optimization on clang
-    if(ENABLE_LTO)
-        add_cflag("-flto")
-    endif()
+    add_cflag("-flto")
 
     add_cflag("-Wno-missing-field-initializers")
-
-    # Have ld strip the symbols from Release and MinSizeRel build types. (-Oz is clang specific)
-    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os")
-    set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} -Oz -s")
 
     if(NOT ENABLE_ASAN)
         if(NOT APPLE)
@@ -198,9 +184,11 @@ if(GIT_VERSION)
     add_cflag("-DGIT_VERSION='\"${GIT_VERSION}\"'")
 endif()
 
-#######################################################################
-# Build options
-#######################################################################
+
+#################
+# Build options #
+#################
+
 # sanitize memory issues in Debug builds
 # https://gcc.gnu.org/gcc-4.8/changes.html
 # https://github.com/google/sanitizers/wiki/AddressSanitizer
@@ -229,12 +217,8 @@ if(UTOX_STATIC)
     endif()
 endif()
 
-if(ENABLE_AUTOUPDATE)
-    add_cflag("-DENABLE_AUTOUPDATE=1")
-endif()
 
 if(TOXCORE_STATIC)
-    # The static windows libs need all of these... because REASONS!
     set(TOX_LIBS
         toxencryptsave
         toxav
@@ -256,7 +240,7 @@ else()
 endif()
 
 if(WIN32)
-    if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+    if(CMAKE_BUILD_TYPE STREQUAL "Release")
         set(GUI_TYPE WIN32)
     endif()
 
@@ -312,9 +296,11 @@ add_subdirectory(src/ui)
 # include utoxAV
 add_subdirectory(src/av)
 
-#######################################################################
-# :: uTox main
-#######################################################################
+
+#############
+# uTox main #
+#############
+
 add_executable(utox ${GUI_TYPE}
     src/avatar.c
     src/chatlog.c
@@ -373,11 +359,11 @@ elseif(UNIX)
         )
 endif()
 
-#######################################################################
-#
-# Testing
-#
-#######################################################################
+
+###########
+# Testing #
+###########
+
 if(ENABLE_TESTS)
   if(UNIX)
     # tests currently only run on linux
@@ -386,9 +372,13 @@ if(ENABLE_TESTS)
   endif()
 endif()
 
+
+##############
+# Build info #
+##############
+
 # print a summary of build options
 message("Build options:")
-message("- CMake Module Path:        ${CMAKE_MODULE_PATH}")
 message("----------------------------------")
 message("- Add ASAN:                ${ENABLE_ASAN}")
 message("- Error on Warning:        ${ENABLE_WERROR}")
@@ -396,8 +386,6 @@ message("- Filter Audio:            ${ENABLE_FILTERAUDIO}")
 message("- uTox Static:             ${UTOX_STATIC}")
 message("- Toxcore Static:          ${TOXCORE_STATIC}")
 message("-- Platform Options --------------")
-message("- Windows Legacy:          ${WIN_XP_LEGACY}")
-message("- Enable DBus:             ${ENABLE_DBUS}")
 message("- Enable Tests             ${ENABLE_TESTS}")
 
 message("* CMAKE SYSTEM is '${CMAKE_SYSTEM_NAME}'")
@@ -405,10 +393,3 @@ message("* C Compiler is '${CMAKE_C_COMPILER}' with the following flags:")
 message("* C flags for Debug:       ${CMAKE_C_FLAGS_DEBUG}")
 message("* C flags for Release:     ${CMAKE_C_FLAGS_RELEASE}")
 message("* C flags for all types:   ${CMAKE_C_FLAGS}")
-
-if (ENABLE_ASAN)
-    message("")
-    message("  TIP: You may want to set the env variable  ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer  for ASAN to show nicer stack traces.")
-    message("       See <http://clang.llvm.org/docs/AddressSanitizer.html#symbolizing-the-reports> for more details.")
-    message("")
-endif()
