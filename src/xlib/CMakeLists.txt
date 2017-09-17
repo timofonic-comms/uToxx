@@ -96,11 +96,6 @@ install(FILES
     )
 
 install(FILES
-    ../utox.1
-    DESTINATION "${CMAKE_INSTALL_MANDIR}/man1"
-    )
-
-install(FILES
    ../../icons/utox-14x14.png
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/14x14/apps"
     )
