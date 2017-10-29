@@ -8,8 +8,6 @@
 
 #if defined __WIN32__ || defined _WIN32 || defined __CYGWIN__
 #include "../windows/main.h"
-#elif defined __OBJC__
-#include "../cocoa/main.h"
 #else
 #include "../xlib/main.h"
 #endif

@@ -584,8 +584,6 @@ void notify(char *title, uint16_t UNUSED(title_length), const char *msg, uint16_
 #endif
 }
 
-void edit_will_deactivate(void) {}
-
 void update_tray(void) {}
 
 void config_osdefaults(UTOX_SAVE *r) {

@@ -68,22 +68,6 @@ build:windows:64:
       - uTox-Win64.exe
     expire_in: 6h
 
-build:macos:
-  stage: build
-  tags:
-    - osx
-  cache:
-    paths:
-      - cache/
-  script:
-    - pwd
-    - docker run --rm -u $(id -u):$(id -g) -v $(pwd):/workdir -e CROSS_TRIPLE=x86_64-apple-darwin arch-build ./extra/gitlab/osx-docker.sh
-    - ls -la ./*
-  artifacts:
-    paths:
-      - utox.app/
-    expire_in: 6h
-
 
 .test: &test
   stage: test

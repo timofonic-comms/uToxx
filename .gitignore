@@ -37,4 +37,3 @@ install_manifest.txt
 
 # Generated files.
 src/branding.h
-src/cocoa/Info.plist

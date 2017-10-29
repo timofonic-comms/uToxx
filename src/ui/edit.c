@@ -33,8 +33,6 @@ static bool edit_select;
 
 static void setactive(EDIT *edit) {
     if (edit != active_edit) {
-        edit_will_deactivate();
-
         if (active_edit && active_edit->onlosefocus) {
             active_edit->onlosefocus(active_edit);
         }

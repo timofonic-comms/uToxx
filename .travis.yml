@@ -53,10 +53,6 @@ matrix:
       env: BUILD=windows
       compiler: x86_64-w64-mingw32-gcc
 
-    - os: osx
-      compiler: clang
-      env: BUILD=osx
-
 git:
   depth: 5
 

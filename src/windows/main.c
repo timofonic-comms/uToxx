@@ -451,8 +451,6 @@ int file_unlock(FILE *file, uint64_t start, size_t length) {
     return UnlockFileEx(file, 0, start, start + length, &lock_overlap);
 }
 
-void edit_will_deactivate(void) {}
-
 /* Redraws the main UI window */
 void redraw(void) {
     native_window_set_target(&main_window);

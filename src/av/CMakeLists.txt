@@ -8,8 +8,6 @@ add_library(utoxAV STATIC
 
 if(WIN32)
     target_link_libraries(utoxAV OpenAL32) # Windows needs to be linked against OpenAL32
-elseif(APPLE)
-    target_link_libraries(utoxAV opus) # Link OSX against opus
 else()
     # Both openal and opus are required for the static Linux builds on Jenkins.
     target_link_libraries(utoxAV openal)

@@ -28,10 +28,6 @@ typedef struct scrollable SCROLLABLE;
 #if defined __WIN32__ || defined _WIN32 || defined __CYGWIN__
 // Windows supplies its own RGB function.
 #include <windows.h>  // TODO, don't do this
-#elif defined __OBJC__
-// xlib and cocoa use the same format for this, but I left both cases here
-// in case I want to use this #ifdef construct elsewhere.
-#define RGB(r, g, b) (((r) << 16) | ((g) << 8) | (b))
 #else
 #define RGB(r, g, b) (((r) << 16) | ((g) << 8) | (b))
 #endif

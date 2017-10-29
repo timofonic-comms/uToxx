@@ -32,7 +32,4 @@ int native_video_getframe(uint8_t *y, uint8_t *u, uint8_t *v, uint16_t width, ui
 bool native_video_startread(void);
 bool native_video_endread(void);
 
-// OS X only.
-void desktopgrab(bool video);
-
 #endif

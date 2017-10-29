@@ -24,10 +24,6 @@
 
 #include <tox/toxav.h>
 
-#ifdef __APPLE__
-#include <OpenAL/al.h>
-#include <OpenAL/alc.h>
-#else
 #include <AL/al.h>
 #include <AL/alc.h>
 
@@ -37,7 +33,6 @@
 /* include for compatibility with older versions of OpenAL */
 #ifndef ALC_ALL_DEVICES_SPECIFIER
 #include <AL/alext.h>
-#endif
 #endif
 
 #ifdef AUDIO_FILTERING

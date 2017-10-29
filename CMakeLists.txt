@@ -26,10 +26,6 @@ endif()
 
 if(WIN32)
     set(WINDOWS TRUE)
-elseif(APPLE)
-    if(CMAKE_SYSTEM_NAME MATCHES ".*MacOS.*")
-        set(MACOSX TRUE)
-    endif()
 elseif(UNIX)
     if(CMAKE_SYSTEM_NAME MATCHES ".*Linux")
         set(LINUX TRUE)
@@ -54,8 +50,7 @@ endif()
 # Options #
 ###########
 
-# disable ASAN for macOS due to "AddressSanitizer: odr-violation: global". see #957
-if (APPLE OR (UTOX_STATIC AND WINDOWS))
+if (UTOX_STATIC AND WINDOWS)
     set(ASAN_DEFAULT OFF)
 else()
     set(ASAN_DEFAULT ON)
@@ -97,8 +92,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 # make version available in C files
 configure_file(${uTox_SOURCE_DIR}/src/branding.h.in
                ${uTox_SOURCE_DIR}/src/branding.h)
-configure_file(${uTox_SOURCE_DIR}/src/cocoa/Info.plist.in
-               ${uTox_SOURCE_DIR}/src/cocoa/Info.plist)
 
 if(${CMAKE_BUILD_TYPE} MATCHES Debug)
     execute_process(COMMAND git describe --abbrev=8 --dirty --always --tags
@@ -171,9 +164,7 @@ elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
     add_cflag("-Wno-missing-field-initializers")
 
     if(NOT ENABLE_ASAN)
-        if(NOT APPLE)
-            add_cflag("-fsanitize=safe-stack")
-        endif()
+        add_cflag("-fsanitize=safe-stack")
     endif()
 else()
     message(SEND_ERROR "Unknown compiler name")
@@ -252,30 +243,6 @@ if(WIN32)
     set(WINDOWS_ICON src/windows/utox.rc)
 
     add_subdirectory(src/windows)
-elseif(APPLE)
-    set(GUI_TYPE MACOSX_BUNDLE)
-
-    # Make apple icon
-    set(APPLE_ICON utox.icns)
-    add_custom_command(OUTPUT utox.icns
-        COMMAND iconutil --convert icns ${uTox_SOURCE_DIR}/src/cocoa/utox.iconset -o utox.icns
-        DEPENDS ${uTox_SOURCE_DIR}/src/cocoa/utox.iconset
-    )
-    set_source_files_properties(${APPLE_ICON} PROPERTIES
-       MACOSX_PACKAGE_LOCATION "Resources")
-
-    include_directories( /usr/local/include /usr/include/malloc )
-    link_directories ( /usr/local/lib )
-
-    # Homebrew installed libtoxcore
-    if(EXISTS /usr/local/opt/libtoxcore/)
-        include_directories( /usr/local/opt/libtoxcore/include )
-        link_directories ( /usr/local/opt/libtoxcore/lib )
-    endif()
-
-    add_definitions("-x objective-c")
-    add_subdirectory(src/cocoa)
-    set(LIBRARIES "opus")
 elseif(UNIX)
     add_subdirectory(src/xlib)
 
@@ -327,7 +294,6 @@ add_executable(utox ${GUI_TYPE}
     src/window.c
 
     ${WINDOWS_ICON}
-    ${APPLE_ICON}
     )
 
 target_link_libraries(utox
@@ -336,20 +302,7 @@ target_link_libraries(utox
         vpx           pthread         m )
 
 set_property(TARGET utox PROPERTY C_STANDARD 11)
-if(APPLE)
-    set_target_properties(utox PROPERTIES MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION})
-    set_target_properties(utox PROPERTIES MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION})
-    set_target_properties(utox PROPERTIES MACOSX_BUNDLE_LONG_VERSION_STRING ${PROJECT_VERSION})
-    set_target_properties(utox PROPERTIES MACOSX_BUNDLE_GUI_IDENTIFIER "io.utox.future")
-    set_target_properties(utox PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "uTox")
-    set_target_properties(utox PROPERTIES MACOSX_BUNDLE_COPYRIGHT ${PROJECT_COPYRIGHT})
-    set_target_properties(utox PROPERTIES MACOSX_BUNDLE_ICON_FILE "${APPLE_ICON}")
-
-    install(TARGETS utox
-        RUNTIME DESTINATION "bin"
-        BUNDLE  DESTINATION "resources"
-        )
-elseif(UNIX)
+if(UNIX)
     install(TARGETS utox
         RUNTIME DESTINATION "bin"
         )
