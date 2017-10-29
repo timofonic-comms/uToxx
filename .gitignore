@@ -37,5 +37,4 @@ install_manifest.txt
 
 # Generated files.
 src/branding.h
-src/android/AndroidManifest.xml
 src/cocoa/Info.plist

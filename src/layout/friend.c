@@ -732,7 +732,7 @@ static void button_chat_send_friend_on_mup(void) {
     if (f && f->online) {
         // TODO clear the chat bar with a /slash command
         e_chat_msg_onenter(&edit_chat_msg_friend);
-        // reset focus to the chat window on send to prevent segfault. May break on android.
+        // reset focus to the chat window on send to prevent segfault.
         edit_setfocus(&edit_chat_msg_friend);
     }
 }

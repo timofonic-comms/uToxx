@@ -215,7 +215,6 @@ bool edit_mdown(EDIT *edit) {
 
         setactive(edit);
 
-        showkeyboard(1);
         return true;
     }
 

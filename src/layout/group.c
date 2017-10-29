@@ -512,7 +512,7 @@ EDIT edit_group_topic = {
 static void button_chat_send_on_mup(void) {
     if (flist_get_type() == ITEM_GROUP) {
         e_group_msg_onenter(&edit_chat_msg_group);
-        // reset focus to the chat window on send to prevent segfault. May break on android.
+        // reset focus to the chat window on send to prevent segfault.
         edit_setfocus(&edit_chat_msg_group);
     }
 }
