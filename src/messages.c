@@ -211,9 +211,6 @@ static bool msg_add_day_notice(MESSAGES *m, time_t last, time_t next) {
             && ltime_day < msg_time->tm_mday))
     {
         MSG_HEADER *msg = calloc(1, sizeof(MSG_HEADER));
-        if (!msg) {
-            return false;
-        }
 
         time(&msg->time);
         msg->our_msg       = 0;
@@ -442,9 +439,6 @@ bool message_log_to_disk(MESSAGES *m, MSG_HEADER *msg) {
             size_t length = sizeof(header) + msg->via.txt.length + author_length + 1; /* extra \n char*/
 
             uint8_t *data = calloc(1, length);
-            if (!data) {
-                exit(1);
-            }
             memcpy(data, &header, sizeof(header));
             memcpy(data + sizeof(header), author, author_length);
             memcpy(data + sizeof(header) + author_length, msg->via.txt.msg, msg->via.txt.length);
@@ -1741,10 +1735,6 @@ void messages_init(MESSAGES *m, uint32_t friend_number) {
     memset(m, 0, sizeof(*m) * COUNTOF(m));
 
     m->data = calloc(20, sizeof(void *));
-    if (!m->data) {
-        exit(1);
-    }
-
     m->extra = 20;
     m->id    = friend_number;
 

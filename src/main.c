@@ -47,13 +47,6 @@ uint8_t *utox_data_load_tox(size_t *size) {
         }
 
         uint8_t *data = calloc(1, length + 1);
-
-        if (!data) {
-            fclose(fp);
-            // Quit. We're out of memory, calloc will fail again.
-            exit(EXIT_FAILURE);
-        }
-
         if (fread(data, length, 1, fp) != 1) {
             fclose(fp);
             free(data);

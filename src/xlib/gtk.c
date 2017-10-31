@@ -130,17 +130,8 @@ static void ugtk_opensendthread(void *args) {
         GSList *list = utoxGTK_file_chooser_get_filenames(dialog), *p = list;
         while (p) {
             UTOX_MSG_FT *send = calloc(1, sizeof(UTOX_MSG_FT));
-            if (!send) {
-                while(p) {
-                    utoxGTK_free(p->data);
-                    p = p->next;
-                }
-                utoxGTK_slist_free(list);
-                utoxGTK_open = false;
-                return;
-            }
             send->file = fopen(p->data, "rb");
-            send->name = (uint8_t*)strdup(p->data);
+            send->name = (uint8_t *)strdup(p->data);
             postmessage_toxcore(TOX_FILE_SEND_NEW, (uint32_t)fid, 0, send);
             utoxGTK_free(p->data);
             p = p->next;

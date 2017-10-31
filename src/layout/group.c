@@ -421,9 +421,6 @@ void e_group_msg_onenter(EDIT *edit) {
     GROUPCHAT *g = flist_get_groupchat();
     if (g) {
         void *d = malloc(length);
-        if (!d) {
-            return;
-        }
         memcpy(d, text, length);
         postmessage_toxcore(action ? TOX_GROUP_SEND_ACTION
                                    : TOX_GROUP_SEND_MESSAGE,
@@ -492,9 +489,6 @@ static void e_group_topic_onenter(EDIT *edit) {
     }
 
     void *d = malloc(edit->length);
-    if (!d){
-        return;
-    }
     memcpy(d, edit->data, edit->length);
     postmessage_toxcore(TOX_GROUP_SET_TOPIC, g->number, edit->length, d);
 }

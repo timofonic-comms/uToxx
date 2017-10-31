@@ -353,19 +353,10 @@ static void utox_av_incoming_frame_v(ToxAV *UNUSED(toxAV), uint32_t friend_numbe
     size_t size     = width * height * 4;
 
     UTOX_FRAME_PKG *frame = calloc(1, sizeof(UTOX_FRAME_PKG));
-
-    if (!frame) {
-        return;
-    }
-
     frame->w    = width;
     frame->h    = height;
     frame->size = size;
     frame->img  = malloc(size);
-    if (!frame->img) {
-        free(frame);
-        return;
-    }
 
     yuv420tobgr(width, height, y, u, v, ystride, ustride, vstride, frame->img);
     if (f->video_inline) {

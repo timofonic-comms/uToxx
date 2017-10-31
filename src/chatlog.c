@@ -101,11 +101,6 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
     MSG_HEADER **data = calloc(count + 1, sizeof(MSG_HEADER *));
     MSG_HEADER **start = data;
 
-    if (!data) {
-        fclose(file);
-        return NULL;
-    }
-
     size_t start_at = records_count - count - skip;
     size_t actual_count = 0;
 
@@ -136,11 +131,6 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
             }
 
             MSG_HEADER *msg = calloc(1, sizeof(MSG_HEADER));
-            if (!msg) {
-                free(start);
-                fclose(file);
-                return NULL;
-            }
 
             msg->our_msg       = header.author;
             msg->receipt_time  = header.receipt;
@@ -150,12 +140,6 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
 
             msg->via.txt.length        = header.msg_length;
             msg->via.txt.msg = calloc(1, msg->via.txt.length);
-            if (!msg->via.txt.msg) {
-                free(start);
-                free(msg);
-                fclose(file);
-                return NULL;
-            }
 
             msg->via.txt.author_length = header.author_length;
             // TODO: msg->via.txt.author used to be allocated but left empty. Commented out for now.

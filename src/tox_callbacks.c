@@ -253,9 +253,6 @@ static void callback_group_namelist_change(Tox *tox, uint32_t gid, uint32_t pid,
                 size_t      len  = tox_conference_peer_get_name_size(tox, gid, i, NULL);
                 tox_conference_peer_get_name(tox, gid, i, tmp, NULL);
                 GROUP_PEER *peer = calloc(1, len * sizeof(void *) + sizeof(*peer));
-                if (!peer) {
-                    exit(1);
-                }
                 /* name and id number (it's worthless, but it's needed */
                 memcpy(peer->name, tmp, len);
                 peer->name_length = len;
@@ -291,10 +288,6 @@ static void callback_group_topic(Tox *UNUSED(tox), uint32_t gid, uint32_t UNUSED
     }
 
     uint8_t *copy_title = malloc(length);
-    if (!copy_title) {
-        return;
-    }
-
     memcpy(copy_title, title, length);
     postmessage_utox(GROUP_TOPIC, gid, length, copy_title);
 }

@@ -80,19 +80,10 @@ HRESULT __stdcall dnd_Drop(IDropTarget *UNUSED(lpMyObj), IDataObject *pDataObjec
         int count = DragQueryFile(h, ~0, NULL, 0);
 
         for (int i = 0; i < count; i++) {
-            UTOX_MSG_FT *msg = calloc(1, sizeof(UTOX_MSG_FT));
-            if (!msg) {
-                return 0;
-            }
-
             char *path = calloc(1, UTOX_FILE_NAME_LENGTH);
-            if (!path) {
-                free(msg);
-                return 0;
-            }
-
             DragQueryFile(h, i, path, UTOX_FILE_NAME_LENGTH);
 
+            UTOX_MSG_FT *msg = calloc(1, sizeof(UTOX_MSG_FT));
             msg->file = fopen(path, "rb");
             if (!msg->file) {
                 free(msg);
@@ -102,7 +93,7 @@ HRESULT __stdcall dnd_Drop(IDropTarget *UNUSED(lpMyObj), IDataObject *pDataObjec
 
             msg->name = (uint8_t *)path;
             postmessage_toxcore(TOX_FILE_SEND_NEW, flist_get_friend()->number, 0, msg);
-                    }
+        }
 
         ReleaseStgMedium(&medium);
     }
@@ -111,8 +102,7 @@ HRESULT __stdcall dnd_Drop(IDropTarget *UNUSED(lpMyObj), IDataObject *pDataObjec
 }
 
 void dnd_init(HWND window) {
-    my_IDropTarget *p;
-    p = malloc(sizeof(my_IDropTarget));
+    my_IDropTarget *p = malloc(sizeof(my_IDropTarget));
     p->dt.lpVtbl = malloc(sizeof(*(p->dt.lpVtbl)));
     p->ref = 0;
 

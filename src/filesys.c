@@ -35,14 +35,9 @@ void *file_raw(char *path, uint32_t *size) {
         return NULL;
     }
 
-    char *data = calloc(1, len);
-    if (!data) {
-        fclose(file);
-        return NULL;
-    }
-
     fseek(file, 0, SEEK_SET);
 
+    char *data = calloc(1, len);
     if (fread(data, len, 1, file) != 1) {
         fclose(file);
         free(data);

@@ -453,13 +453,7 @@ bool svg_draw(bool needmemory) {
                BM_CHAT_SEND_OVERLAY_WIDTH * BM_CHAT_SEND_OVERLAY_HEIGHT +
                BM_CHAT_BUTTON_OVERLAY_WIDTH * BM_CHAT_BUTTON_OVERLAY_HEIGHT;
 
-    svg_data = calloc(1, size);
-
-    if (!svg_data) {
-        return false;
-    }
-
-    uint8_t *p = svg_data;
+    uint8_t *p = svg_data = calloc(1, size);
 
     /* Scroll bars top bottom halves */
     drawcircle(p, SCROLL_WIDTH);

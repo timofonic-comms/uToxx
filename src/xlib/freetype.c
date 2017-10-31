@@ -31,11 +31,8 @@ Picture loadglyphpic(uint8_t *data, int width, int height, int pitch, bool no_su
         uint32_t *rgbx, *p, *end;
 
         rgbx = malloc(4 * width * height);
-        if (!rgbx) {
-            return None;
-        }
 
-        p     = rgbx;
+        p = rgbx;
         int i = height;
         if (!vertical) {
             do {
@@ -105,9 +102,6 @@ GLYPH *font_getglyph(FONT *f, uint32_t ch) {
         }
 
         g = malloc(sizeof(GLYPH) * 2);
-        if (!g) {
-            return NULL;
-        }
 
         f->glyphs[hash] = g;
     }

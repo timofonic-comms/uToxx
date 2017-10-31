@@ -362,10 +362,6 @@ void pastedata(void *data, Atom type, size_t len, bool select) {
         NATIVE_IMAGE *native_image = utox_image_to_native(data, size, &width, &height, 0);
         if (NATIVE_IMAGE_IS_VALID(native_image)) {
             UTOX_IMAGE png_image = malloc(size);
-            if (!png_image){
-                free(native_image);
-                return;
-            }
 
             memcpy(png_image, data, size);
             friend_sendimage(f, native_image, width, height, png_image, size);
@@ -376,9 +372,6 @@ void pastedata(void *data, Atom type, size_t len, bool select) {
             return;
         }
         char *path = malloc(len + 1);
-        if (!path) {
-            return;
-        }
         formaturilist(path, (char *)data, len);
         postmessage_toxcore(TOX_FILE_SEND_NEW, f->number, 0xFFFF, path);
     } else if (type == XA_UTF8_STRING && edit_active()) {
@@ -475,15 +468,11 @@ NATIVE_IMAGE *utox_image_to_native(const UTOX_IMAGE data, size_t size, uint16_t 
     *h = height;
 
     NATIVE_IMAGE *image = malloc(sizeof(NATIVE_IMAGE));
-    if (!image) {
-        return NULL;
-    }
     image->rgb   = rgb;
     image->alpha = alpha;
 
     return image;
 }
-
 
 void image_free(NATIVE_IMAGE *image) {
     if (!image) {

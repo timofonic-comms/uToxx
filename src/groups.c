@@ -109,11 +109,6 @@ uint32_t group_add_message(GROUPCHAT *g, uint32_t peer_id, const uint8_t *messag
     }
 
     MSG_HEADER *msg = calloc(1, sizeof(MSG_HEADER));
-    if (!msg) {
-        pthread_mutex_unlock(&messages_lock);
-        return UINT32_MAX;
-    }
-
     msg->our_msg  = (g->our_peer_number == peer_id ? true : false);
     msg->msg_type = m_type;
 
@@ -125,20 +120,9 @@ uint32_t group_add_message(GROUPCHAT *g, uint32_t peer_id, const uint8_t *messag
     time(&msg->time);
 
     msg->via.grp.author = calloc(1, peer->name_length);
-    if (!msg->via.grp.author) {
-        free(msg);
-        pthread_mutex_unlock(&messages_lock);
-        return UINT32_MAX;
-    }
     memcpy(msg->via.grp.author, peer->name, peer->name_length);
 
     msg->via.grp.msg = calloc(1, length);
-    if (!msg->via.grp.msg) {
-        free(msg->via.grp.author);
-        free(msg);
-        pthread_mutex_unlock(&messages_lock);
-        return UINT32_MAX;
-    }
     memcpy(msg->via.grp.msg, message, length);
 
     pthread_mutex_unlock(&messages_lock);
@@ -157,9 +141,6 @@ void group_peer_add(GROUPCHAT *g, uint32_t peer_id, bool UNUSED(our_peer_number)
 
     // Allocate space for the struct and the dynamic array holding the peer's name.
     GROUP_PEER *peer = calloc(1, sizeof(GROUP_PEER) + strlen(default_peer_name) + 1);
-    if (!peer) {
-        exit(1);
-    }
     strcpy2(peer->name, default_peer_name);
     peer->name_length = 0;
     peer->name_color  = name_color;
@@ -306,9 +287,6 @@ void init_groups(void) {
     }
 
     group = calloc(self.groups_list_size, sizeof(GROUPCHAT));
-    if (!group) {
-        exit(1);
-    }
 
     for (size_t i = 0; i < self.groups_list_size; i++) {
         // TODO: figure out if groupchats are text or audio

@@ -481,10 +481,6 @@ static void generate_melody(MELODY melody[], uint32_t seconds, uint32_t notes_pe
     const size_t buf_size = seconds * sample_rate * 2; // 16 bit (2 bytes per sample)
     int16_t *samples  = calloc(buf_size, sizeof(int16_t));
 
-    if (!samples) {
-        return;
-    }
-
     for (uint64_t index = 0; index < buf_size; ++index) {
         /* index / sample rate `mod` seconds. will give you full second long notes
          * you can change the length each tone is played by changing notes_per_sec
@@ -546,9 +542,6 @@ void utox_audio_thread(void *args) {
 
     #define PREVIEW_BUFFER_SIZE (UTOX_DEFAULT_SAMPLE_RATE_A / 2)
     int16_t *preview_buffer = calloc(PREVIEW_BUFFER_SIZE, 2);
-    if (!preview_buffer) {
-        return;
-    }
     unsigned int preview_buffer_index = 0;
     bool preview_on = false;
 

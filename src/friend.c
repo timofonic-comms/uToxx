@@ -85,9 +85,6 @@ uint16_t friend_request_new(const uint8_t *id, const uint8_t *msg, size_t length
     r->number = curr_num;
     memcpy(r->bin_id, id, TOX_ADDRESS_SIZE);
     r->msg = malloc(length + 1);
-    if (!r->msg) {
-        return UINT16_MAX;
-    }
     memcpy(r->msg, msg, length);
     r->msg[length] = 0; // Toxcore doesn't promise null term on strings
     r->length = length;
@@ -152,15 +149,13 @@ void utox_write_metadata(FRIEND *f) {
     }
 
     uint8_t *data = calloc(1, total_size);
-    if (data) {
-        memcpy(data, &metadata, sizeof(metadata));
-        if (f->alias && f->alias_length) {
-            memcpy(data + sizeof(metadata), f->alias, metadata.alias_length);
-        }
-
-        fwrite(data, total_size, 1, file);
-        free(data);
+    memcpy(data, &metadata, sizeof(metadata));
+    if (f->alias && f->alias_length) {
+        memcpy(data + sizeof(metadata), f->alias, metadata.alias_length);
     }
+
+    fwrite(data, total_size, 1, file);
+    free(data);
 
     fclose(file);
 }
@@ -184,11 +179,6 @@ static void friend_meta_data_read(FRIEND *f) {
     }
 
     FRIEND_META_DATA *metadata = calloc(1, size);
-    if (!metadata) {
-        fclose(file);
-        return;
-    }
-
     bool read_metadata = fread(metadata, size, 1, file);
     fclose(file);
 
@@ -270,9 +260,6 @@ void utox_friend_list_init(Tox *tox) {
     self.friend_list_size = tox_self_get_friend_list_size(tox);
 
     friend = calloc(self.friend_list_size, sizeof(FRIEND));
-    if (!friend) {
-        exit(1);
-    }
 
     for (uint32_t i = 0; i < self.friend_list_size; ++i) {
         utox_friend_init(tox, i);
@@ -284,10 +271,6 @@ void friend_setname(FRIEND *f, uint8_t *name, size_t length) {
         size_t size = sizeof(" is now known as ") + f->name_length + length;
 
         char *p = calloc(1, size);
-        if (!p) {
-            return;
-        }
-
         size = snprintf(p, size, "%.*s is now known as %.*s", (int)f->name_length,
                         f->name, (int)length, name);
 
@@ -341,10 +324,6 @@ void friend_set_alias(FRIEND *f, uint8_t *alias, uint16_t length) {
         f->alias_length = 0;
     } else {
         f->alias = calloc(1, length + 1);
-        if (!f->alias) {
-            return;
-        }
-
         memcpy(f->alias, alias, length);
         f->alias_length = length;
     }
@@ -354,11 +333,8 @@ void friend_sendimage(FRIEND *f, NATIVE_IMAGE *native_image, uint16_t width, uin
                       UTOX_IMAGE png_image, size_t png_size)
 {
     struct TOX_SEND_INLINE_MSG *tsim = malloc(sizeof(struct TOX_SEND_INLINE_MSG));
-    if (!tsim) {
-        return;
-    }
 
-    tsim->image      = png_image;
+    tsim->image = png_image;
     tsim->image_size = png_size;
     postmessage_toxcore(TOX_FILE_SEND_NEW_INLINE, f - friend, 0, tsim);
 
@@ -414,9 +390,6 @@ void friend_set_typing(FRIEND *f, int typing) {
 
 void friend_addid(uint8_t *id, char *msg, uint16_t msg_length) {
     char *data = malloc(TOX_ADDRESS_SIZE + msg_length);
-    if (!data) {
-        return;
-    }
 
     memcpy(data, id, TOX_ADDRESS_SIZE);
     memcpy(data + TOX_ADDRESS_SIZE, msg, msg_length);

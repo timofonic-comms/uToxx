@@ -24,10 +24,6 @@ void native_export_chatlog_init(uint32_t friend_number) {
     }
 
     char *path = calloc(1, UTOX_FILE_NAME_LENGTH);
-    if (!path){
-        return;
-    }
-
     snprintf(path, UTOX_FILE_NAME_LENGTH, "%.*s.txt", (int)f->name_length, f->name);
 
     wchar_t filepath[UTOX_FILE_NAME_LENGTH] = { 0 };
@@ -44,10 +40,6 @@ void native_export_chatlog_init(uint32_t friend_number) {
 
     if (GetSaveFileNameW(&ofn)) {
         path = calloc(1, UTOX_FILE_NAME_LENGTH);
-        if (!path){
-            return;
-        }
-
         native_to_utf8str(filepath, path, UTOX_FILE_NAME_LENGTH);
 
         FILE *file = utox_get_file_simple(path, UTOX_FILE_OPTS_WRITE);
@@ -75,10 +67,6 @@ void native_select_dir_ft(uint32_t fid, uint32_t num, FILE_TRANSFER *file) {
 
     if (GetSaveFileNameW(&ofn)) {
         char *path = calloc(1, UTOX_FILE_NAME_LENGTH);
-        if (!path) {
-            return;
-        }
-
         native_to_utf8str(filepath, path, UTOX_FILE_NAME_LENGTH * 2);
         postmessage_toxcore(TOX_FILE_ACCEPT, fid, num, path);
     }
@@ -118,10 +106,6 @@ void native_autoselect_dir_ft(uint32_t fid, FILE_TRANSFER *file) {
     swprintf(fullpath, UTOX_FILE_NAME_LENGTH, L"%ls\\%ls", subpath, filename);
 
     char *path = calloc(1, UTOX_FILE_NAME_LENGTH);
-    if (!path) {
-        return;
-    }
-
     native_to_utf8str(fullpath, path, UTOX_FILE_NAME_LENGTH);
     postmessage_toxcore(TOX_FILE_ACCEPT_AUTO, fid, file->file_number, path);
 }

@@ -359,9 +359,6 @@ static void page_close(ITEM *i) {
             free(f->typed);
             f->typed_length = edit_chat_msg_friend.length;
             f->typed = calloc(1, f->typed_length);
-            if (!f->typed) {
-                return;
-            }
 
             memcpy(f->typed, edit_chat_msg_friend.data, f->typed_length);
 
@@ -397,9 +394,6 @@ static void page_close(ITEM *i) {
                 free(g->typed);
                 g->typed_length = edit_chat_msg_group.length;
                 g->typed = calloc(1, g->typed_length);
-                if (!g->typed) {
-                    return;
-                }
 
                 memcpy(g->typed, edit_chat_msg_group.data, g->typed_length);
 
@@ -771,7 +765,7 @@ static void push_selected(void) {
 
         case ITEM_FRIEND: {
             push_pop.data = calloc(1, TOX_PUBLIC_KEY_SIZE);
-            FRIEND *f     = get_friend(selected_item->id_number);
+            FRIEND *f = get_friend(selected_item->id_number);
             if (!f) {
                 // TODO should this be an exit code?
                 // It's a critical error that could do

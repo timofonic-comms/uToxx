@@ -17,10 +17,6 @@ static bool desktopgrab_video = false;
 // image should be freed with image_free
 static NATIVE_IMAGE *create_utox_image(HBITMAP bmp, bool has_alpha, uint32_t width, uint32_t height) {
     NATIVE_IMAGE *image = malloc(sizeof(NATIVE_IMAGE));
-    if (!image) {
-        return NULL;
-    }
-
     image->bitmap        = bmp;
     image->has_alpha     = has_alpha;
     image->width         = width;

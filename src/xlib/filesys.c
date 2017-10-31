@@ -39,28 +39,19 @@ uint8_t *native_load_data(const uint8_t *name, size_t name_length, size_t *out_s
 
     fseek(file, 0, SEEK_END);
     size_t size = ftell(file);
+    fseek(file, 0, SEEK_SET);
 
     uint8_t *data = calloc(size + 1, 1); // needed for the ending null byte
-    if (!data) {
+    if (fread(data, size, 1, file) != 1) {
         fclose(file);
+        free(data);
         if (out_size) {
             *out_size = 0;
         }
         return NULL;
-    } else {
-        fseek(file, 0, SEEK_SET);
-
-        if (fread(data, size, 1, file) != 1) {
-            fclose(file);
-            free(data);
-            if (out_size) {
-                *out_size = 0;
-            }
-            return NULL;
-        }
-
-        fclose(file);
     }
+
+    fclose(file);
 
     if (out_size) {
         *out_size = size;
@@ -129,9 +120,6 @@ void native_autoselect_dir_ft(uint32_t fid, FILE_TRANSFER *file) {
     }
 
     uint8_t *path = malloc(file->name_length + 1);
-    if (!path) {
-        return;
-    }
 
     if (settings.portable_mode) {
         snprintf((char *)path, UTOX_FILE_NAME_LENGTH, "./tox/Tox_Auto_Accept/");

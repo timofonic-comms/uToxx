@@ -40,9 +40,6 @@ static UTOX_WINDOW *native_window_create(UTOX_WINDOW *window, char *title, unsig
 {
     if (!window) {
         window = calloc(1, sizeof(UTOX_WINDOW));
-        if (!window) {
-            return NULL;
-        }
     }
 
     XSetWindowAttributes attrib = {

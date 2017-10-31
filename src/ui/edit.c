@@ -365,10 +365,6 @@ void edit_do(EDIT *edit, uint16_t start, uint16_t length, bool remove) {
     }
 
     new = calloc(1, sizeof(EDIT_CHANGE) + length);
-    if (!new) {
-        exit(1);
-    }
-
     new->remove = remove;
     new->start  = start;
     new->length = length;

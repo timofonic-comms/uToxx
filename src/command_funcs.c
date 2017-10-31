@@ -43,10 +43,6 @@ bool slash_invite(void *object, char *arg, int UNUSED(arg_length)) {
 
 bool slash_topic(void *object, char *arg, int arg_length) {
     void *d = calloc(1, arg_length);
-    if (!d) {
-        return false;
-    }
-
     GROUPCHAT *g = object;
     memcpy(d, arg, arg_length);
     postmessage_toxcore(TOX_GROUP_SET_TOPIC, g->number, arg_length, d);

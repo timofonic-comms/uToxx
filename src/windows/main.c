@@ -66,17 +66,10 @@ void openfilesend(void) {
             return;
         }
 
-        UTOX_MSG_FT *msg = calloc(1, sizeof(UTOX_MSG_FT));
-        if (!msg) {
-            return;
-        }
-
         char *path = calloc(1, UTOX_FILE_NAME_LENGTH);
-        if (!path) {
-            return;
-        }
-
         native_to_utf8str(filepath, path, UTOX_FILE_NAME_LENGTH);
+
+        UTOX_MSG_FT *msg = calloc(1, sizeof(UTOX_MSG_FT));
         msg->file = utox_get_file_simple(path, UTOX_FILE_OPTS_READ);
         msg->name = (uint8_t *)path;
 
@@ -87,9 +80,6 @@ void openfilesend(void) {
 
 void openfileavatar(void) {
     char *filepath = calloc(1, UTOX_FILE_NAME_LENGTH);
-    if (!filepath) {
-        return;
-    }
 
     wchar_t dir[UTOX_FILE_NAME_LENGTH];
     GetCurrentDirectoryW(COUNTOF(dir), dir);
@@ -150,10 +140,6 @@ void openfileavatar(void) {
 
 void file_save_inline_image_png(MSG_HEADER *msg) {
     char *path = calloc(1, UTOX_FILE_NAME_LENGTH);
-    if (!path) {
-        exit(1);
-    }
-
     snprintf(path, UTOX_FILE_NAME_LENGTH, "%.*s", (int)msg->via.ft.name_length, (char *)msg->via.ft.name);
 
     OPENFILENAME ofn = {
@@ -256,10 +242,6 @@ void copy(int value) {
 /* TODO DRY, this exists in screen_grab.c */
 static NATIVE_IMAGE *create_utox_image(HBITMAP bmp, bool has_alpha, uint32_t width, uint32_t height) {
     NATIVE_IMAGE *image = calloc(1, sizeof(NATIVE_IMAGE));
-    if (!image) {
-        return NULL;
-    }
-
     image->bitmap        = bmp;
     image->has_alpha     = has_alpha;
     image->width         = width;
@@ -468,10 +450,6 @@ void redraw(void) {
 void update_tray(void) {
     // FIXME: this is likely to over/under-run
     char *tip = calloc(1, 128); // 128 is the max length of nid.szTip
-    if (!tip) {
-        return;
-    }
-
     uint32_t tip_length = MIN(snprintf(tip, 127, "%s : %s", self.name, self.statusmsg), 127);
 
     NOTIFYICONDATAW nid = {

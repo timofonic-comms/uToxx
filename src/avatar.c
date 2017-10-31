@@ -48,10 +48,6 @@ static uint8_t *load_img_data(char hexid[TOX_PUBLIC_KEY_SIZE * 2], size_t *out_s
     }
 
     uint8_t *data = calloc(1, size);
-    if (!data) {
-        fclose(fp);
-        return NULL;
-    }
 
     if (fread(data, size, 1, fp) != 1) {
         fclose(fp);
@@ -161,10 +157,6 @@ bool avatar_init(char hexid[TOX_PUBLIC_KEY_SIZE * 2], AVATAR *avatar) {
 
 bool avatar_init_self(void) {
     self.avatar = calloc(1, sizeof(AVATAR));
-    if (self.avatar == NULL) {
-        return false;
-    }
-
     return avatar_load(self.id_str, self.avatar, NULL);
 }
 

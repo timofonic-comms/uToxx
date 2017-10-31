@@ -114,9 +114,6 @@ static void calculate_speed(FILE_TRANSFER *file) {
     }
 
     FILE_TRANSFER *msg = calloc(1, sizeof(FILE_TRANSFER));
-    if (!msg) {
-        return;
-    }
 
     *msg = *file;
     postmessage_utox(FILE_STATUS_UPDATE, file->status, 0, msg);
@@ -384,9 +381,6 @@ static void utox_pause_file(FILE_TRANSFER *file, bool us) {
     }
 
     FILE_TRANSFER *msg = calloc(1, sizeof(FILE_TRANSFER));
-    if (!msg) {
-        return;
-    }
 
     *msg = *file;
     postmessage_utox(FILE_STATUS_UPDATE, file->status, 0, msg);
@@ -424,9 +418,6 @@ static void run_file_local(FILE_TRANSFER *file) {
     }
 
     FILE_TRANSFER *msg = calloc(1, sizeof(FILE_TRANSFER));
-    if (!msg) {
-        return;
-    }
 
     *msg = *file;
     postmessage_utox(FILE_STATUS_UPDATE, file->status, 0, msg);
@@ -452,9 +443,6 @@ static void run_file_remote(FILE_TRANSFER *file) {
     }
 
     FILE_TRANSFER *msg = calloc(1, sizeof(FILE_TRANSFER));
-    if (!msg) {
-        return;
-    }
 
     *msg = *file;
     postmessage_utox(FILE_STATUS_UPDATE, file->status, 0, msg);
@@ -467,10 +455,6 @@ static void decode_inline_png(uint32_t friend_id, uint8_t *data, uint64_t size) 
     NATIVE_IMAGE *native_image = utox_image_to_native((UTOX_IMAGE)data, size, &width, &height, 0);
     if (NATIVE_IMAGE_IS_VALID(native_image)) {
         uint8_t *msg = malloc(sizeof(uint16_t) * 2 + sizeof(NATIVE_IMAGE *));
-        if (!msg) {
-            free(native_image);
-            return;
-        }
 
         memcpy(msg, &width, sizeof(uint16_t));
         memcpy(msg + sizeof(uint16_t), &height, sizeof(uint16_t));
@@ -483,9 +467,6 @@ static void decode_inline_png(uint32_t friend_id, uint8_t *data, uint64_t size) 
 /* Complete active file, (when the whole file transfer is successful). */
 static void utox_complete_file(FILE_TRANSFER *file) {
     FILE_TRANSFER *msg = calloc(1, sizeof(FILE_TRANSFER));
-    if (!msg) {
-        return;
-    }
 
     *msg = *file;
     postmessage_utox(FILE_STATUS_UPDATE, file->status, 0, msg);
@@ -654,10 +635,6 @@ static void incoming_avatar(Tox *tox, uint32_t friend_number, uint32_t file_numb
     ft->avatar    = true;
 
     ft->via.avatar = calloc(1, size);
-    if (!ft->via.avatar) {
-        ft_local_control(tox, friend_number, file_number, TOX_FILE_CONTROL_CANCEL);
-        return;
-    }
 
     ft->status = FILE_TRANSFER_STATUS_PAUSED_US;
     ft_local_control(tox, friend_number, file_number, TOX_FILE_CONTROL_RESUME);
@@ -690,10 +667,6 @@ static void incoming_inline_image(Tox *tox, uint32_t friend_number, uint32_t fil
     ft->target_size = size;
 
     ft->via.memory = calloc(1, size);
-    if (!ft->via.memory) {
-        ft_local_control(tox, friend_number, file_number, TOX_FILE_CONTROL_CANCEL);
-        return;
-    }
 
     ft_local_control(tox, friend_number, file_number, TOX_FILE_CONTROL_RESUME);
 
@@ -761,9 +734,6 @@ static void incoming_file_callback_request(Tox *tox, uint32_t friend_number, uin
             ft->via.file      = file;
 
             FILE_TRANSFER *msg = calloc(1, sizeof(FILE_TRANSFER));
-            if (!msg) {
-                return;
-            }
 
             *msg = *ft;
             postmessage_utox(FILE_SEND_NEW, friend_number, file_number, msg);
@@ -790,9 +760,6 @@ static void incoming_file_callback_request(Tox *tox, uint32_t friend_number, uin
     ft->resumeable = ft_init_resumable(ft);
 
     FILE_TRANSFER *msg = calloc(1, sizeof(FILE_TRANSFER));
-    if (!msg) {
-        return;
-    }
 
     *msg = *ft;
     postmessage_utox(FILE_INCOMING_NEW, friend_number, detox_incoming_file_number(file_number), msg);
@@ -954,10 +921,6 @@ uint32_t ft_send_file(Tox *tox, uint32_t friend_number, FILE *file, uint8_t *pat
     ft->target_size = size;
 
     ft->name = calloc(1, name_length + 1);
-    if (!ft->name) {
-        --f->ft_outgoing_active_count;
-        return UINT32_MAX;
-    }
     ft->name_length = name_length;
     snprintf((char *)ft->name, name_length + 1, "%.*s", (int)name_length, name);
 
@@ -970,9 +933,6 @@ uint32_t ft_send_file(Tox *tox, uint32_t friend_number, FILE *file, uint8_t *pat
     ft->status = FILE_TRANSFER_STATUS_PAUSED_THEM;
 
     FILE_TRANSFER *msg = calloc(1, sizeof(FILE_TRANSFER));
-    if (!msg) {
-        return UINT32_MAX;
-    }
     *msg = *ft;
     postmessage_utox(FILE_SEND_NEW, friend_number, file_number, msg);
     return file_number;
@@ -1025,10 +985,6 @@ uint32_t ft_send_data(Tox *tox, uint32_t friend_number, uint8_t *data, size_t si
     ft->inline_img = true;
 
     ft->name = calloc(1, name_length + 1);
-    if (!ft->name) {
-        --f->ft_outgoing_active_count;
-        return UINT32_MAX;
-    }
 
     ft->name_length = name_length;
     snprintf((char *)ft->name, name_length + 1, "%.*s", (int)name_length, name);
@@ -1044,9 +1000,6 @@ uint32_t ft_send_data(Tox *tox, uint32_t friend_number, uint8_t *data, size_t si
 
 
     FILE_TRANSFER *msg = calloc(1, sizeof(FILE_TRANSFER));
-    if (!msg) {
-        return UINT32_MAX;
-    }
 
     *msg = *ft;
     postmessage_utox(FILE_SEND_NEW, friend_number, file_number, msg);

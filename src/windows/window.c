@@ -108,9 +108,6 @@ UTOX_WINDOW *native_window_create_notify(int x, int y, int w, int h, PANEL *pane
 
     if (!popup) {
         popup = calloc(1, sizeof(UTOX_WINDOW)); // FIXME leaks
-        if (!popup) {
-            return NULL;
-        }
     }
     popup->window = window;
 

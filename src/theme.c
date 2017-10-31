@@ -665,11 +665,6 @@ static uint8_t *utox_data_load_custom_theme(size_t *out) {
     }
 
     uint8_t *data = calloc(1, *out + 1);
-    if (!data) {
-        fclose(fp);
-        return NULL;
-    }
-
     if (fread(data, *out, 1, fp) != 1) {
         fclose(fp);
         free(data);

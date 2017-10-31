@@ -75,9 +75,7 @@ SETTINGS settings = {
 
 // TODO refactor to match same order in main.h
 UTOX_SAVE *config_load(void) {
-    UTOX_SAVE *save;
-    save = utox_data_load_utox();
-
+    UTOX_SAVE *save = utox_data_load_utox();
     if (!save) {
         /* Create and set defaults */
         save = calloc(1, sizeof(UTOX_SAVE));
@@ -271,11 +269,6 @@ UTOX_SAVE *utox_data_load_utox(void) {
     }
 
     UTOX_SAVE *save = calloc(1, size + 1);
-    if (!save) {
-        fclose(fp);
-        return NULL;
-    }
-
     if (fread(save, size, 1, fp) != 1) {
         fclose(fp);
         free(save);
